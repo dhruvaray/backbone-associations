@@ -130,34 +130,36 @@ var project1 = new Project({
   number: "2"
 });
 
-//set up eventing
+ //set up eventing
 emp.on('change:manager',function(){
   console.log("change:manager fired...");
 });                
 
-emp.get("manager").on('change',function(){
-  console.log("`change` on manager fired...");
-});
-
 emp.set({manager:mgr});
 
-//Console Log
-//change:manager fired...
-//`change` on manager fired...
+emp.get("manager").on('change',function(){
+  console.log("change on manager fired...");
+});
+
+emp.get("manager").set({'fname':'Greg'});    
 
 //set up eventing
-project1.on('change',function(){
-  console.log("change:project fired...");
+project1.get('locations').on('reset',function(){
+  console.log("reset on locations fired...");
 });                
-project1.on('change:locations',function(){
+project1.get('locations').on('add',function(){
   console.log("change:locations fired...");
 });                
 
-project1.set({locations:[loc1, loc2]});
+project1.get('locations').add([loc1, loc2]);
+project1.get('locations').reset();
 
 //Console Log
-//change:project fired...
-//"change:locations fired...
+//change:manager fired...
+//change on manager fired...
+//change:locations fired...
+//change:locations fired...
+//reset on locations fired...
 
 ````
 
