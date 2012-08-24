@@ -1,5 +1,5 @@
 # Backbone-associations
-Backbone-associations was born out of a need to provide a lightweight implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/) with a limited, but commonly used feature subset. We support one-to-one and one-to-many relations between Backbone.Models. This implementation offers speed and a low memory footprint for models having these relation types. It is able to handle updates to nested models in a performing fashion. See [benchmarks and tests](test/test_suite.html) for detailed results.
+Backbone-associations was born out of a need to provide a lightweight implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/) with a limited, but commonly used feature subset. We support one-to-one and one-to-many relations between Backbone.Models. This implementation offers speed and a low memory footprint for models having these relation types. It is able to handle updates to nested models in a performing fashion. See [benchmarks and tests](https://raw.github.com/dhruvaray/backbone-associations/master/test/test-suite.html) for detailed results.
 
 
 ## Contents
@@ -13,8 +13,8 @@ Backbone-associations was born out of a need to provide a lightweight implementa
 ### <a name="download"/>Download
 You can download the latest 
 
-* [Development Version 0.1](backbone-associations.js)
-* [Production Version 0.1](backbone-associations-min.js) 
+* [Development Version 0.1](https://raw.github.com/dhruvaray/backbone-associations/master/backbone-associations.js)
+* [Production Version 0.1](https://raw.github.com/dhruvaray/backbone-associations/master/backbone-associations-min.js) 
 
 ### <a name="installation"/>Installation
 
@@ -102,7 +102,7 @@ Used for specifying one-to-one or one-to-many relationships.
 A string (which can be resolved to an object type on the global scope), or a reference to a `Backbone.Collection` type. Determine the type of collections used for a `Many` relation.
 
 ## <a name="eventing"/>Eventing with `AssociatedModels`
-CRUD operations on AssociatedModels trigger the appropriate events - identical to base Backbone Models & Collections.  This is best understood with a simple example. More detailed examples can be found in the [test suite](/test/test-suite.html). 
+CRUD operations on AssociatedModels trigger the appropriate events - identical to base Backbone Models & Collections.  This is best understood with a simple example. More detailed examples can be found in the [test suite](https://raw.github.com/dhruvaray/backbone-associations/master/test/test-suite.html). 
 
 
 ````javascript
