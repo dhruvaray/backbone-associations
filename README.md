@@ -1,8 +1,9 @@
 # Backbone-associations
-Backbone-associations was born out of a need to provide a lightweight implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/) with a limited, but commonly used feature subset. We support one-to-one and one-to-many relations between Backbone.Models. This implementation offers speed and a low memory footprint for models having these relation types. It is able to handle updates to nested models in a performing fashion. 
+Backbone-associations was born out of a need to provide a lightweight implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/) with a limited, but commonly used feature subset. It supports one-to-one and one-to-many relations between Backbone.Models. This implementation offers speed and a low memory footprint for models having these relation types. It is able to handle updates to nested models in a performing fashion. 
 
 ![Performance](https://raw.github.com/dhruvaray/backbone-associations/master/test/speed.png)
 
+Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations.
 
 ## Contents
 
