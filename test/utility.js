@@ -2,13 +2,12 @@ var Utility = {
     drawChart : function(opt) {		
         if(opt.associated && opt.relational && opt.associated.length == opt.relational.length && (typeof google!=='undefined') && google.visualization){
             var dataTable = [];
-            dataTable.push(['Objects', 'Associations','Relational']);
+            dataTable.push(['Objects', 'Backbone-associations','Backbone-relational']);
             for(var i=0;i<opt.points.length;i++){
                 dataTable.push([opt.points[i], opt.associated[i],opt.relational[i]]);
             }
             var data =  google.visualization.arrayToDataTable(dataTable);
-            var options = {
-                title: opt.chartName+' Performance',
+            var options = {               
                 hAxis: {title: opt.hTitle,  titleTextStyle: {color: 'blue'}},
                 vAxis: {title: opt.vTitle,  titleTextStyle: {color: 'blue'}},
                 legend : {position:'top',alignment:'end'}
@@ -59,10 +58,9 @@ var Utility = {
                     chartType:'AREACHART',
                     associated : _.values(associatedPeriodData),
                     relational : _.values(relationalPeriodData),
-                    points : ['10','15','20','25','30'],
-                    chartName : 'Speed',
+                    points : ['10','15','20','25','30'],                    
                     vTitle : 'Time(ms)',
-                    hTitle : 'Number of objects inserted',
+                    hTitle : 'Operation - (set n associations)',
                     divName : 'speed_chart_div1'
                 });	
                 Utility.drawChart({
@@ -70,9 +68,8 @@ var Utility = {
                     associated : _.values(associatedHzData),
                     relational : _.values(relationalHzData),
                     points : ['10','15','20','25','30'],
-                    chartName : 'Speed',
-                    vTitle : 'Op/sec',
-                    hTitle : 'Number of objects inserted',
+                    vTitle : 'Ops/sec',
+                    hTitle : 'Operation - (set n associations)',
                     divName : 'speed_chart_div2'
                 });	                
             }
