@@ -91,6 +91,24 @@ $(document).ready(function() {
         }        
     });
     
+    Node = Backbone.AssociatedModel.extend({
+        relations : [
+            {
+                type: Backbone.One,
+                key: 'parent',
+                relatedModel: 'Node'
+            },
+            {
+                type: Backbone.Many,
+                key: 'children',
+                relatedModel: 'Node'
+            }
+        ],
+        defaults: {
+            name : ''
+        }
+    });
+
     module("Backbone.AssociatedModel",{
         setup: function() {
             emp = new Employee({
@@ -398,6 +416,105 @@ $(document).ready(function() {
         equal(emp.get('works_for').get('number'),-1);
         equal(emp.get('works_for').get('type'),void 0);
         
+    });
+    
+    module("Cyclic Graph",{
+        setup: function() {            
+            node1 = new Node({name:'n1'});
+            node2 = new Node({name:'n2'});
+            node3 = new Node({name:'n3'});
+        }
+    });
+    
+    test("set,trigger",10,function() {               
+        node1.on("change:parent",function(){
+            ok(true,"node1 change:parent fired...");
+        });
+        node2.on("change:parent",function(){
+            ok(true,"node2 change:parent fired...");
+        });
+        node3.on("change:parent",function(){
+            ok(true,"node3 change:parent fired...");
+        });
+
+        node1.on("change:children",function(){
+            ok(true,"node1 change:children fired...");
+        });
+        node2.on("change:children",function(){
+            ok(true,"node2 change:children fired...");
+        });
+        node3.on("change:children",function(){
+            ok(true,"node3 change:children fired...");
+        });        
+        
+        node1.set({parent:node2,children:[node3]});
+        node2.set({parent:node3,children:[node1]});
+        node3.set({parent:node1,children:[node2]});       
+    });
+    
+    test("change,silent",9,function() {        
+        node1.on("change:parent",function(){
+            ok(true,"node1 change:parent fired...");
+        });
+        node2.on("change:parent",function(){
+            ok(true,"node2 change:parent fired...");
+        });
+        node3.on("change:parent",function(){
+            ok(true,"node3 change:parent fired...");
+        });                              
+        
+        node1.set({parent:node2,children:[node3]},{silent : true});
+        node2.set({parent:node3,children:[node1]},{silent : true});
+        node3.set({parent:node1,children:[node2]},{silent : true});
+        node1.change();
+        node2.change();
+        node3.change();
+    });
+    
+    test("toJSON",1,function() {        
+        node1.set({parent:node2,children:[node3]});
+        node2.set({parent:node3,children:[node1]});
+        node3.set({parent:node1,children:[node2]});
+        var rawJSON = {
+              "name": "n1",
+              "children": [
+                {
+                  "name": "n3",
+                  "children": [
+                    {
+                      "name": "n2",
+                      "children": [],
+                      "parent": undefined
+                    }
+                  ],
+                  "parent": undefined
+                }
+              ],
+              "parent": {
+                "name": "n2",
+                "children": [],
+                "parent": {
+                  "name": "n3",
+                  "children": [],
+                  "parent": undefined
+                }
+              }
+            };    
+        ok(_.isEqual(node1.toJSON(),rawJSON));        
+    });
+    
+    test("clone",6,function() {        
+        node1.set({parent:node2,children:[node3]});        
+        var cloneNode = node1.clone();
+        equal(node1.get('name'),cloneNode.get('name'),'name of node should be same as clone');
+        equal(node1.get('parent').get('name'),cloneNode.get('parent').get('name'),'name of node should be same as clone');
+        cloneNode.set({name:'clone-n1'});
+        equal(node1.get('name'),'n1','name of node1 should be `n1`');
+        equal(cloneNode.get('name'),'clone-n1','name of node should be `clone-n1`');        
+        
+        cloneNode.get('parent').set({name:'clone-n2'});
+        equal(node1.get('parent').get('name'),'n2',"name of node1's parent should be `n2`");
+        equal(cloneNode.get('parent').get('name'),'clone-n2',"name of node1's parent should be `clone-n2`");        
     });
 });
 
