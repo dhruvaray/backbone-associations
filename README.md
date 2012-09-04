@@ -12,13 +12,13 @@ The [annotated](http://dhruvaray.github.com/backbone-associations/docs/backbone-
 * [Installation](#installation)
 * [Specifying Associations](#associations)
 * [Eventing with Associations](#eventing)
-* [Known Issues](#issues)
+* [Change Log](#changelog)
 
 
 ### <a name="download"/>Download
 
-* [Minified version 0.1 ](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js)
-* [Development version 0.1](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
+* [Minified version 0.2.0 ](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js)
+* [Development version 0.2.0](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
 
 
 ### <a name="installation"/>Installation
@@ -173,8 +173,10 @@ project1.get('locations').reset();
 
 ````
 
-## <a name="issues"/>Known Issues
+## <a name="changelog"/>Change Log
+#### Version 0.2.0
+Added support for cyclic object graphs.
 
-#### Version 0.1
-Cyclic object graphs are not supported.
+#### Version 0.1.0
+Initial Backbone-associations release.
 

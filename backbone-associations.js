@@ -1,5 +1,5 @@
 //
-// Backbone-associations.js 0.1.0
+// Backbone-associations.js 0.2.0
 //
 // (c) 2012 Dhruva Ray, Jaynti Kanani
 //
@@ -106,7 +106,7 @@
                         }
                         //Add proxy events to respective parents
                         this.attributes[relation.key].off("all");
-                        this.attributes[relation.key].on("all",function(events){this.trigger(events,_.rest(arguments))},this);
+                        this.attributes[relation.key].on("all",function(){return this.trigger.apply(this,arguments);},this);
                         //If reference has changed, trigger `change:attribute` event
                         refChanged && this.trigger('change:'+relation.key,options);
                         //Create a local `processedRelations` array to store the relation key which has been processed. 
@@ -146,44 +146,69 @@
                 throw new Error( 'type must inherit from Backbone.AssociatedModel' );
             }
             return collection;
-        },		
+        },
+        // `trigger` the event for `Associated Model`
+        trigger : function(){
+            //Check & Add `visited` tag to prevent event of cycle
+            if(!this.visited){
+                // mark as `visited`
+                this.visited = true;
+                Backbone.Model.prototype.trigger.apply(this,arguments);
+                //delete `visited` tag to allow trigger for next `set` operation
+                delete this.visited;
+            }
+            return this;
+        },
         //The JSON representation of the model.
-        toJSON : function(){		
-            //Get json representation from `Backbone.Model.prototype.toJSON`
-            var json = Backbone.Model.prototype.toJSON.apply( this, arguments );
-            //If `this.relations` is defined, iterate through each `relation` and added it's json representation to parents' json representation
-            if(this.relations){
-                _.each(this.relations ,function(relation){  
-                    if(this.attributes[relation.key]){
-                        json[relation.key] = (this.attributes[relation.key].cid !== this.cid) ? this.attributes[relation.key].toJSON() : void 0;
-                    }
-                },this);
+        toJSON : function(){		            
+            var json;
+            if(!this.visited){
+                this.visited = true;
+                //Get json representation from `Backbone.Model.prototype.toJSON`
+                json = Backbone.Model.prototype.toJSON.apply( this, arguments );
+                //If `this.relations` is defined, iterate through each `relation` and added it's json representation to parents' json representation
+                if(this.relations){
+                    _.each(this.relations ,function(relation){  
+                        var attr = this.attributes[relation.key];
+                        if(attr){
+                            aJson = attr.toJSON();                            
+                            json[relation.key] = _.isArray(aJson)?_.compact(aJson):aJson;
+                        }
+                    },this);
+                }
+                delete this.visited;
             }
             return json;
         },
         //deep `clone` the model.
         clone : function(){		
-            //Get shallow clone from `Backbone.Model.prototype.clone`
-            var cloneObj = Backbone.Model.prototype.clone.apply( this, arguments );
-            //If `this.relations` is defined, iterate through each `relation` and `clone`
-            if(this.relations){
-                _.each(this.relations ,function(relation){  
-                    if(this.attributes[relation.key]){
-                        var sourceObj = cloneObj.attributes[relation.key];
-                        if(sourceObj instanceof Backbone.Collection){
-                            //Creates new `collection` using `relation`
-                            var newCollection = relation.collectionType ? new relation.collectionType() : this._createCollection(relation.relatedModel);                            
-                            //Added each `clone` model to `newCollection`
-                            sourceObj.each(function(model){
-                                newCollection.add(model.clone());                            
-                            });                            
-                            cloneObj.attributes[relation.key] = newCollection;
-                        }   
-                        else if(sourceObj instanceof Backbone.Model){
-                            cloneObj.attributes[relation.key] = sourceObj.clone();
+            var cloneObj;
+            if(!this.visited){
+                this.visited = true;
+                //Get shallow clone from `Backbone.Model.prototype.clone`
+                cloneObj = Backbone.Model.prototype.clone.apply( this, arguments );
+                //If `this.relations` is defined, iterate through each `relation` and `clone`
+                if(this.relations){
+                    _.each(this.relations ,function(relation){  
+                        if(this.attributes[relation.key]){
+                            var sourceObj = cloneObj.attributes[relation.key];
+                            if(sourceObj instanceof Backbone.Collection){
+                                //Creates new `collection` using `relation`
+                                var newCollection = relation.collectionType ? new relation.collectionType() : this._createCollection(relation.relatedModel);                            
+                                //Added each `clone` model to `newCollection`
+                                sourceObj.each(function(model){
+                                    var mClone = model.clone()
+                                    mClone && newCollection.add(mClone);                            
+                                });                            
+                                cloneObj.attributes[relation.key] = newCollection;
+                            }   
+                            else if(sourceObj instanceof Backbone.Model){
+                                cloneObj.attributes[relation.key] = sourceObj.clone();
+                            }
                         }
-                    }
-                },this);
+                    },this);
+                }
+                delete this.visited;
             }
             return cloneObj;
         }			
