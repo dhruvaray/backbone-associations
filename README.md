@@ -23,7 +23,7 @@ The [annotated](http://dhruvaray.github.com/backbone-associations/docs/backbone-
 
 ### <a name="installation"/>Installation
 
-Backbone-associations depends on [backbone](https://github.com/documentcloud/backbone) (and thus on  [underscore](https://github.com/documentcloud/underscore)). Include Backbone-relational right after Backbone and Underscore:
+Backbone-associations depends on [backbone](https://github.com/documentcloud/backbone) (and thus on  [underscore](https://github.com/documentcloud/underscore)). Include Backbone-associations right after Backbone and Underscore:
 
 ```html
 <script type="text/javascript" src="./js/underscore.js"></script>
