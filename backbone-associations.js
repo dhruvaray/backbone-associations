@@ -51,7 +51,7 @@
             }			
             // Extract attributes and options.
             options || (options = {});
-            if(!attributes) return;
+            if(!attributes) return this;
             if (options.unset) for (attr in attributes) attributes[attr] = void 0;			
             //Check for existence of relations in this model
             if(this.relations){			
@@ -88,7 +88,7 @@
                             //Create New `Backbone.Model` using `relation.relatedModel` if `attributes` is not null							
                             if(!this.attributes[relation.key]){                            
                                 //If `val` is already instance of  `AssociatedModel`, reserve `relation.key` for `Backbone.Model.prototype.set`
-                                if(val instanceof Backbone.AssociatedModel) return;                            
+                                if(val instanceof Backbone.AssociatedModel) return this;                            
                                 this.attributes[relation.key] = new relation.relatedModel();
                                 refChanged = true;
                             }

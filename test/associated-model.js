@@ -418,6 +418,33 @@ $(document).ready(function() {
         
     });
     
+    test("save", 1, function () {
+        emp.sync = function(method, model, options) {
+            options.success.call();
+        };
+        emp.save(null,{
+            success : function(){
+                ok(true,"success in model save");
+            },
+            error : function(){
+                ok(true,"error in model save");
+            }
+        });
+    });
+
+    test("validate after save", 1, function() {
+        var lastError = null;
+        emp.sync = function(method, model, options) {
+            options.success.call(this, {sex: 'O'});
+        };
+        emp.save(null, {
+            error: function(model, error) {
+                lastError = error;
+            }
+        });
+        equal(lastError, "invalid sex value");
+    });
+
     module("Cyclic Graph",{
         setup: function() {            
             node1 = new Node({name:'n1'});
