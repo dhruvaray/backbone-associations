@@ -174,7 +174,7 @@ project1.get('locations').reset();
 ````
 
 ## <a name="changelog"/>Change Log
-#### Version 0.2.0
+#### Version 0.2.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.1.0...v0.2.0)
 Added support for cyclic object graphs.
 
 #### Version 0.1.0
