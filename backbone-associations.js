@@ -65,6 +65,9 @@
                         relation.collectionType && _.isString(relation.collectionType) && (relation.collectionType = eval(relation.collectionType));
                         //Track reference change of associated model for `change:attribute` event
                         var refChanged = false;
+                        //Merge in options specific to this relation
+                        var relationOptions = options;
+                        if (relation.options != undefined) _.extend(relationOptions,relation.options);
                         //If `relation` defines model as associated collection...
                         if(relation.type === Backbone.Many){
                             //`relation.collectionType` should be instance of `Backbone.Collection`
@@ -81,7 +84,7 @@
                                 val = val.models;
                             }
                             //Resetting new Collection with new value and options
-                            this.attributes[relation.key].reset(val,options);
+                            this.attributes[relation.key].reset(val,relationOptions);
                         }
                         //If `relation` defines model as associated model...
                         else if(relation.type == Backbone.One && relation.relatedModel){
@@ -102,13 +105,13 @@
                                 this.attributes[relation.key].set(opt,{silent:true});
                             }
                             //Set `val` to model with options
-                            this.attributes[relation.key].set(val,options);
+                            this.attributes[relation.key].set(val,relationOptions);
                         }
                         //Add proxy events to respective parents
                         this.attributes[relation.key].off("all");
                         this.attributes[relation.key].on("all",function(){return this.trigger.apply(this,arguments);},this);
                         //If reference has changed, trigger `change:attribute` event
-                        refChanged && this.trigger('change:'+relation.key,options);
+                        refChanged && this.trigger('change:'+relation.key);
                         //Create a local `processedRelations` array to store the relation key which has been processed.
                         //We cannot use `this.relations` because if there is no value defined for `relation.key`, it will not get processed by either Backbone `set` or the `AssociatedModel` set
                         !processedRelations && (processedRelations=[]);
