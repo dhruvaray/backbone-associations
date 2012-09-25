@@ -445,6 +445,66 @@ $(document).ready(function() {
         equal(lastError, "invalid sex value");
     });
 
+    test("relation's options : parse", 3, function() {
+        //relation options with `set`
+        var NewEmployee = Employee.extend({
+            parse : function(obj) {
+                if(obj.sex === "M"){
+                    obj.prefix = "Mr.";
+                }
+                return obj;
+            }
+        });
+        var emp2 = new NewEmployee({
+            fname : "Tom",
+            lname : "Hanks",
+            age : 45,
+            sex : "M"
+        },{parse:true});
+        equal(emp2.get("prefix"),"Mr.","Prefix of emp2 should be 'Mr.'");
+
+        //relation options with `fetch`
+        var Company = Backbone.AssociatedModel.extend({
+            url : "/company",
+            relations : [
+                {
+                    type : Backbone.Many,
+                    relatedModel : NewEmployee,
+                    key : 'employees',
+                    options : {
+                        parse : true,
+                        add : true
+                    }
+                }
+            ],
+            defaults : {
+                name : '',
+                employees : null
+            },
+            //proxy for server
+            sync : function(method, model, options) {
+                return options.success.call(this,{
+                    name : 'c-name',
+                    employees :[
+                        {
+                            fname : "John",
+                            lname : "Smith",
+                            age : 21,
+                            sex : "M"
+                        }
+                    ]
+                });
+            }
+        });
+        var company = new Company();
+        company.fetch({
+            success : function(model,response){
+                equal(model.get("name"),"c-name","Company name should be c-name");
+                equal(model.get("employees").at(0).get('prefix'),"Mr.","Prefix of male employees of company should be Mr.");
+            }
+        });
+    });
+
     module("Cyclic Graph",{
         setup: function() {            
             node1 = new Node({name:'n1'});
@@ -453,7 +513,7 @@ $(document).ready(function() {
         }
     });
     
-    test("set,trigger",10,function() {               
+    test("set,trigger",10,function() {
         node1.on("change:parent",function(){
             ok(true,"node1 change:parent fired...");
         });
