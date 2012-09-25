@@ -445,6 +445,21 @@ $(document).ready(function() {
         equal(lastError, "invalid sex value");
     });
 
+    test("`change:attr` and `change` event with options", 4, function() {
+        emp.on("change",function(employeeModel,options){
+            equal(employeeModel.get("fname"),emp.get("fname"));
+            equal(options.changes.lname,true,"changed attribute found in arguments");
+        });
+        emp.on("change:works_for",function(employeeModel,changedWorksFor,options){
+            equal(employeeModel.get("fname"),emp.get("fname"));
+            equal(changedWorksFor,void 0);
+        });
+        emp.set({
+            lname : 'Hanks',
+            works_for : undefined
+        });
+    });
+
     test("relation's options : parse", 3, function() {
         //relation options with `set`
         var NewEmployee = Employee.extend({
