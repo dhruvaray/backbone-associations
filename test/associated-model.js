@@ -520,6 +520,23 @@ $(document).ready(function() {
         });
     });
 
+    test("`visited` flag results wrong toJSON outpul in event callback : issue #3",5,function(){
+        var dependents = emp.get("dependents");
+        dependents.reset();
+        var json = {"fname":"Jane","lname":"Smith","sex":"F","age":0,"relationship":"C"};
+        emp.on("change:fname",function(model){
+            equal("Tom",model.toJSON().fname,"fname of `model.toJSON()` should be Tom");
+        });
+        dependents.on("add",function(model){
+            ok(_.isEqual(json,model.toJSON()));
+            ok(_.isEqual(json,model.clone().toJSON()));
+            equal(model.visited,void 0,"`model.visited` flag should be `undefined`");
+            equal(model.visitedTrigger,true,"`model.visited` flag should be `true`");
+        });
+        emp.set({"fname":"Tom"})
+        dependents.add(child1);
+    });
+
     module("Cyclic Graph",{
         setup: function() {            
             node1 = new Node({name:'n1'});
