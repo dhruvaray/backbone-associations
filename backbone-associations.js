@@ -150,12 +150,12 @@
         // `trigger` the event for `Associated Model`
         trigger : function(){
             //Check & Add `visited` tag to prevent event of cycle
-            if(!this.visited){
+            if(!this.visitedTrigger){
                 // mark as `visited`
-                this.visited = true;
+                this.visitedTrigger = true;
                 Backbone.Model.prototype.trigger.apply(this,arguments);
                 //delete `visited` tag to allow trigger for next `set` operation
-                delete this.visited;
+                delete this.visitedTrigger;
             }
             return this;
         },
