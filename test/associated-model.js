@@ -445,6 +445,98 @@ $(document).ready(function() {
         equal(lastError, "invalid sex value");
     });
 
+    test("`change:attr` and `change` event with options", 4, function() {
+        emp.on("change",function(employeeModel,options){
+            equal(employeeModel.get("fname"),emp.get("fname"));
+            equal(options.changes.lname,true,"changed attribute found in arguments");
+        });
+        emp.on("change:works_for",function(employeeModel,changedWorksFor,options){
+            equal(employeeModel.get("fname"),emp.get("fname"));
+            equal(changedWorksFor,void 0);
+        });
+        emp.set({
+            lname : 'Hanks',
+            works_for : undefined
+        });
+    });
+
+    test("relation's options : parse", 3, function() {
+        //relation options with `set`
+        var NewEmployee = Employee.extend({
+            parse : function(obj) {
+                if(obj.sex === "M"){
+                    obj.prefix = "Mr.";
+                }
+                return obj;
+            }
+        });
+        var emp2 = new NewEmployee({
+            fname : "Tom",
+            lname : "Hanks",
+            age : 45,
+            sex : "M"
+        },{parse:true});
+        equal(emp2.get("prefix"),"Mr.","Prefix of emp2 should be 'Mr.'");
+
+        //relation options with `fetch`
+        var Company = Backbone.AssociatedModel.extend({
+            url : "/company",
+            relations : [
+                {
+                    type : Backbone.Many,
+                    relatedModel : NewEmployee,
+                    key : 'employees',
+                    options : {
+                        parse : true,
+                        add : true
+                    }
+                }
+            ],
+            defaults : {
+                name : '',
+                employees : null
+            },
+            //proxy for server
+            sync : function(method, model, options) {
+                return options.success.call(this,{
+                    name : 'c-name',
+                    employees :[
+                        {
+                            fname : "John",
+                            lname : "Smith",
+                            age : 21,
+                            sex : "M"
+                        }
+                    ]
+                });
+            }
+        });
+        var company = new Company();
+        company.fetch({
+            success : function(model,response){
+                equal(model.get("name"),"c-name","Company name should be c-name");
+                equal(model.get("employees").at(0).get('prefix'),"Mr.","Prefix of male employees of company should be Mr.");
+            }
+        });
+    });
+
+    test("`visited` flag results wrong toJSON outpul in event callback : issue #3",5,function(){
+        var dependents = emp.get("dependents");
+        dependents.reset();
+        var json = {"fname":"Jane","lname":"Smith","sex":"F","age":0,"relationship":"C"};
+        emp.on("change:fname",function(model){
+            equal("Tom",model.toJSON().fname,"fname of `model.toJSON()` should be Tom");
+        });
+        dependents.on("add",function(model){
+            ok(_.isEqual(json,model.toJSON()));
+            ok(_.isEqual(json,model.clone().toJSON()));
+            equal(model.visited,void 0,"`model.visited` flag should be `undefined`");
+            equal(model.visitedTrigger,true,"`model.visited` flag should be `true`");
+        });
+        emp.set({"fname":"Tom"})
+        dependents.add(child1);
+    });
+
     module("Cyclic Graph",{
         setup: function() {            
             node1 = new Node({name:'n1'});
@@ -453,7 +545,7 @@ $(document).ready(function() {
         }
     });
     
-    test("set,trigger",10,function() {               
+    test("set,trigger",10,function() {
         node1.on("change:parent",function(){
             ok(true,"node1 change:parent fired...");
         });
