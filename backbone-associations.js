@@ -109,7 +109,10 @@
                         }
                         //Add proxy events to respective parents
                         this.attributes[relationKey].off("all");
-                        this.attributes[relationKey].on("all",function(){return this.trigger.apply(this,arguments);},this);
+                        this.attributes[relationKey].on("all",function(){
+                           arguments[1] = this;
+                           return this.trigger.apply(this,arguments);
+                        },this);
                         //If reference has changed, trigger `change:attribute` event
                         refChanged && this.trigger('change:'+relationKey,this,this.get(relationKey),relationOptions);
                         //Create a local `processedRelations` array to store the relation key which has been processed.
