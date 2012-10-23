@@ -45,17 +45,17 @@ Each `Backbone.AssociatedModel` can contain an array of `relations`. Each relati
 
 var Employee = Backbone.AssociatedModel.extend({  	  
 	relations: [
-  	{
-    	type: Backbone.One, //nature of the relationship
-      key: 'manager', // attribute of Employee
-      relatedModel: 'Employee' //AssociatedModel for attribute key
-      }
+        {
+            type: Backbone.One, //nature of the relationship
+            key: 'manager', // attribute of Employee
+            relatedModel: 'Employee' //AssociatedModel for attribute key
+        }
     ],
   defaults: {
     age : 0,
     fname : "",
     lname : "",
-    mananger : {}
+    mananger : null
   }        
 });
 
