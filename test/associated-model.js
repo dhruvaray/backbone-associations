@@ -1,4 +1,13 @@
 $(document).ready(function() {
+    var attr
+      , child1, child2
+      , dept1
+      , emp
+      , loc1, loc2
+      , node1, node2, node3
+      , parent1
+      , project1, project2
+    ;
 
     var Location = Backbone.AssociatedModel.extend({
         defaults: {
