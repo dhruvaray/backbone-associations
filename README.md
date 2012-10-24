@@ -55,7 +55,7 @@ var Employee = Backbone.AssociatedModel.extend({
     age : 0,
     fname : "",
     lname : "",
-    mananger : null
+    manager : null
   }        
 });
 
