@@ -52,7 +52,7 @@
             // Extract attributes and options.
             options || (options = {});
             if(!attributes) return this;
-            if (options.unset) for (attr in attributes) attributes[attr] = void 0;
+            if (options.unset) for (var attr in attributes) attributes[attr] = void 0;
             //Check for existence of relations in this model
             if(this.relations){
                 //Iterate over `this.relations` and `set` model and collection values
@@ -176,7 +176,7 @@
                     _.each(this.relations ,function(relation){
                         var attr = this.attributes[relation.key];
                         if(attr){
-                            aJson = attr.toJSON();
+                            var aJson = attr.toJSON();
                             json[relation.key] = _.isArray(aJson)?_.compact(aJson):aJson;
                         }
                     },this);
