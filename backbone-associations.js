@@ -58,6 +58,7 @@
                 //Iterate over `this.relations` and `set` model and collection values
                 _.each(this.relations ,function(relation){
                     var relationKey = relation.key, relatedModel = relation.relatedModel, collectiontype = relation.collectionType;
+                    var reverse = relation.reverse || false;
                     if (attributes[relationKey] != undefined ){
                         //Get value of attribute with relation key in `val`
                         var val = getValue(attributes,relationKey);
@@ -107,6 +108,9 @@
                             //Set `val` to model with options
                             this.attributes[relationKey].set(val,relationOptions);
                         }
+                        if (reverse) {
+                            this.attributes[relationKey].reverse = _.clone(this);
+                        }  
                         //Add proxy events to respective parents
                         this.attributes[relationKey].off("all");
                         this.attributes[relationKey].on("all",function(){return this.trigger.apply(this,arguments);},this);
