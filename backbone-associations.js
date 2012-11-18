@@ -35,6 +35,8 @@
     Backbone.AssociatedModel = Backbone.Model.extend({
         //Define relations with Associated Model
         relations: undefined,
+        //Define a hash to keep current triggered events
+        triggedEvents: {},
         //Set a hash of model attributes on the object,
         //firing `"change"` unless you choose to silence it.
         //It maintains relations between models during the set operation. It also bubbles up child events to the parent.
@@ -155,12 +157,13 @@
         // `trigger` the event for `Associated Model`
         trigger : function(){
             //Check & Add `visited` tag to prevent event of cycle
-            if(!this.visitedTrigger){
+            var events = arguments[0];
+            if(!this.triggedEvents[events]){
                 // mark as `visited`
-                this.visitedTrigger = true;
+                this.triggedEvents[events] = true;
                 Backbone.Model.prototype.trigger.apply(this,arguments);
                 //delete `visited` tag to allow trigger for next `set` operation
-                delete this.visitedTrigger;
+                delete this.triggedEvents[events];
             }
             return this;
         },
