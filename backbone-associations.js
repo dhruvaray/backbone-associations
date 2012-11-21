@@ -74,42 +74,58 @@
                             if(collectiontype && !collectiontype.prototype instanceof Backbone.Collection){
                                 throw new Error( 'collectionType must inherit from Backbone.Collection' );
                             }
-                            //Create new `Backbone.Collection` with `collectionType`
-                            if(!this.attributes[relationKey]){
-                                this.attributes[relationKey] = collectiontype ? new collectiontype() : this._createCollection(relatedModel);
+
+                            //If `val` is a `Backbone.Collection` instance
+                            if (val instanceof Backbone.Collection){
+                                this.attributes[relationKey] = val;
                                 refChanged = true;
                             }
-                            // Get all models if `val` is already instanceof `Backbone.Collection`
-                            if(val instanceof Backbone.Collection){
-                                val = val.models;
+                            else{
+                                //Create new `Backbone.Collection` with `collectionType`
+                                if(!this.attributes[relationKey]){
+                                    this.attributes[relationKey] = collectiontype ? new collectiontype() : this._createCollection(relatedModel);
+                                    refChanged = true;
+                                }
+                                //Resetting new Collection with new value and options
+                                this.attributes[relationKey].reset(val,relationOptions);
                             }
-                            //Resetting new Collection with new value and options
-                            this.attributes[relationKey].reset(val,relationOptions);
                         }
                         //If `relation` defines model as associated model...
                         else if(relation.type == Backbone.One && relatedModel){
-                            //Create New `Backbone.Model` using `relatedModel` if `attributes` is not null
-                            if(!this.attributes[relationKey]){
-                                //If `val` is already instance of  `AssociatedModel`, reserve `relationKey` for `Backbone.Model.prototype.set`
-                                if(val instanceof Backbone.AssociatedModel) return this;
-                                this.attributes[relationKey] = new relatedModel();
+
+                            //If `val` is a full fledged `AssociatedModel`
+                            if (val instanceof Backbone.AssociatedModel){
+                                this.attributes[relationKey] = val;
                                 refChanged = true;
                             }
-                            //If the new attributes is a smaller subset, then use the default values for that attribute - if available.
                             else{
-                                var opt = {};
-                                var defaults = getValue(this.attributes[relationKey], 'defaults');
-                                _.each(this.attributes[relationKey].attributes,function(value,key){
-                                    !_.has(val,key) && (opt[key] = (defaults ? defaults[key] : void 0));
-                                });
-                                this.attributes[relationKey].set(opt,{silent:true});
+                                //Create New `Backbone.Model` using `relatedModel` if `attributes` is not null
+                                if(!this.attributes[relationKey]){
+                                    this.attributes[relationKey] = new relatedModel();
+                                    refChanged = true;
+                                }
+                                //If the new attributes is a smaller subset, then use the default values for that attribute - if available.
+                                else{
+                                    var opt = {};
+                                    var defaults = getValue(this.attributes[relationKey], 'defaults');
+                                    _.each(this.attributes[relationKey].attributes,function(value,key){
+                                        !_.has(val,key) && (opt[key] = (defaults ? defaults[key] : void 0));
+                                    });
+                                    this.attributes[relationKey].set(opt,{silent:true});
+                                }
+                                //Set `val` to model with options
+                                this.attributes[relationKey].set(val,relationOptions);
                             }
-                            //Set `val` to model with options
-                            this.attributes[relationKey].set(val,relationOptions);
                         }
                         //Add proxy events to respective parents
                         this.attributes[relationKey].off("all");
-                        this.attributes[relationKey].on("all",function(){return this.trigger.apply(this,arguments);},this);
+                        this.attributes[relationKey].on("all",function(){
+                            //Change the event name to `relationKey` to
+                            if (arguments[0].indexOf("change:")!=-1){
+                                arguments[0] = "change:" + relationKey;
+                            }
+                            return this.trigger.apply(this,arguments);
+                        },this);
                         //If reference has changed, trigger `change:attribute` event
                         refChanged && this.trigger('change:'+relationKey,this,this.get(relationKey),relationOptions);
                         //Create a local `processedRelations` array to store the relation key which has been processed.
@@ -120,7 +136,7 @@
                         }
                     }
                 },this);
-            };
+            }
             if(processedRelations){
                 //Find attributes yet to be processed - `tbp`
                 tbp = {};
@@ -202,7 +218,7 @@
                                 var newCollection = relation.collectionType ? new relation.collectionType() : this._createCollection(relation.relatedModel);
                                 //Added each `clone` model to `newCollection`
                                 sourceObj.each(function(model){
-                                    var mClone = model.clone()
+                                    var mClone = model.clone();
                                     mClone && newCollection.add(mClone);
                                 });
                                 cloneObj.attributes[relation.key] = newCollection;

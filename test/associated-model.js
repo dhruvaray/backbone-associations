@@ -298,23 +298,28 @@ $(document).ready(function() {
         equal(emp.get('works_for').get('name'), 'Marketing');
     });
 
-    test("child `change`", 5, function() {
+    test("child `change`", 7, function() {
 
         emp.on('change',function(){
             ok(true,"Fired emp change...");
         });
+        emp.on('change:works_for',function(){
+            ok(true,"Fired emp change:works_for...");
+        });
+        emp.on('change:dependents',function(){
+            ok(true,"Fired emp change:dependents change...");
+        });
+
         emp.get('works_for').on('change',function(){
             ok(true,"Fired works_for change...");
         });
         emp.get('works_for').on('change:name',function(){
-            ok(true,"Fired dept:name change...");
-        });
-        emp.on('change:dependents',function(){
-            ok(true,"Fired dependents change...");
+            ok(true,"Fired works_for dept:name change...");
         });
         emp.get("dependents").on('add',function(){
             ok(true,"Fired dependents added...");
         });
+
         emp.get('works_for').set({name:"Marketing"});
         child2 = new Dependent({
                 fname : "Greg",
@@ -529,7 +534,7 @@ $(document).ready(function() {
         });
     });
 
-    test("`visited` flag results wrong toJSON outpul in event callback : issue #3",5,function(){
+    test("`visited` flag results in wrong toJSON output in event callback : issue #3",5,function(){
         var dependents = emp.get("dependents");
         dependents.reset();
         var json = {"fname":"Jane","lname":"Smith","sex":"F","age":0,"relationship":"C"};
@@ -554,7 +559,7 @@ $(document).ready(function() {
         }
     });
 
-    test("set,trigger",10,function() {
+    test("set,trigger",12,function() {
         node1.on("change:parent",function(){
             ok(true,"node1 change:parent fired...");
         });
