@@ -126,8 +126,11 @@
                             }
                             return this.trigger.apply(this,arguments);
                         },this);
-                        //If reference has changed, trigger `change:attribute` event
-                        refChanged && this.trigger('change:'+relationKey,this,this.get(relationKey),relationOptions);
+                        //If reference has changed, trigger `change:attribute` & 'change' event
+                        if (refChanged){
+                            this.trigger('change:'+relationKey,this,this.get(relationKey),relationOptions);
+                            this.trigger('change',this, relationOptions);
+                        }
                         //Create a local `processedRelations` array to store the relation key which has been processed.
                         //We cannot use `this.relations` because if there is no value defined for `relationKey`, it will not get processed by either Backbone `set` or the `AssociatedModel` set
                         !processedRelations && (processedRelations=[]);

@@ -298,7 +298,7 @@ $(document).ready(function() {
         equal(emp.get('works_for').get('name'), 'Marketing');
     });
 
-    test("child `change`", 7, function() {
+    test("child `change`", 15, function() {
 
         emp.on('change',function(){
             ok(true,"Fired emp change...");
@@ -308,6 +308,9 @@ $(document).ready(function() {
         });
         emp.on('change:dependents',function(){
             ok(true,"Fired emp change:dependents change...");
+        });
+        emp.on('add',function(){
+            ok(true,"Fired emp dependents add...");
         });
 
         emp.get('works_for').on('change',function(){
@@ -321,6 +324,9 @@ $(document).ready(function() {
         });
 
         emp.get('works_for').set({name:"Marketing"});
+        emp.set('works_for',{name:"Marketing",number:29});
+        emp.set('works_for',undefined);
+        emp.set('works_for',dept1);
         child2 = new Dependent({
                 fname : "Greg",
                 lname : "Smith",
