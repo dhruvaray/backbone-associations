@@ -75,47 +75,40 @@
                                 throw new Error( 'collectionType must inherit from Backbone.Collection' );
                             }
 
-                            //If `val` is a `Backbone.Collection` instance
                             if (val instanceof Backbone.Collection){
-                                this.attributes[relationKey] = val;
-                                refChanged = true;
-                            }
-                            else{
-                                //Create new `Backbone.Collection` with `collectionType`
+                                Backbone.Model.prototype.set.call(this, relationKey, val);
+                            }else{
                                 if(!this.attributes[relationKey]){
-                                    this.attributes[relationKey] = collectiontype ? new collectiontype() : this._createCollection(relatedModel);
-                                    refChanged = true;
+                                    var data = collectiontype ? new collectiontype() : this._createCollection(relatedModel);
+                                    data.add(val,relationOptions);
+                                    Backbone.Model.prototype.set.call(this, relationKey, data);
+                                }else{
+                                    this.attributes[relationKey].reset(val,relationOptions);
                                 }
-                                //Resetting new Collection with new value and options
-                                this.attributes[relationKey].reset(val,relationOptions);
                             }
                         }
                         //If `relation` defines model as associated model...
                         else if(relation.type == Backbone.One && relatedModel){
 
-                            //If `val` is a full fledged `AssociatedModel`
                             if (val instanceof Backbone.AssociatedModel){
-                                this.attributes[relationKey] = val;
-                                refChanged = true;
-                            }
-                            else{
-                                //Create New `Backbone.Model` using `relatedModel` if `attributes` is not null
+                                Backbone.Model.prototype.set.call(this, relationKey, val);
+                            }else{
                                 if(!this.attributes[relationKey]){
-                                    this.attributes[relationKey] = new relatedModel();
-                                    refChanged = true;
-                                }
-                                //If the new attributes is a smaller subset, then use the default values for that attribute - if available.
-                                else{
+                                    var data = new relatedModel();
+                                    data.set(val);
+                                    Backbone.Model.prototype.set.call(this, relationKey, data);
+                                }else{
                                     var opt = {};
                                     var defaults = getValue(this.attributes[relationKey], 'defaults');
                                     _.each(this.attributes[relationKey].attributes,function(value,key){
                                         !_.has(val,key) && (opt[key] = (defaults ? defaults[key] : void 0));
                                     });
                                     this.attributes[relationKey].set(opt,{silent:true});
+                                    this.attributes[relationKey].set(val);
                                 }
-                                //Set `val` to model with options
-                                this.attributes[relationKey].set(val,relationOptions);
                             }
+
+
                         }
                         //Add proxy events to respective parents
                         this.attributes[relationKey].off("all");
@@ -126,11 +119,7 @@
                             }
                             return this.trigger.apply(this,arguments);
                         },this);
-                        //If reference has changed, trigger `change:attribute` & 'change' event
-                        if (refChanged){
-                            this.trigger('change:'+relationKey,this,this.get(relationKey),relationOptions);
-                            this.trigger('change',this, relationOptions);
-                        }
+
                         //Create a local `processedRelations` array to store the relation key which has been processed.
                         //We cannot use `this.relations` because if there is no value defined for `relationKey`, it will not get processed by either Backbone `set` or the `AssociatedModel` set
                         !processedRelations && (processedRelations=[]);
