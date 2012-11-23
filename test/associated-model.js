@@ -1,6 +1,6 @@
 $(document).ready(function() {
     var attr
-      , child1, child2
+      , child1, child2, child3, child4
       , dept1
       , emp
       , loc1, loc2
@@ -130,6 +130,30 @@ $(document).ready(function() {
             child1 = new Dependent({
                 fname : "Jane",
                 lname : "Smith",
+                sex : "F",
+                relationship : "C"
+
+            });
+
+            child2 = new Dependent({
+                fname : "Barbara",
+                lname : "Ruth",
+                sex : "F",
+                relationship : "C"
+
+            });
+
+            child3 = new Dependent({
+                fname : "Gregory",
+                lname : "Smith",
+                sex : "M",
+                relationship : "C"
+
+            });
+
+            child4 = new Dependent({
+                fname : "Jane",
+                lname : "Doe",
                 sex : "F",
                 relationship : "C"
 
@@ -281,23 +305,12 @@ $(document).ready(function() {
             equal(emp.get('works_for').previous('name'), 'R&D');
             ok(emp.get('works_for').previousAttributes().name, 'R&D', 'previousAttributes is correct');
         });
-        equal(emp.get('works_for').hasChanged(), false);
-        equal(emp.get('works_for').hasChanged(undefined), false);
-        emp.set(
-            {
-                works_for : {
-                    name : 'Marketing',
-                    number : '24'
-                }
-            }
-        );
-        equal(emp.get('works_for').hasChanged(), false);//TODO
-        equal(emp.get('works_for').hasChanged('name'), false);//TODO
+        emp.set('works_for', {name : 'Marketing',number : '24'});
         emp.get('works_for').change();
         equal(emp.get('works_for').get('name'), 'Marketing');
     });
 
-    test("child `change`", 15, function() {
+    test("child `change`", 12, function() {
 
         emp.on('change',function(){
             ok(true,"Fired emp change...");
@@ -305,12 +318,13 @@ $(document).ready(function() {
         emp.on('change:works_for',function(){
             ok(true,"Fired emp change:works_for...");
         });
-        emp.on('change:dependents',function(){
-            ok(true,"Fired emp change:dependents change...");
+        emp.on('change:works_for.name',function(){
+            ok(true,"Fired emp change:works_for.name...");
         });
-        emp.on('add',function(){
-            ok(true,"Fired emp dependents add...");
+        emp.on('change:works_for.number',function(){
+            ok(true,"Fired emp change:works_for.number...");
         });
+
 
         emp.get('works_for').on('change',function(){
             ok(true,"Fired works_for change...");
@@ -318,24 +332,70 @@ $(document).ready(function() {
         emp.get('works_for').on('change:name',function(){
             ok(true,"Fired works_for dept:name change...");
         });
-        emp.get("dependents").on('add',function(){
-            ok(true,"Fired dependents added...");
+        emp.get('works_for').on('change:number',function(){
+            ok(true,"Fired works_for dept:number change...");
         });
 
-        emp.get('works_for').set({name:"Marketing"});
-        emp.set('works_for',{name:"Marketing",number:29});
-        emp.set('works_for',undefined);
-        emp.set('works_for',dept1);
-        child2 = new Dependent({
-                fname : "Greg",
-                lname : "Smith",
-                sex : "M",
-                relationship : "C"
-        });
-        emp.get("dependents").at(0).set({age:15});
-        emp.get("dependents").add(child2);
+        emp.get('works_for').set({name:"Marketing"});//4
+        emp.set('works_for',{name:"Marketing",number:29});//4
+        emp.set('works_for',undefined);//2
+        emp.set('works_for',dept1);//2
+        emp.set('works_for',dept1);//0
+
+
 
     });
+
+    test("child `add`", 17, function() {
+
+        emp.on('add',function(){
+            ok(true,"Fired emp change...");
+        });
+        emp.on('add:dependents',function(){
+            ok(true,"Fired emp add:dependents...");
+        });
+        emp.on('remove:dependents',function(){
+            ok(true,"Fired emp remove:dependents...");
+        });
+        emp.on('reset:dependents',function(){
+            ok(true,"Fired emp reset:dependents...");
+        });
+        emp.on('change:dependents.age',function(){
+            ok(true,"Fired emp change:dependents.age...");
+        });
+        emp.on('change:dependents',function(){
+            ok(true,"Fired emp change:dependents...");
+        });
+
+
+        emp.get('dependents').on('change',function(){
+            ok(true,"Fired dependents change...");
+        });
+        emp.get('dependents').at(0).on('change',function(){
+            ok(true,"Fired at0 dependents change...");
+        });
+        emp.get('dependents').at(0).on('change:age',function(){
+            ok(true,"Fired at0 dependents change:age...");
+        });
+        emp.get('dependents').on('add',function(){
+            ok(true,"Fired dependents add...");
+        });
+        emp.get('dependents').on('remove',function(){
+            ok(true,"Fired dependents remove...");
+        });
+        emp.get('dependents').on('reset',function(){
+            ok(true,"Fired dependents reset...");
+        });
+
+        emp.get("dependents").at(0).set({age:15});//5
+
+        emp.get("dependents").add(child2);//2
+        emp.get("dependents").add([child3,child4]);//4
+        emp.get("dependents").remove([child1,child4]);//4
+        emp.get("dependents").reset();//2
+
+    });
+
 
     test("toJSON", 2, function() {
         var json1 = emp.get('dependents').toJSON();
@@ -564,7 +624,7 @@ $(document).ready(function() {
         }
     });
 
-    test("set,trigger",12,function() {
+    test("set,trigger",18,function() {
         node1.on("change:parent",function(){
             ok(true,"node1 change:parent fired...");
         });
@@ -585,12 +645,42 @@ $(document).ready(function() {
             ok(true,"node3 change:children fired...");
         });
 
-        node1.set({parent:node2,children:[node3]});
-        node2.set({parent:node3,children:[node1]});
-        node3.set({parent:node1,children:[node2]});
+        node1.on("change:parent.parent",function(){
+            ok(true,"node1 change:parent.parent fired...");
+        });
+        node1.on("change:parent.children",function(){
+            ok(true,"node1 change:parent.children fired...");
+        });
+        node1.on("change:parent.parent.parent",function(){
+            ok(true,"node1 change:parent.parent.parent fired...");
+        });
+        node1.on("change:parent.parent.children",function(){
+            ok(true,"node1 change:parent.parent.children fired...");
+        });
+
+
+        node2.on("change:parent.parent",function(){
+            ok(true,"node2 change:parent.parent fired...");
+        });
+        node2.on("change:parent.children",function(){
+            ok(true,"node2 change:parent.children fired...");
+        });
+        node2.on("change:parent.parent.parent",function(){
+            ok(true,"node2 change:parent.parent.parent fired...");
+        });
+        node2.on("change:parent.parent.children",function(){
+            ok(true,"node2 change:parent.parent.children fired...");
+        });
+
+
+
+        node1.set({parent:node2,children:[node3]});//2
+        node2.set({parent:node3,children:[node1]});//6
+        node3.set({parent:node1,children:[node2]});//8
     });
 
-    test("change,silent",9,function() {
+    test("change,silent",18,function() {
+
         node1.on("change:parent",function(){
             ok(true,"node1 change:parent fired...");
         });
@@ -601,10 +691,47 @@ $(document).ready(function() {
             ok(true,"node3 change:parent fired...");
         });
 
+        node1.on("change:children",function(){
+            ok(true,"node1 change:children fired...");
+        });
+        node2.on("change:children",function(){
+            ok(true,"node2 change:children fired...");
+        });
+        node3.on("change:children",function(){
+            ok(true,"node3 change:children fired...");
+        });
+
+        node1.on("change:parent.parent",function(){
+            ok(true,"node1 change:parent.parent fired...");
+        });
+        node1.on("change:parent.children",function(){
+            ok(true,"node1 change:parent.children fired...");
+        });
+        node1.on("change:parent.parent.parent",function(){
+            ok(true,"node1 change:parent.parent.parent fired...");
+        });
+        node1.on("change:parent.parent.children",function(){
+            ok(true,"node1 change:parent.parent.children fired...");
+        });
+
+
+        node2.on("change:parent.parent",function(){
+            ok(true,"node2 change:parent.parent fired...");
+        });
+        node2.on("change:parent.children",function(){
+            ok(true,"node2 change:parent.children fired...");
+        });
+        node2.on("change:parent.parent.parent",function(){
+            ok(true,"node2 change:parent.parent.parent fired...");
+        });
+        node2.on("change:parent.parent.children",function(){
+            ok(true,"node2 change:parent.parent.children fired...");
+        });
+
         node1.set({parent:node2,children:[node3]},{silent : true});
         node2.set({parent:node3,children:[node1]},{silent : true});
         node3.set({parent:node1,children:[node2]},{silent : true});
-        node1.change();
+        node1.change();//2
         node2.change();
         node3.change();
     });

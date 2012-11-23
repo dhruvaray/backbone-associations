@@ -64,8 +64,6 @@
                         //Get class if relation is stored as a string
                         relatedModel && _.isString(relatedModel) && (relatedModel = eval(relatedModel));
                         collectiontype && _.isString(collectiontype) && (collectiontype = eval(collectiontype));
-                        //Track reference change of associated model for `change:attribute` event
-                        var refChanged = false;
                         //Merge in options specific to this relation
                         var relationOptions = relation.options?_.extend({},relation.options,options):options;
                         //If `relation` defines model as associated collection...
@@ -107,15 +105,16 @@
                                     this.attributes[relationKey].set(val);
                                 }
                             }
-
-
                         }
                         //Add proxy events to respective parents
                         this.attributes[relationKey].off("all");
                         this.attributes[relationKey].on("all",function(){
-                            //Change the event name to `relationKey` to
-                            if (arguments[0].indexOf("change:")!=-1){
-                                arguments[0] = "change:" + relationKey;
+                            //Change the event name to a fully qualified path
+                            if (_.contains(["change","add","remove","reset","destroy","sync","error"],arguments[0]))
+                                arguments[0] = arguments[0].replace(arguments[0],arguments[0]+":"+relationKey);
+                            else{
+                                var op = arguments[0].split(":");
+                                arguments[0] = op[0]+":"+relationKey+"."+op[1];
                             }
                             return this.trigger.apply(this,arguments);
                         },this);
@@ -172,6 +171,45 @@
             }
             return this;
         },
+        /*hasChanged : function(attr){
+
+            if (!arguments.length) {
+                var hasLLeafAMChanged = Backbone.Model.prototype.hasChanged.call(this);
+                //Go down the hierarchy to see if anything has changed
+                if (!hasLeafAMChanged){
+                    if(this.relations){
+                        for(var relation in this.relations){
+                            if (attributes[relation.key] != undefined ){
+                                if(attributes[relationKey].hasChanged())
+                                    return true;
+                            }
+                        };
+                    }
+                    return false;
+                }else{
+                    return hasLeafAMChanged;
+                }
+            }else{
+                return this[attr] && (this[attr] instanceof Backbone.AssociatedModel) ? this[attr].hasChanged() : Backbone.Model.prototype.hasChanged.call(this[attr]);
+            }
+
+        },
+        changedAttributes:function(){
+            var changed;
+            changed = Backbone.Model.prototype.changedAttributes.call(this);
+            if(this.relations){
+                for(var relation in this.relations){
+                    if (attributes[relation.key] != undefined ){
+                        if(attributes[relationKey].hasChanged())
+                            changed.push(attributes[relationKey]);
+                    }
+                };
+            }
+            return changed;
+        },
+        previous:function(attr){
+
+        },*/
         //The JSON representation of the model.
         toJSON : function(){
             var json;
