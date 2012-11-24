@@ -106,18 +106,21 @@
                                 }
                             }
                         }
-                        //Add proxy events to respective parents
-                        this.attributes[relationKey].off("all");
-                        this.attributes[relationKey].on("all",function(){
-                            //Change the event name to a fully qualified path
-                            if (_.contains(["change","add","remove","reset","destroy","sync","error"],arguments[0]))
-                                arguments[0] = arguments[0].replace(arguments[0],arguments[0]+":"+relationKey);
-                            else{
-                                var op = arguments[0].split(":");
-                                arguments[0] = op[0]+":"+relationKey+"."+op[1];
-                            }
-                            return this.trigger.apply(this,arguments);
-                        },this);
+
+                        //Add proxy events to respective parents. Only add callback if not defined
+                        if (!this.attributes[relationKey]._proxyCallback){
+                            this.attributes[relationKey]._proxyCallback = function(){
+                                //Change the event name to a fully qualified path
+                                if (_.contains(["change","add","remove","reset","destroy","sync","error"],arguments[0]))
+                                    arguments[0] = arguments[0].replace(arguments[0],arguments[0]+":"+relationKey);
+                                else{
+                                    var op = arguments[0].split(":");
+                                    arguments[0] = op[0]+":"+relationKey+"."+op[1];
+                                }
+                                return this.trigger.apply(this,arguments);
+                            };
+                            this.attributes[relationKey].on("all",this.attributes[relationKey]._proxyCallback,this);
+                        }
 
                         //Create a local `processedRelations` array to store the relation key which has been processed.
                         //We cannot use `this.relations` because if there is no value defined for `relationKey`, it will not get processed by either Backbone `set` or the `AssociatedModel` set
