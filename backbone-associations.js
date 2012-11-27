@@ -14,15 +14,11 @@
 (function () {
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
-    var _, Backbone, BackboneModel;
-    if (typeof window === 'undefined') {
+    var root = this, _ = root._, Backbone = root.Backbone, BackboneModel;
+    if (!_ && typeof exports !== 'undefined') {
         _ = require('underscore');
         Backbone = require('backbone');
         exports = module.exports = Backbone;
-    } else {
-        _ = window._;
-        Backbone = window.Backbone;
-        exports = window;
     }
     BackboneModel = Backbone.Model.prototype;
 
