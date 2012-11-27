@@ -14,13 +14,14 @@
 (function () {
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
-    var root = this, _ = root._, Backbone = root.Backbone, BackboneModel;
+    var root = this, _ = root._, Backbone = root.Backbone, BackboneModel, defaultEvents;
     if (!_ && typeof exports !== 'undefined') {
         _ = require('underscore');
         Backbone = require('backbone');
         exports = module.exports = Backbone;
     }
     BackboneModel = Backbone.Model.prototype;
+    defaultEvents = ["change", "add", "remove", "reset", "destroy", "sync", "error"];
 
     // Backbone.AssociatedModel
     // --------------
@@ -101,13 +102,17 @@
                         //Add proxy events to respective parents. Only add callback if not defined
                         if (!this.attributes[relationKey]._proxyCallback) {
                             this.attributes[relationKey]._proxyCallback = function () {
-                                var args = arguments, events = args[0], opt;
+                                var args = arguments,
+                                    events = args[0],
+                                    opt = events.split(":"),
+                                    eventType = opt[0],
+                                    eventPath;
                                 //Change the event name to a fully qualified path
-                                if (_.contains(["change", "add", "remove", "reset", "destroy", "sync", "error"], events)) {
-                                    args[0] = events.replace(events, events + ":" + relationKey);
-                                } else {
-                                    opt = events.split(":");
-                                    args[0] = opt[0] + ":" + relationKey + "." + opt[1];
+                                if (_.contains(defaultEvents, eventType)) {
+                                    if (opt && _.size(opt) > 1) {
+                                        eventPath = opt[1];
+                                    }
+                                    args[0] = eventType + ":" + relationKey + (eventPath ? "." + eventPath : "");
                                 }
                                 return this.trigger.apply(this, args);
                             };
