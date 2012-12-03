@@ -352,6 +352,40 @@ $(document).ready(function() {
 
     });
 
+    test("child `raise nested events: Issue #15`", 6, function() {
+
+        emp.on('change',function(){
+            ok(true,"Fired emp change...");
+        });
+        emp.on('change:works_for',function(){
+            ok(true,"Fired emp change:works_for...");
+        });
+        emp.on('change:works_for.name',function(){
+            ok(true,"Fired emp change:works_for.name...");
+        });
+        emp.on('change:works_for.number',function(){
+            ok(true,"Fired emp change:works_for.number...");
+        });
+        emp.on('nestedevent',function(){
+            ok(true,"Fired emp nestedevent...");
+        });
+
+
+        emp.get('works_for').on('change',function(){
+            emp.get('works_for').trigger("nestedevent",arguments);
+            ok(true,"Fired works_for change...");
+        });
+        emp.get('works_for').on('change:name',function(){
+            ok(true,"Fired works_for dept:name change...");
+        });
+        emp.get('works_for').on('nestedevent',function(){
+            ok(true,"Fired works_for nestedevent...");
+        });
+
+        emp.get('works_for').set({name:"Marketing"});//6
+
+    });
+
     test("child `add`", 19, function() {
 
         /*emp.on('all',function(event){
@@ -622,7 +656,7 @@ $(document).ready(function() {
         });
     });
 
-    test("`visited` flag results in wrong toJSON output in event callback : issue #3",5,function(){
+    test("`visited` flag results in wrong toJSON output in event callback : issue #3",3,function(){
         var dependents = emp.get("dependents");
         dependents.reset();
         var json = {"fname":"Jane","lname":"Smith","sex":"F","age":0,"relationship":"C"};
@@ -632,8 +666,6 @@ $(document).ready(function() {
         dependents.on("add",function(model){
             ok(_.isEqual(json,model.toJSON()));
             ok(_.isEqual(json,model.clone().toJSON()));
-            equal(model.visited,void 0,"`model.visited` flag should be `undefined`");
-            equal(model.visitedTrigger,true,"`model.visited` flag should be `true`");
         });
         emp.set({"fname":"Tom"})
         dependents.add(child1);
@@ -647,8 +679,9 @@ $(document).ready(function() {
         }
     });
 
-    test("set,trigger",12,function() {
+    test("set,trigger",15,function() {
         node1.on("change:parent",function(){
+            node1.trigger("nestedevent",arguments);
             ok(true,"node1 change:parent fired...");
         });
         node2.on("change:parent",function(){
@@ -668,6 +701,17 @@ $(document).ready(function() {
             ok(true,"node3 change:children fired...");
         });
 
+        node1.on("nestedevent",function(){
+            ok(true,"node1 nested fired...");
+        });
+        node2.on("nestedevent",function(){
+            ok(true,"node2 nested fired...");
+        });
+        node3.on("nestedevent",function(){
+            ok(true,"node3 nested fired...");
+        });
+
+
         /*
         For all the events which could possibly fire
         node2.on('all',function(event){
@@ -681,8 +725,8 @@ $(document).ready(function() {
         });*/
 
 
-        node1.set({parent:node2,children:[node3]});//2
-        node2.set({parent:node3,children:[node1]});//4
+        node1.set({parent:node2,children:[node3]});//2+1
+        node2.set({parent:node3,children:[node1]});//4+2
         node3.set({parent:node1,children:[node2]});//6
     });
 

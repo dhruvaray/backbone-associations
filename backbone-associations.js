@@ -114,6 +114,13 @@
                                     }
                                     args[0] = eventType + ":" + relationKey + (eventPath ? "." + eventPath : "");
                                 }
+                                if(this.attributes[relationKey]  instanceof  Backbone.AssociatedModel){
+                                    var pe = args[0].indexOf(":") !== -1 ? args[0].split(":")[1] : args[0];
+                                    if (!this.attributes[relationKey]._proxyCalls)
+                                        this.attributes[relationKey]._proxyCalls = [];
+                                    if (!_.find(this.attributes[relationKey]._proxyCalls,function(val){return val === pe;}))
+                                        this.attributes[relationKey]._proxyCalls.push(pe);
+                                }
                                 return this.trigger.apply(this, args);
                             };
                             this.attributes[relationKey].on("all", this.attributes[relationKey]._proxyCallback, this);
@@ -158,14 +165,21 @@
         },
         // `trigger` the event for `Associated Model`
         trigger : function () {
-            //Check & Add `visited` tag to prevent event of cycle
-            if (!this.visitedTrigger) {
-                // mark as `visited`
-                this.visitedTrigger = true;
-                BackboneModel.trigger.apply(this, arguments);
-                //delete `visited` tag to allow trigger for next `set` operation
-                delete this.visitedTrigger;
+            //Check if proxy calls originated this event
+            if (this._proxyCalls && this._proxyCalls.length > 0){
+                var len = this._proxyCalls.length;
+                var event = arguments[0];
+                this._proxyCalls = _.filter(this._proxyCalls, function(proxyCall){
+                    //arguments[0] ends with proxyCall
+                    var d = event.length - proxyCall.length;
+                    return event.indexOf(proxyCall,d) === -1;
+                });
+                //Was source of event. So no need to re-proxy this call. Prevents cycles
+                if (len !== this._proxyCalls.length)
+                     return this;
+
             }
+            BackboneModel.trigger.apply(this, arguments);
             return this;
         },
         /*hasChanged : function(attr){
