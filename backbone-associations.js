@@ -33,6 +33,7 @@
     Backbone.AssociatedModel = Backbone.Model.extend({
         //Define relations with Associated Model
         relations: undefined,
+        _proxyCalls: undefined,
         //Set a hash of model attributes on the object,
         //firing `"change"` unless you choose to silence it.
         //It maintains relations between models during the set operation. It also bubbles up child events to the parent.
@@ -103,26 +104,51 @@
                         if (!this.attributes[relationKey]._proxyCallback) {
                             this.attributes[relationKey]._proxyCallback = function () {
                                 var args = arguments,
-                                    events = args[0],
-                                    opt = events.split(":"),
+                                    opt = args[0].split(":"),
                                     eventType = opt[0],
-                                    eventPath;
+                                    _proxyCalls = this.attributes[relationKey]._proxyCalls,
+                                    eventPath,
+                                    eventAvailable;
+
                                 //Change the event name to a fully qualified path
                                 if (_.contains(defaultEvents, eventType)) {
                                     if (opt && _.size(opt) > 1) {
                                         eventPath = opt[1];
                                     }
-                                    args[0] = eventType + ":" + relationKey + (eventPath ? "." + eventPath : "");
+
+                                    eventPath = relationKey + (eventPath ? "." + eventPath : "");
+                                    args[0] = eventType + ":" + eventPath;
+
+                                    if (this.attributes[relationKey] instanceof Backbone.AssociatedModel) {
+                                        if (_proxyCalls) {
+                                            //If event has been already triggered as result of same source `eventPath`,
+                                            //no need to re-trigger event to prevent cycle
+                                            eventAvailable = _.find (_proxyCalls, function (value, eventKey) {
+                                                //`event` ends with eventKey
+                                                var d = eventPath.length - eventKey.length;
+                                                return eventPath.indexOf (eventKey, d) !== -1;
+                                            });
+                                            if (eventAvailable) {
+                                                 return this;
+                                            }
+                                        } else {
+                                            _proxyCalls = this.attributes[relationKey]._proxyCalls = {};
+                                        }
+                                        // Add `eventPath` in `_proxyCalls` hash to track of.
+                                        _proxyCalls[eventPath] = true;
+                                    }
                                 }
-                                if(this.attributes[relationKey]  instanceof  Backbone.AssociatedModel){
-                                    var pe = args[0].indexOf(":") !== -1 ? args[0].split(":")[1] : args[0];
-                                    if (!this.attributes[relationKey]._proxyCalls)
-                                        this.attributes[relationKey]._proxyCalls = [];
-                                    if (!_.find(this.attributes[relationKey]._proxyCalls,function(val){return val === pe;}))
-                                        this.attributes[relationKey]._proxyCalls.push(pe);
+
+                                // bubble up event to parent `model`
+                                this.trigger.apply(this, args);
+
+                                // remove `eventPath` from `_proxyCalls`, if `eventPath` and `_proxCalls` are available.
+                                if (eventPath && _proxyCalls) {
+                                    delete _proxyCalls[eventPath];
                                 }
-                                return this.trigger.apply(this, args);
+                                return this;
                             };
+
                             this.attributes[relationKey].on("all", this.attributes[relationKey]._proxyCallback, this);
                         }
 
@@ -163,64 +189,6 @@
             }
             return collection;
         },
-        // `trigger` the event for `Associated Model`
-        trigger : function () {
-            //Check if proxy calls originated this event
-            if (this._proxyCalls && this._proxyCalls.length > 0){
-                var len = this._proxyCalls.length;
-                var event = arguments[0];
-                this._proxyCalls = _.filter(this._proxyCalls, function(proxyCall){
-                    //arguments[0] ends with proxyCall
-                    var d = event.length - proxyCall.length;
-                    return event.indexOf(proxyCall,d) === -1;
-                });
-                //Was source of event. So no need to re-proxy this call. Prevents cycles
-                if (len !== this._proxyCalls.length)
-                     return this;
-
-            }
-            BackboneModel.trigger.apply(this, arguments);
-            return this;
-        },
-        /*hasChanged : function(attr){
-
-            if (!arguments.length) {
-                var hasLLeafAMChanged = BackboneModel.hasChanged.call(this);
-                //Go down the hierarchy to see if anything has changed
-                if (!hasLeafAMChanged){
-                    if(this.relations){
-                        for(var relation in this.relations){
-                            if (attributes[relation.key] != undefined ){
-                                if(attributes[relationKey].hasChanged())
-                                    return true;
-                            }
-                        };
-                    }
-                    return false;
-                }else{
-                    return hasLeafAMChanged;
-                }
-            }else{
-                return this[attr] && (this[attr] instanceof Backbone.AssociatedModel) ? this[attr].hasChanged() : BackboneModel.hasChanged.call(this[attr]);
-            }
-
-        },
-        changedAttributes:function(){
-            var changed;
-            changed = BackboneModel.changedAttributes.call(this);
-            if(this.relations){
-                for(var relation in this.relations){
-                    if (attributes[relation.key] != undefined ){
-                        if(attributes[relationKey].hasChanged())
-                            changed.push(attributes[relationKey]);
-                    }
-                };
-            }
-            return changed;
-        },
-        previous:function(attr){
-
-        },*/
         //The JSON representation of the model.
         toJSON : function () {
             var json, aJson;
