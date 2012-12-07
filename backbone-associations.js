@@ -190,7 +190,7 @@
             return collection;
         },
         //The JSON representation of the model.
-        toJSON : function () {
+        toJSON : function (options) {
             var json, aJson;
             if (!this.visited) {
                 this.visited = true;
@@ -201,7 +201,7 @@
                     _.each(this.relations, function (relation) {
                         var attr = this.attributes[relation.key];
                         if (attr) {
-                            aJson = attr.toJSON();
+                            aJson = attr.toJSON(options);
                             json[relation.key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
                         }
                     }, this);
