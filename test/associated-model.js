@@ -671,6 +671,59 @@ $(document).ready(function() {
         dependents.add(child1);
     });
 
+    test("Saving child of Model in Collection result in improper overwrite on return : issue#17", function() {    
+        var Child = Backbone.AssociatedModel.extend({
+            defaults: {
+                favoriteToy: "",
+                color: ""
+            },
+            //proxy for save success
+            sync: function(method, model, options) {
+                options.success.call();
+            }
+        });
+
+        var Parent = Backbone.AssociatedModel.extend({
+            relations : [
+                {
+                    type : Backbone.One,
+                    key : "child",
+                    relatedModel : Child
+                }
+            ],
+            defaults: {
+                career : "",
+                address: "",
+                child : null
+            }
+        });
+
+        var Collection = Backbone.Collection.extend({
+            model : Parent
+        });
+
+        var collection = new Collection(
+        [
+            {
+                id: 1,
+                career : "Writer",
+                address: "Baker Street",
+                child : {
+                    id: 1,
+                    favoriteToy: "Plane",
+                    color: "white"
+                }
+            }
+        ]);
+        var parent = collection.get(1);
+        parent.get("child").save({"color":"blue"}, {
+            success : function(){
+                ok("collection : ",JSON.stringify(collection, null, 4));
+                ok("collection.get(1) : ",JSON.stringify(collection.get(1), null, 4));
+            }
+        });
+    });
+
     module("Cyclic Graph",{
         setup: function() {
             node1 = new Node({name:'n1'});
