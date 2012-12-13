@@ -1,5 +1,5 @@
 //
-// Backbone-associations.js 0.1.0
+// Backbone-associations.js 0.2.1
 //
 // (c) 2012 Dhruva Ray, Jaynti Kanani
 //
