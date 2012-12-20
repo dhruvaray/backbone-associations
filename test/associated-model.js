@@ -310,7 +310,7 @@ $(document).ready(function() {
         equal(emp.get('works_for').get('name'), 'Marketing');
     });
 
-    test("child `change`", 12, function() {
+    test("child `change`", 18, function() {
 
         /*emp.on('all',function(event){
             ok(true,"Fired emp " + event);
@@ -327,6 +327,13 @@ $(document).ready(function() {
             ok(true,"Fired emp change:works_for...");
         });
         emp.on('change:works_for.name',function(){
+            equal(true,emp.get("works_for").hasChanged());
+            equal(true,emp.hasChanged());
+            equal(true,emp.hasChanged("works_for"));
+            var changed = emp.changedAttributes();
+            equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
+            equal(emp.get("works_for").previousAttributes()["name"],"R&D");
+            equal(emp.get("works_for").previous("name"),"R&D");
             ok(true,"Fired emp change:works_for.name...");
         });
         emp.on('change:works_for.number',function(){
@@ -344,11 +351,70 @@ $(document).ready(function() {
             ok(true,"Fired works_for dept:number change...");
         });
 
-        emp.get('works_for').set({name:"Marketing"});//4
+        emp.get('works_for').get('locations').at(0).on('change:zip',function(){
+            ok(true,"Fired works_for locations0:zip change...");
+        });
+
+        emp.get('works_for').get('locations').at(0).on('change',function(){
+            ok(true,"Fired works_for locations0 change...");
+        });
+
+
+        emp.get('works_for').set({name:"Marketing"});//4+6
         emp.set('works_for',{name:"Marketing",number:29});//4
         emp.set('works_for',undefined);//2
         emp.set('works_for',dept1);//2
         emp.set('works_for',dept1);//0
+
+
+    });
+
+    test("child `change in collection`", 10, function() {
+
+
+        emp.get('works_for').get('locations').at(0).on('change:zip',function(){
+            ok(true,"Fired works_for locations0:zip change...");
+        });
+
+        emp.get('works_for').get('locations').at(0).on('change',function(){
+            ok(true,"Fired works_for locations0 change...");
+        });
+
+        emp.get('works_for').on('change:locations[0].zip',function(){
+            ok(true,"Fired emp.works_for change:locations[0].zip...");
+        });
+
+        emp.get('works_for').on('change:locations[0]',function(){
+            ok(true,"Fired emp.works_for change:locations[0]...");
+        });
+
+        emp.on('change:works_for.locations[0].zip',function(){
+            ok(true,"Fired emp change:works_for.locations[0].zip...");
+        });
+
+        emp.on('change:works_for.locations[0]',function(){
+            ok(true,"Fired emp change:works_for.locations[0]...");
+        });
+
+
+        emp.on('change:works_for.controls.locations[0].zip',function(){
+            ok(true,"Fired emp change:works_for.controls.locations[0].zip...");
+        });
+
+        emp.on('change:works_for.controls.locations[0]',function(){
+            ok(true,"Fired emp change:works_for.controls.locations[0]...");
+        });
+
+        emp.get('works_for').on('change:controls.locations[0].zip',function(){
+            ok(true,"Fired emp.works_for change:controls.locations[0].zip...");
+        });
+
+        emp.get('works_for').on('change:controls.locations[0]',function(){
+            ok(true,"Fired emp.works_for change:controls.locations[0]...");
+        });
+
+
+        emp.get('works_for').get("locations").at(0).set('zip',94403);//10
 
     });
 
@@ -411,11 +477,11 @@ $(document).ready(function() {
         emp.on('reset:dependents',function(){
             ok(true,"Fired emp reset:dependents...");
         });
-        emp.on('change:dependents.age',function(){
-            ok(true,"Fired emp change:dependents.age...");
+        emp.on('change:dependents[0].age',function(){
+            ok(true,"Fired emp change:dependents[0].age...");
         });
-        emp.on('change:dependents',function(){
-            ok(true,"Fired emp change:dependents...");
+        emp.on('change:dependents[0]',function(){
+            ok(true,"Fired emp change:dependents[0]...");
         });
 
 
@@ -764,10 +830,20 @@ $(document).ready(function() {
             ok(true,"node3 nested fired...");
         });
 
+        node1.on("change:children[0]",function(){
+            ok(true,"node1 change:children[0] fired...");
+        });
+        node2.on("change:children[0]",function(){
+            ok(true,"node2 change:children[0] fired...");
+        });
+        node3.on("change:children[0]",function(){
+            ok(true,"node3 change:children[0] fired...");
+        });
 
-        /*
-        For all the events which could possibly fire
-        node2.on('all',function(event){
+
+
+        //For all the events which could possibly fire
+        /*node2.on('all',function(event){
             ok(true,"node2 " + event);
         });
         node1.on('all',function(event){
@@ -804,6 +880,17 @@ $(document).ready(function() {
         node3.on("change:children",function(){
             ok(true,"node3 change:children fired...");
         });
+
+        node1.on("change:children[0]",function(){
+            ok(true,"node1 change:children[0] fired...");
+        });
+        node2.on("change:children[0]",function(){
+            ok(true,"node2 change:children[0] fired...");
+        });
+        node3.on("change:children[0]",function(){
+            ok(true,"node3 change:children[0] fired...");
+        });
+
 
         node1.set({parent:node2,children:[node3]},{silent : true});
         node2.set({parent:node3,children:[node1]},{silent : true});

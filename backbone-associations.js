@@ -106,6 +106,8 @@
                                 var args = arguments,
                                     opt = args[0].split(":"),
                                     eventType = opt[0],
+                                    eventObject = args[1],
+                                    indexEventObject = -1,
                                     _proxyCalls = this.attributes[relationKey]._proxyCalls,
                                     eventPath,
                                     eventAvailable;
@@ -115,8 +117,12 @@
                                     if (opt && _.size(opt) > 1) {
                                         eventPath = opt[1];
                                     }
+                                    //find the specific object in the collection which has changed
+                                    if (this.attributes[relationKey] instanceof Backbone.Collection && "change" === eventType) {
+                                        indexEventObject = _.indexOf(this.attributes[relationKey].models,eventObject);
+                                    }
 
-                                    eventPath = relationKey + (eventPath ? "." + eventPath : "");
+                                    eventPath = relationKey + (indexEventObject !== -1 ? "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
                                     args[0] = eventType + ":" + eventPath;
 
                                     if (this.attributes[relationKey] instanceof Backbone.AssociatedModel) {
@@ -137,6 +143,8 @@
                                         // Add `eventPath` in `_proxyCalls` hash to track of.
                                         _proxyCalls[eventPath] = true;
                                     }
+
+
                                 }
 
                                 // bubble up event to parent `model`
@@ -188,6 +196,93 @@
                 throw new Error('type must inherit from Backbone.AssociatedModel');
             }
             return collection;
+        },
+        //Has the model changed. Traverse the object hierarchy to compute dirtyness
+        hasChanged : function(attr){
+            var isDirty;
+            //To prevent cycles, check if this node is visited
+            if(!this.visitedHC){
+                this.visitedHC = true;
+                if (!arguments.length) {
+                    isDirty = Backbone.Model.prototype.hasChanged.call(this);
+                    //Go down the hierarchy to see if anything has changed
+                    if (!isDirty){
+                        if(this.relations){
+                            for(var i=0; i<this.relations.length; ++i){
+                                var relation = this.relations[i];
+                                if (this.attributes[relation.key] != undefined ){
+                                    if(this.attributes[relation.key] instanceof Backbone.AssociatedModel){
+                                        if (this.attributes[relation.key].hasChanged())
+                                            isDirty = true;
+                                        break;
+                                    }
+                                    if(this.attributes[relation.key] instanceof Backbone.Collection){
+                                        var dirtyObjects = _.each(this.attributes[relation.key].models,function(m){
+                                            return (m.hasChanged() === true)
+                                        });
+                                        if (dirtyObjects && dirtyObjects.length > 0){
+                                            isDirty = true;
+                                            break;
+                                        }
+                                    }
+
+                                }
+                            };
+                        }
+                    }
+                }else{
+                    isDirty = (this.attributes[attr] !== undefined) && (this.attributes[attr] instanceof Backbone.AssociatedModel) ?
+                        this.attributes[attr].hasChanged() : Backbone.Model.prototype.hasChanged.call(this,attr);
+                }
+                delete this.visitedHC;
+            }
+            return isDirty;
+
+        },
+        //Returns a hash of the changed attributes
+        changedAttributes:function(){
+            var delta=false;
+            //To prevent cycles, check if this node is visited
+            if(!this.visitedCA){
+                this.visitedCA = true;
+                var delta = Backbone.Model.prototype.changedAttributes.call(this);
+                if(this.relations){
+                    for(var i=0; i<this.relations.length; ++i){
+                        var relation = this.relations[i];
+                        if (this.attributes[relation.key] !== undefined ){
+                            if(this.attributes[relation.key] instanceof Backbone.AssociatedModel){
+                                if (this.attributes[relation.key].hasChanged())
+                                    delta[relation.key] = this.attributes[relation.key].toJSON();
+                            }
+                        }
+                    };
+                }
+                delete this.visitedCA;
+            }
+            return delta;
+        },
+        //Returns the previous attributes of the graph
+        previousAttributes:function(){
+            var pa;
+            //To prevent cycles, check if this node is visited
+            if(!this.visitedPA){
+                this.visitedPA = true;
+                pa = BackboneModel.previousAttributes.apply(this, arguments);
+                if (this.relations) {
+                    _.each(this.relations, function (relation) {
+                        if (this.attributes[relation.key] instanceof Backbone.AssociatedModel)
+                            pa[relation.key] = this.attributes[relation.key].previousAttributes();
+                        if (this.attributes[relation.key] instanceof Backbone.Collection)
+                            pa[relation.key] = _.map(this.attributes[relation.key].models,function(m){return m.previousAttributes()});
+                    }, this);
+                }
+                delete this.visitedPA;
+            }
+            return pa;
+        },
+        //Return the previous value of the passed in attribute
+        previous: function(attribute){
+            return this.previousAttributes()[attribute];
         },
         //The JSON representation of the model.
         toJSON : function (options) {
