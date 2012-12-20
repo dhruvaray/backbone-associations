@@ -369,7 +369,7 @@ $(document).ready(function() {
 
     });
 
-    test("child `change in collection`", 10, function() {
+    test("child `change in collection`", 12, function() {
 
 
         emp.get('works_for').get('locations').at(0).on('change:zip',function(){
@@ -377,6 +377,9 @@ $(document).ready(function() {
         });
 
         emp.get('works_for').get('locations').at(0).on('change',function(){
+            equal(true,emp.get('works_for').hasChanged());
+            equal(true,emp.hasChanged());
+
             ok(true,"Fired works_for locations0 change...");
         });
 

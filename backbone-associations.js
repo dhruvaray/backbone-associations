@@ -217,7 +217,7 @@
                                         break;
                                     }
                                     if(this.attributes[relation.key] instanceof Backbone.Collection){
-                                        var dirtyObjects = _.each(this.attributes[relation.key].models,function(m){
+                                        var dirtyObjects = _.filter(this.attributes[relation.key].models,function(m){
                                             return (m.hasChanged() === true)
                                         });
                                         if (dirtyObjects && dirtyObjects.length > 0){
