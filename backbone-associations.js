@@ -73,11 +73,11 @@
                             }
 
                             if (val instanceof Backbone.Collection) {
-                                BackboneModel.set.call(this, relationKey, val);
+                                BackboneModel.set.call(this, relationKey, val, relationOptions);
                             } else if (!this.attributes[relationKey]) {
                                 data = collectionType ? new collectionType() : this._createCollection(relatedModel);
                                 data.add(val, relationOptions);
-                                BackboneModel.set.call(this, relationKey, data);
+                                BackboneModel.set.call(this, relationKey, data, relationOptions);
                             } else {
                                 this.attributes[relationKey].reset(val, relationOptions);
                             }
@@ -85,10 +85,10 @@
                             //If `relation` defines model as associated model...
                         } else if (relation.type === Backbone.One && relatedModel) {
                             if (val instanceof Backbone.AssociatedModel) {
-                                BackboneModel.set.call(this, relationKey, val);
+                                BackboneModel.set.call(this, relationKey, val, relationOptions);
                             } else if (!this.attributes[relationKey]) {
                                 data = new relatedModel(val);
-                                BackboneModel.set.call(this, relationKey, data);
+                                BackboneModel.set.call(this, relationKey, data, relationOptions);
                             } else {
                                 data = {};
                                 defaults = getValue(this.attributes[relationKey], 'defaults');
@@ -96,7 +96,7 @@
                                     !_.has(val, key) && (data[key] = (defaults ? defaults[key] : void 0));
                                 });
                                 this.attributes[relationKey].set(data, {silent:true});
-                                this.attributes[relationKey].set(val);
+                                this.attributes[relationKey].set(val, relationOptions);
                             }
                         }
 
@@ -204,7 +204,7 @@
             if (!this.visitedHC) {
                 this.visitedHC = true;
                 if (!arguments.length) {
-                    isDirty = Backbone.Model.prototype.hasChanged.call(this);
+                    isDirty = BackboneModel.hasChanged.call(this);
                     //Go down the hierarchy to see if anything has changed
                     if (!isDirty) {
                         if (this.relations) {
@@ -231,7 +231,7 @@
                     }
                 } else {
                     isDirty = (this.attributes[attr] !== undefined) && (this.attributes[attr] instanceof Backbone.AssociatedModel) ?
-                        this.attributes[attr].hasChanged() : Backbone.Model.prototype.hasChanged.call(this, attr);
+                        this.attributes[attr].hasChanged() : BackboneModel.hasChanged.call(this, attr);
                 }
                 delete this.visitedHC;
             }
@@ -245,7 +245,7 @@
                 //To prevent cycles, check if this node is visited
                 if (!this.visitedCA) {
                     this.visitedCA = true;
-                    delta = Backbone.Model.prototype.changedAttributes.call(this);
+                    delta = BackboneModel.changedAttributes.call(this);
                     if (this.relations) {
                         for (var i = 0; i < this.relations.length; ++i) {
                             var relation = this.relations[i];
