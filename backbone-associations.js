@@ -239,36 +239,44 @@
 
         },
         //Returns a hash of the changed attributes
-        changedAttributes:function () {
-            var delta = false;
-            //To prevent cycles, check if this node is visited
-            if (!this.visitedCA) {
-                this.visitedCA = true;
-                delta = Backbone.Model.prototype.changedAttributes.call(this);
-                if (this.relations) {
-                    for (var i = 0; i < this.relations.length; ++i) {
-                        var relation = this.relations[i];
-                        if (this.attributes[relation.key] !== undefined) {
-                            if (this.attributes[relation.key] instanceof Backbone.AssociatedModel) {
-                                if (this.attributes[relation.key].hasChanged())
-                                    delta[relation.key] = this.attributes[relation.key].toJSON();
-                            }
-                            if (this.attributes[relation.key] instanceof Backbone.Collection) {
-                                var changedCollection = _.filter(_.map(this.attributes[relation.key].models, function (m) {
-                                    return m.changedAttributes();
-                                }), function (m) {
-                                    return m !== false;
-                                });
-                                if (changedCollection && changedCollection.length > 0) {
-                                    delta[relation.key] = changedCollection;
+        changedAttributes:function (diff) {
+            if (!diff) {
+                var delta = false;
+                //To prevent cycles, check if this node is visited
+                if (!this.visitedCA) {
+                    this.visitedCA = true;
+                    delta = Backbone.Model.prototype.changedAttributes.call(this);
+                    if (this.relations) {
+                        for (var i = 0; i < this.relations.length; ++i) {
+                            var relation = this.relations[i];
+                            if (this.attributes[relation.key] !== undefined) {
+                                if (this.attributes[relation.key] instanceof Backbone.AssociatedModel) {
+                                    if (this.attributes[relation.key].hasChanged())
+                                        delta[relation.key] = this.attributes[relation.key].toJSON();
+                                }
+                                if (this.attributes[relation.key] instanceof Backbone.Collection) {
+                                    var changedCollection = _.filter(_.map(this.attributes[relation.key].models, function (m) {
+                                        return m.changedAttributes();
+                                    }), function (m) {
+                                        return m !== false;
+                                    });
+                                    if (changedCollection && changedCollection.length > 0) {
+                                        delta[relation.key] = changedCollection;
+                                    }
                                 }
                             }
                         }
                     }
+                    delete this.visitedCA;
                 }
-                delete this.visitedCA;
+                return delta;
             }
-            return delta;
+            var val, changed = false, old = this.previousAttributes();
+            for (var attr in diff) {
+                if (_.isEqual(old[attr], (val = diff[attr]))) continue;
+                (changed || (changed = {}))[attr] = val;
+            }
+            return changed;
         },
         //Returns the previous attributes of the graph
         previousAttributes:function () {
@@ -292,8 +300,8 @@
             return pa;
         },
         //Return the previous value of the passed in attribute
-        previous:function (attribute) {
-            return this.previousAttributes()[attribute];
+        previous:function (attr) {
+            return this.previousAttributes()[attr];
         },
         //The JSON representation of the model.
         toJSON:function (options) {

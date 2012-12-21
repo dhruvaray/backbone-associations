@@ -310,7 +310,7 @@ $(document).ready(function () {
         equal(emp.get('works_for').get('name'), 'Marketing');
     });
 
-    test("child `change`", 18, function () {
+    test("child `change`", 19, function () {
 
         /*emp.on('all',function(event){
          ok(true,"Fired emp " + event);
@@ -334,6 +334,12 @@ $(document).ready(function () {
             equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
             equal(emp.get("works_for").previousAttributes()["name"], "R&D");
             equal(emp.get("works_for").previous("name"), "R&D");
+
+            var diff = emp.get('works_for').toJSON();
+            diff.locations[0].zip = 94405;
+            changed = emp.get('works_for').changedAttributes(diff);
+            equal(changed.locations[0].zip, 94405);
+
             ok(true, "Fired emp change:works_for.name...");
         });
         emp.on('change:works_for.number', function () {
@@ -360,7 +366,7 @@ $(document).ready(function () {
         });
 
 
-        emp.get('works_for').set({name:"Marketing"});//4+6
+        emp.get('works_for').set({name:"Marketing"});//4+7
         emp.set('works_for', {name:"Marketing", number:29});//4
         emp.set('works_for', undefined);//2
         emp.set('works_for', dept1);//2
