@@ -874,8 +874,7 @@ $(document).ready(function () {
         node3.set({parent:node1, children:[node2]});//6
     });
 
-    // TODO
-    test("change,silent", 0, function () {
+    test("change, silent", 12, function () {
 
         node1.on("change:parent", function () {
             ok(true, "node1 change:parent fired...");
@@ -911,9 +910,9 @@ $(document).ready(function () {
         node1.set({parent:node2, children:[node3]}, {silent:true});
         node2.set({parent:node3, children:[node1]}, {silent:true});
         node3.set({parent:node1, children:[node2]}, {silent:true});
-        //node1.change();
-        //node2.change();
-        //node3.change();
+        node1.change();
+        node2.change();
+        node3.change();
     });
 
     test("toJSON", 1, function () {

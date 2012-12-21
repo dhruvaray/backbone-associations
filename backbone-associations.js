@@ -125,26 +125,22 @@
                                     eventPath = relationKey + (indexEventObject !== -1 ? "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
                                     args[0] = eventType + ":" + eventPath;
 
-                                    if (this.attributes[relationKey] instanceof Backbone.AssociatedModel) {
-                                        if (_proxyCalls) {
-                                            //If event has been already triggered as result of same source `eventPath`,
-                                            //no need to re-trigger event to prevent cycle
-                                            eventAvailable = _.find(_proxyCalls, function (value, eventKey) {
-                                                //`event` ends with eventKey
-                                                var d = eventPath.length - eventKey.length;
-                                                return eventPath.indexOf(eventKey, d) !== -1;
-                                            });
-                                            if (eventAvailable) {
-                                                return this;
-                                            }
-                                        } else {
-                                            _proxyCalls = this.attributes[relationKey]._proxyCalls = {};
+                                    if (_proxyCalls) {
+                                        //If event has been already triggered as result of same source `eventPath`,
+                                        //no need to re-trigger event to prevent cycle
+                                        eventAvailable = _.find(_proxyCalls, function (value, eventKey) {
+                                            //`event` ends with eventKey
+                                            var d = eventPath.length - eventKey.length;
+                                            return eventPath.indexOf(eventKey, d) !== -1;
+                                        });
+                                        if (eventAvailable) {
+                                            return this;
                                         }
-                                        // Add `eventPath` in `_proxyCalls` hash to track of.
-                                        _proxyCalls[eventPath] = true;
+                                    } else {
+                                        _proxyCalls = this.attributes[relationKey]._proxyCalls = {};
                                     }
-
-
+                                    // Add `eventPath` in `_proxyCalls` hash to track of.
+                                    _proxyCalls[eventPath] = true;
                                 }
 
                                 // bubble up event to parent `model`
