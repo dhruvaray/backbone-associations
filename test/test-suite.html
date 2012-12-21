@@ -1,52 +1,43 @@
 <!doctype html>
 <html lang="en">
-<head>
-	<title>Backbone-associations test cases</title>
-	<link rel="stylesheet" href="./lib/qunit.css" type="text/css" media="screen" />
-	
-	<script type="text/javascript" src="utility.js"></script>
-	
-	<script type="text/javascript" src="./lib/jquery-1.7.1.js"></script>
-	<script type="text/javascript" src="./lib/underscore.js"></script>
-	<script type="text/javascript" src="./lib/backbone.js"></script>	
-	<script type="text/javascript" src="./lib/backbone-relational.js"></script>	
-	<script type="text/javascript" src="../backbone-associations.js"></script>	
-	<script type="text/javascript" src="./lib/qunit.js"></script>
-	<script type="text/javascript" src="./lib/jslitmus.js"></script>
-		
-	<script type="text/javascript" src="associated-model.js"></script>	
-	
-	<script src="speed.js"></script>
-	
-	 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-	 <script>				
-        if(typeof google !== 'undefined'){
-            google.load("visualization", "1", {packages:["corechart"]});
-            google.setOnLoadCallback(function(){			
-                Utility.loadJSLitmusProxy.call(Utility,JSLitmus);			
-            });					
-        }
-	 </script>
-</head>
-<body>
-	
-	<h1 id="qunit-header"><a href='/test/test-suite.html'>Backbone-associations Test Suite</a></h1>
-	<h2 id="qunit-banner"></h2>
-	<div id="qunit-testrunner-toolbar"></div>
-	<h2 id="qunit-userAgent"></h2>
-	<ol id="qunit-tests"></ol>
-	<div id="qunit-fixture">
-	</div>
-	
-	
-	<div>
-		<br/>
-		<br/>
-		<h1 id="qunit-header" style="width: inherit;">Backbone-associations Speed Suite</h1>
-		<div id="jslitmus_container" style="margin: 20px 10px;">
-		</div>		
-	</div>     
-    <div id="speed_chart_div1" style="width: 60%;"></div>   
-    <div id="speed_chart_div2" style="width: 60%;"></div>   
-</body>
+    <head>
+        <title>Backbone-associations test cases</title>
+
+        <link rel="stylesheet" href="./lib/qunit.css" type="text/css" media="screen" />
+
+        <script type="text/javascript" src="utility.js"></script>
+
+        <script type="text/javascript" src="./lib/jquery-1.7.1.js"></script>
+        <script type="text/javascript" src="./lib/underscore.js"></script>
+        <script type="text/javascript" src="./lib/backbone.js"></script>
+        <script type="text/javascript" src="../backbone-associations.js"></script>
+        <script type="text/javascript" src="./lib/qunit.js"></script>
+        <script type="text/javascript" src="./lib/jslitmus.js"></script>
+
+        <script type="text/javascript" src="associated-model.js"></script>
+
+        <script src="speed.js"></script>
+    </head>
+    <body>
+        <h1 id="qunit-header">
+            <a href='/test/test-suite.html'>
+                Backbone-associations Test Suite
+            </a>
+        </h1>
+        <h2 id="qunit-banner"></h2>
+        <div id="qunit-testrunner-toolbar"></div>
+        <h2 id="qunit-userAgent"></h2>
+        <ol id="qunit-tests"></ol>
+        <div id="qunit-fixture">
+        </div>
+        <div>
+            <br/>
+            <br/>
+            <h1 id="qunit-header" style="width: inherit;">
+                Backbone-associations Speed Suite
+            </h1>
+            <div id="jslitmus_container" style="margin: 20px 10px;">
+            </div>
+        </div>
+    </body>
 </html>
