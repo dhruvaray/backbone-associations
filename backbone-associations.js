@@ -59,7 +59,7 @@
                         val, relationOptions, data, defaults;
                     if (attributes[relationKey]) {
                         //Get value of attribute with relation key in `val`
-                        val = getValue(attributes, relationKey);
+                        val = _.result(attributes, relationKey);
                         //Get class if relation is stored as a string
                         relatedModel && _.isString(relatedModel) && (relatedModel = eval(relatedModel));
                         collectionType && _.isString(collectionType) && (collectionType = eval(collectionType));
@@ -91,7 +91,7 @@
                                 BackboneModel.set.call(this, relationKey, data, relationOptions);
                             } else {
                                 data = {};
-                                defaults = getValue(this.attributes[relationKey], 'defaults');
+                                defaults = _.result(this.attributes[relationKey], 'defaults');
                                 _.each(this.attributes[relationKey].attributes, function (value, key) {
                                     !_.has(val, key) && (data[key] = (defaults ? defaults[key] : void 0));
                                 });
@@ -352,10 +352,4 @@
             return cloneObj;
         }
     });
-    // Duplicate Backbone's behavior. To get a value from a Backbone object as a property
-    // or as a function.
-    var getValue = function (object, prop) {
-        if (!(object && object[prop])) return null;
-        return _.isFunction(object[prop]) ? object[prop]() : object[prop];
-    };
 })();
