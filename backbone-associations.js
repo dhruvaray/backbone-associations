@@ -194,7 +194,7 @@
         },
         //Has the model changed. Traverse the object hierarchy to compute dirtyness
         hasChanged: function (attr) {
-            var isDirty, relation, attrValue, i, dirtyObjects, length;
+            var isDirty, relation, attrValue, i, dirtyObjects;
             //To prevent cycles, check if this node is visited
             if (!this.visitedHC) {
                 this.visitedHC = true;
@@ -224,60 +224,53 @@
             return !!isDirty;
         },
         //Returns a hash of the changed attributes
-        changedAttributes:function (diff) {
-            if (!diff) {
-                var delta = false;
-                //To prevent cycles, check if this node is visited
-                if (!this.visitedCA) {
-                    this.visitedCA = true;
-                    delta = BackboneModel.changedAttributes.call(this);
-                    if (this.relations) {
-                        for (var i = 0; i < this.relations.length; ++i) {
-                            var relation = this.relations[i];
-                            if (this.attributes[relation.key] !== undefined) {
-                                if (this.attributes[relation.key] instanceof Backbone.AssociatedModel) {
-                                    if (this.attributes[relation.key].hasChanged())
-                                        delta[relation.key] = this.attributes[relation.key].toJSON();
+        changedAttributes: function (diff) {
+            var delta, relation, attrValue, changedCollection, i;
+            //To prevent cycles, check if this node is visited
+            if (!this.visitedCA) {
+                this.visitedCA = true;
+                delta = BackboneModel.changedAttributes.apply(this, arguments);
+                if (this.relations) {
+                    for (i = 0; i < this.relations.length; ++i) {
+                        relation = this.relations[i];
+                        attrValue = this.attributes[relation.key];
+                        if (attrValue) {
+                            if (attrValue instanceof Backbone.Collection) {
+                                changedCollection = _.filter(attrValue.map(function (m) {
+                                    return m.changedAttributes();
+                                }), function (m) {
+                                    return !!m;
+                                });
+                                if (_.size(changedCollection) > 0) {
+                                    delta[relation.key] = changedCollection;
                                 }
-                                if (this.attributes[relation.key] instanceof Backbone.Collection) {
-                                    var changedCollection = _.filter(_.map(this.attributes[relation.key].models, function (m) {
-                                        return m.changedAttributes();
-                                    }), function (m) {
-                                        return m !== false;
-                                    });
-                                    if (changedCollection && changedCollection.length > 0) {
-                                        delta[relation.key] = changedCollection;
-                                    }
-                                }
+                            } else if (attrValue instanceof Backbone.AssociatedModel && attrValue.hasChanged()) {
+                                delta[relation.key] = attrValue.toJSON();
                             }
                         }
                     }
-                    delete this.visitedCA;
                 }
-                return delta;
+                delete this.visitedCA;
             }
-            var val, changed = false, old = this.previousAttributes();
-            for (var attr in diff) {
-                if (_.isEqual(old[attr], (val = diff[attr]))) continue;
-                (changed || (changed = {}))[attr] = val;
-            }
-            return changed;
+            return !delta ? false : delta;
         },
         //Returns the previous attributes of the graph
         previousAttributes:function () {
-            var pa;
+            var pa, attrValue;
             //To prevent cycles, check if this node is visited
             if (!this.visitedPA) {
                 this.visitedPA = true;
                 pa = BackboneModel.previousAttributes.apply(this, arguments);
                 if (this.relations) {
                     _.each(this.relations, function (relation) {
-                        if (this.attributes[relation.key] instanceof Backbone.AssociatedModel)
-                            pa[relation.key] = this.attributes[relation.key].previousAttributes();
-                        if (this.attributes[relation.key] instanceof Backbone.Collection)
-                            pa[relation.key] = _.map(this.attributes[relation.key].models, function (m) {
-                                return m.previousAttributes()
+                        attrValue = this.attributes[relation.key];
+                        if (attrValue instanceof Backbone.AssociatedModel) {
+                            pa[relation.key] = attrValue.previousAttributes();
+                        } else if (attrValue instanceof Backbone.Collection){
+                            pa[relation.key] = attrValue.map(function (m) {
+                                return m.previousAttributes();
                             });
+                        }
                     }, this);
                 }
                 delete this.visitedPA;
