@@ -152,7 +152,6 @@
                                 }
                                 return this;
                             };
-
                             this.attributes[relationKey].on("all", this.attributes[relationKey]._proxyCallback, this);
                         }
 
@@ -194,45 +193,35 @@
             return collection;
         },
         //Has the model changed. Traverse the object hierarchy to compute dirtyness
-        hasChanged:function (attr) {
-            var isDirty;
+        hasChanged: function (attr) {
+            var isDirty, relation, attrValue, i, dirtyObjects, length;
             //To prevent cycles, check if this node is visited
             if (!this.visitedHC) {
                 this.visitedHC = true;
-                if (!arguments.length) {
-                    isDirty = BackboneModel.hasChanged.call(this);
-                    //Go down the hierarchy to see if anything has changed
-                    if (!isDirty) {
-                        if (this.relations) {
-                            for (var i = 0; i < this.relations.length; ++i) {
-                                var relation = this.relations[i];
-                                if (this.attributes[relation.key] != undefined) {
-                                    if (this.attributes[relation.key] instanceof Backbone.AssociatedModel) {
-                                        if (this.attributes[relation.key].hasChanged())
-                                            isDirty = true;
-                                        break;
-                                    }
-                                    if (this.attributes[relation.key] instanceof Backbone.Collection) {
-                                        var dirtyObjects = _.filter(this.attributes[relation.key].models, function (m) {
-                                            return (m.hasChanged() === true)
-                                        });
-                                        if (dirtyObjects && dirtyObjects.length > 0) {
-                                            isDirty = true;
-                                            break;
-                                        }
-                                    }
-                                }
+                isDirty = BackboneModel.hasChanged.apply(this, arguments);
+                if (!isDirty && this.relations) {
+                    //Go down the hierarchy to see if anything has `changed`
+                    for (i = 0; i < this.relations.length; ++i) {
+                        relation = this.relations[i];
+                        attrValue = this.attributes[relation.key];
+                        if (attrValue) {
+                            if (attrValue instanceof Backbone.Collection) {
+                                dirtyObjects = attrValue.filter(function (m) {
+                                    return m.hasChanged() === true;
+                                });
+                                _.size(dirtyObjects) > 0  && (isDirty = true);
+                            } else {
+                                isDirty = attrValue.hasChanged && attrValue.hasChanged();
+                            }
+                            if (isDirty) {
+                                break;
                             }
                         }
                     }
-                } else {
-                    isDirty = (this.attributes[attr] !== undefined) && (this.attributes[attr] instanceof Backbone.AssociatedModel) ?
-                        this.attributes[attr].hasChanged() : BackboneModel.hasChanged.call(this, attr);
                 }
                 delete this.visitedHC;
             }
-            return isDirty;
-
+            return !!isDirty;
         },
         //Returns a hash of the changed attributes
         changedAttributes:function (diff) {
