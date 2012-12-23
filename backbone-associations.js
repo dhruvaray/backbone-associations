@@ -193,7 +193,7 @@
             return collection;
         },
         //Has the model changed. Traverse the object hierarchy to compute dirtyness
-        hasChanged: function (attr) {
+        hasChanged:function (attr) {
             var isDirty, relation, attrValue, i, dirtyObjects;
             //To prevent cycles, check if this node is visited
             if (!this.visitedHC) {
@@ -209,7 +209,7 @@
                                 dirtyObjects = attrValue.filter(function (m) {
                                     return m.hasChanged() === true;
                                 });
-                                _.size(dirtyObjects) > 0  && (isDirty = true);
+                                _.size(dirtyObjects) > 0 && (isDirty = true);
                             } else {
                                 isDirty = attrValue.hasChanged && attrValue.hasChanged();
                             }
@@ -224,11 +224,11 @@
             return !!isDirty;
         },
         //Returns a hash of the changed attributes
-        changedAttributes: function (diff) {
+        changedAttributes:function (diff) {
             var delta, relation, attrValue, changedCollection, i;
             //To prevent cycles, check if this node is visited
-            if (!this.visitedCA) {
-                this.visitedCA = true;
+            if (!this.visited) {
+                this.visited = true;
                 delta = BackboneModel.changedAttributes.apply(this, arguments);
                 if (this.relations) {
                     for (i = 0; i < this.relations.length; ++i) {
@@ -250,37 +250,33 @@
                         }
                     }
                 }
-                delete this.visitedCA;
+                delete this.visited;
             }
             return !delta ? false : delta;
         },
         //Returns the hash of the previous attributes of the graph
         previousAttributes:function () {
-            var pa, attrValue;
+            var pa, attrValue, pattrValue, pattrJSON;
             //To prevent cycles, check if this node is visited
-            if (!this.visitedPA) {
-                this.visitedPA = true;
+            if (!this.visited) {
+                this.visited = true;
                 pa = BackboneModel.previousAttributes.apply(this, arguments);
                 if (this.relations) {
                     _.each(this.relations, function (relation) {
                         attrValue = this.attributes[relation.key];
-                        if (attrValue instanceof Backbone.AssociatedModel) {
-                            pa[relation.key] = attrValue.previousAttributes();
-                        } else if (attrValue instanceof Backbone.Collection){
-                            pa[relation.key] = attrValue.map(function (m) {
-                                return m.previousAttributes();
-                            });
-                        }
-                        if (pa[relation.key] && (!_.isEqual(pa[relation.key].toJSON(), this.attributes[relation.key].defaults))) {
-                            if (this.attributes[relation.key] instanceof Backbone.AssociatedModel)
-                                pa[relation.key] = this.attributes[relation.key].previousAttributes();
-                            if (this.attributes[relation.key] instanceof Backbone.Collection)
-                                pa[relation.key] = _.map(this.attributes[relation.key].models, function (m) {
-                                    return m.previousAttributes()
+                        pattrValue = pa[relation.key];
+                        pattrJSON = pattrValue ? pattrValue.toJSON() : undefined;
+                        if (pattrValue && (!_.isEqual(pattrJSON, attrValue.defaults))) {
+                            if (attrValue instanceof Backbone.AssociatedModel) {
+                                pa[relation.key] = attrValue.previousAttributes();
+                            } else if (attrValue instanceof Backbone.Collection) {
+                                pa[relation.key] = attrValue.map(function (m) {
+                                    return m.previousAttributes();
                                 });
+                            }
                         } else {
-                            if (pa[relation.key])
-                                pa[relation.key] = pa[relation.key].toJSON();
+                            if (pattrValue)
+                                pa[relation.key] = pattrJSON;
                         }
                     }, this);
                 }
