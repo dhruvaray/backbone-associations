@@ -987,6 +987,22 @@ $(document).ready(function () {
 
             });
 
+            child3 = new Dependent({
+                fname:"Gregory",
+                lname:"Smith",
+                sex:"M",
+                relationship:"C"
+
+            });
+
+            child4 = new Dependent({
+                fname:"Jane",
+                lname:"Doe",
+                sex:"F",
+                relationship:"C"
+
+            });
+
             parent1 = new Dependent({
                 fname:"Edgar",
                 lname:"Smith",
@@ -1029,14 +1045,13 @@ $(document).ready(function () {
             dept1.set({locations:[loc1, loc2]});
             dept1.set({controls:[project1, project2]});
 
-            //emp.set({"works_for":dept1});
             emp.set({"dependents":[child1, parent1]});
 
         }
     });
 
 
-    test("child `example-1`", 11, function () {
+    test("example-1", 11, function () {
 
         emp.on('change', function () {
             ok(true, "Fired emp change...");
@@ -1058,7 +1073,8 @@ $(document).ready(function () {
         emp.set("works_for", dept1); //11
     });
 
-    test("child `example-2`", 19, function () {
+
+    test("example-2", 19, function () {
 
         emp.set("works_for", dept1);
         var dept1snapshot = dept1.toJSON();
@@ -1099,6 +1115,110 @@ $(document).ready(function () {
 
         emp.get('works_for').set({name:"Marketing"});//4+7
 
+
+    });
+
+    test("example-3", 11, function () {
+
+        emp.on('add', function () {
+            ok(true, "Fired emp change...");
+        });
+        emp.on('add:dependents', function () {
+            ok(true, "Fired emp add:dependents...");
+        });
+        emp.on('remove:dependents', function () {
+            ok(true, "Fired emp remove:dependents...");
+        });
+        emp.on('reset:dependents', function () {
+            ok(true, "Fired emp reset:dependents...");
+        });
+        emp.on('change:dependents[0].age', function () {
+            ok(true, "Fired emp change:dependents[0].age...");
+        });
+        emp.on('change:dependents[0]', function () {
+            ok(true, "Fired emp change:dependents[0]...");
+        });
+
+
+        emp.get('dependents').at(0).on('change', function () {
+            ok(true, "Fired at0 dependents change...");
+        });
+        emp.get('dependents').at(0).on('change:age', function () {
+            ok(true, "Fired at0 dependents change:age...");
+        });
+        emp.get('dependents').at(0).on('remove', function () {
+            ok(true, "Fired at0 dependents remove...");
+        });
+        emp.get('dependents').on('add', function () {
+            ok(true, "Fired dependents add...");
+        });
+        emp.get('dependents').on('remove', function () {
+            ok(true, "Fired dependents remove...");
+        });
+        emp.get('dependents').on('reset', function () {
+            ok(true, "Fired dependents reset...");
+        });
+
+        emp.get("dependents").at(0).set({age:15});//4
+
+        emp.get("dependents").add(child2);//2
+        emp.get("dependents").remove([child1]);//3
+        emp.get("dependents").reset();//2
+
+    });
+
+    test("example-4", 14, function () {
+
+        emp.set("works_for", dept1);
+
+        emp.get('works_for').get('locations').at(0).on('change:zip', function () {
+            ok(true, "Fired works_for locations0:zip change...");
+        });
+
+        emp.get('works_for').get('locations').at(0).on('change', function () {
+            equal(true, emp.get('works_for').hasChanged());
+            equal(true, emp.hasChanged());
+            var changed = emp.get('works_for').changedAttributes();
+            equal(JSON.stringify(changed['locations']), "[{\"zip\":94403}]");
+            equal(JSON.stringify(changed['controls']), "[{\"locations\":[{\"zip\":94403}]}]");
+            ok(true, "Fired works_for locations0 change...");
+        });
+
+        emp.get('works_for').on('change:locations[0].zip', function () {
+            ok(true, "Fired emp.works_for change:locations[0].zip...");
+        });
+
+        emp.get('works_for').on('change:locations[0]', function () {
+            ok(true, "Fired emp.works_for change:locations[0]...");
+        });
+
+        emp.on('change:works_for.locations[0].zip', function () {
+            ok(true, "Fired emp change:works_for.locations[0].zip...");
+        });
+
+        emp.on('change:works_for.locations[0]', function () {
+            ok(true, "Fired emp change:works_for.locations[0]...");
+        });
+
+
+        emp.on('change:works_for.controls.locations[0].zip', function () {
+            ok(true, "Fired emp change:works_for.controls.locations[0].zip...");
+        });
+
+        emp.on('change:works_for.controls.locations[0]', function () {
+            ok(true, "Fired emp change:works_for.controls.locations[0]...");
+        });
+
+        emp.get('works_for').on('change:controls.locations[0].zip', function () {
+            ok(true, "Fired emp.works_for change:controls.locations[0].zip...");
+        });
+
+        emp.get('works_for').on('change:controls.locations[0]', function () {
+            ok(true, "Fired emp.works_for change:controls.locations[0]...");
+        });
+
+
+        emp.get('works_for').get("locations").at(0).set('zip', 94403);//10 + 4
 
     });
 
