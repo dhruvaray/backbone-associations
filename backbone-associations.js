@@ -254,7 +254,7 @@
             }
             return !delta ? false : delta;
         },
-        //Returns the previous attributes of the graph
+        //Returns the hash of the previous attributes of the graph
         previousAttributes:function () {
             var pa, attrValue;
             //To prevent cycles, check if this node is visited
@@ -271,9 +271,20 @@
                                 return m.previousAttributes();
                             });
                         }
+                        if (pa[relation.key] && (!_.isEqual(pa[relation.key].toJSON(), this.attributes[relation.key].defaults))) {
+                            if (this.attributes[relation.key] instanceof Backbone.AssociatedModel)
+                                pa[relation.key] = this.attributes[relation.key].previousAttributes();
+                            if (this.attributes[relation.key] instanceof Backbone.Collection)
+                                pa[relation.key] = _.map(this.attributes[relation.key].models, function (m) {
+                                    return m.previousAttributes()
+                                });
+                        } else {
+                            if (pa[relation.key])
+                                pa[relation.key] = pa[relation.key].toJSON();
+                        }
                     }, this);
                 }
-                delete this.visitedPA;
+                delete this.visited;
             }
             return pa;
         },

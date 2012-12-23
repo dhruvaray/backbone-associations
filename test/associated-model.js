@@ -652,12 +652,12 @@ $(document).ready(function () {
             options.success.call(this, {sex:'O'});
         };
         //Backbone 0.9.9
-        emp.on('invalid', function(model, error) {
+        emp.on('invalid', function (model, error) {
             lastError = error;
         });
-        emp.save(null,{
+        emp.save(null, {
             //Backbone 0.9.2
-            error: function(model, error) {
+            error:function (model, error) {
                 lastError = error;
             }
         });
@@ -960,5 +960,148 @@ $(document).ready(function () {
         equal(node1.get('parent').get('name'), 'n2', "name of node1's parent should be `n2`");
         equal(cloneNode.get('parent').get('name'), 'clone-n2', "name of node1's parent should be `clone-n2`");
     });
+
+    module("Examples", {
+        setup:function () {
+
+            emp = new Employee({
+                fname:"John",
+                lname:"Smith",
+                age:21,
+                sex:"M"
+            });
+
+            child1 = new Dependent({
+                fname:"Jane",
+                lname:"Smith",
+                sex:"F",
+                relationship:"C"
+
+            });
+
+            child2 = new Dependent({
+                fname:"Barbara",
+                lname:"Ruth",
+                sex:"F",
+                relationship:"C"
+
+            });
+
+            parent1 = new Dependent({
+                fname:"Edgar",
+                lname:"Smith",
+                sex:"M",
+                relationship:"P"
+
+            });
+
+            loc1 = new Location({
+                add1:"P.O Box 3899",
+                zip:"94404",
+                state:"CA"
+
+            });
+
+            loc2 = new Location({
+                add1:"P.O Box 4899",
+                zip:"95502",
+                state:"CA"
+            });
+
+            project1 = new Project({
+                name:"Project X",
+                number:"2"
+            });
+
+            project2 = new Project({
+                name:"Project Y",
+                number:"2"
+            });
+
+            project2.get("locations").add(loc2);
+            project1.get("locations").add(loc1);
+
+            dept1 = new Department({
+                name:"R&D",
+                number:"23"
+            });
+
+            dept1.set({locations:[loc1, loc2]});
+            dept1.set({controls:[project1, project2]});
+
+            //emp.set({"works_for":dept1});
+            emp.set({"dependents":[child1, parent1]});
+
+        }
+    });
+
+
+    test("child `example-1`", 11, function () {
+
+        emp.on('change', function () {
+            ok(true, "Fired emp change...");
+            equal(true, emp.hasChanged());
+            equal(true, emp.hasChanged("works_for"));
+
+        });
+        emp.on('change:works_for', function () {
+            ok(true, "Fired emp change:works_for...");
+            equal(true, emp.hasChanged());
+            equal(true, emp.hasChanged("works_for"));
+            var changed = emp.changedAttributes();
+            equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
+            equal(emp.previousAttributes()['works_for'].name, "");
+            equal(emp.previousAttributes()['works_for'].number, -1);
+            equal(emp.previousAttributes()['works_for'].locations.length, 0);
+            equal(emp.previousAttributes()['works_for'].controls.length, 0);
+        });
+        emp.set("works_for", dept1); //11
+    });
+
+    test("child `example-2`", 19, function () {
+
+        emp.set("works_for", dept1);
+        var dept1snapshot = dept1.toJSON();
+
+        emp.on('change:works_for', function () {
+            ok(true, "Fired emp change:works_for...");
+            equal(true, emp.hasChanged());
+            equal(true, emp.hasChanged("works_for"));
+            var changed = emp.changedAttributes();
+            equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
+            equal(emp.previousAttributes().works_for.name, "R&D");
+            equal(true, _.isEqual(emp.previous("works_for"), dept1snapshot));
+
+        });
+
+        emp.on('change:works_for.name', function () {
+            ok(true, "Fired emp change:works_for.name...");
+            equal(true, emp.get("works_for").hasChanged());
+            equal(true, emp.hasChanged());
+            equal(true, emp.hasChanged("works_for"));
+            var changed = emp.changedAttributes();
+            equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
+            equal(emp.get("works_for").previousAttributes()["name"], "R&D");
+            equal(emp.get("works_for").previous("name"), "R&D");
+        });
+
+
+        emp.get('works_for').on('change', function () {
+            ok(true, "Fired emp.works_for change...");
+            equal(true, emp.get("works_for").hasChanged());
+            equal(emp.get("works_for").previousAttributes()["name"], "R&D");
+        });
+        emp.get('works_for').on('change:name', function () {
+            ok(true, "Fired emp.works_for name change...");
+            equal(true, emp.get("works_for").hasChanged());
+            equal(emp.get("works_for").previousAttributes()["name"], "R&D");
+        });
+
+        emp.get('works_for').set({name:"Marketing"});//4+7
+
+
+    });
+
+
 });
 
