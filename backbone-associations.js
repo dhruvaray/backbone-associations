@@ -12,14 +12,20 @@
 // Initial Setup
 // --------------
 (function () {
+    "use strict";
+
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
-    var root = this, _ = root._, Backbone = root.Backbone, BackboneModel, defaultEvents;
-    if (!_ && typeof exports !== 'undefined') {
+    var _, Backbone, BackboneModel, defaultEvents;
+    if (typeof require !== 'undefined') {
         _ = require('underscore');
         Backbone = require('backbone');
         exports = module.exports = Backbone;
+    } else {
+        _ = window._;
+        Backbone = window.Backbone;
     }
+
     BackboneModel = Backbone.Model.prototype;
     defaultEvents = ["change", "add", "remove", "reset", "destroy", "sync", "error"];
 
