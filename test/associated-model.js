@@ -285,20 +285,24 @@ $(document).ready(function () {
         equal(emp2.get('works_for').get('name'), 'R&D', "Changing a parent attribute does not change the clone.");
     });
 
-    test("change, hasChanged, changedAttributes, previous, previousAttributes", function () {
-        //equal(emp.changedAttributes(), false);
+    test("change, hasChanged, changedAttributes, previous, previousAttributes", 7, function () {
+
         emp.on('change', function () {
-            ok(emp.get('works_for').hasChanged('name'), "department's name changed");
-            ok(_.isEqual(emp.get('works_for').changedAttributes(), {name:'Marketing', number:'24'}), 'changedAttributes returns the changed attrs');
-            equal(emp.get('works_for').previous('name'), 'R&D');
-            ok(emp.get('works_for').previousAttributes().name, 'R&D', 'previousAttributes is correct');
+            ok(emp.hasChanged('works_for'), "emp->change, employee has changed");
+        });
+        emp.on('change:works_for', function () {
+            ok(emp.hasChanged(), "emp->change:works_for, emp has changed");
+            ok(emp.hasChanged('works_for'), "department has changed");
+            equal(emp.get('works_for').hasChanged(), false, "department's name/number has just changed");
+            equal(emp.get('works_for').changedAttributes(), false, 'changedAttributes for `works_for` returns false as it is new object');
+            equal(emp.previous('works_for')['name'], 'R&D');
+            equal(emp.previousAttributes().works_for['name'], 'R&D', 'previousAttributes is correct');
+
         });
         emp.set('works_for', {name:'Marketing', number:'24'});
-        emp.get('works_for').change();
-        equal(emp.get('works_for').get('name'), 'Marketing');
     });
 
-    test("child `change`", 19, function () {
+    test("child `change`", 17, function () {
 
         /*emp.on('all',function(event){
          ok(true,"Fired emp " + event);
@@ -319,7 +323,7 @@ $(document).ready(function () {
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
             var changed = emp.changedAttributes();
-            equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
+            deepEqual(changed['works_for'], emp.get("works_for").toJSON());
             equal(emp.get("works_for").previousAttributes()["name"], "R&D");
             equal(emp.get("works_for").previous("name"), "R&D");
 
@@ -330,9 +334,6 @@ $(document).ready(function () {
 
             ok(true, "Fired emp change:works_for.name...");
         });
-        emp.on('change:works_for.number', function () {
-            ok(true, "Fired emp change:works_for.number...");
-        });
 
 
         emp.get('works_for').on('change', function () {
@@ -340,9 +341,6 @@ $(document).ready(function () {
         });
         emp.get('works_for').on('change:name', function () {
             ok(true, "Fired works_for dept:name change...");
-        });
-        emp.get('works_for').on('change:number', function () {
-            ok(true, "Fired works_for dept:number change...");
         });
 
         emp.get('works_for').get('locations').at(0).on('change:zip', function () {
@@ -355,7 +353,7 @@ $(document).ready(function () {
 
 
         emp.get('works_for').set({name:"Marketing"});//4+7
-        emp.set('works_for', {name:"Marketing", number:29});//4
+        emp.set('works_for', {name:"Marketing", number:29});//2
         emp.set('works_for', undefined);//2
         emp.set('works_for', dept1);//2
         emp.set('works_for', dept1);//0
@@ -1120,9 +1118,6 @@ $(document).ready(function () {
 
     test("example-3", 11, function () {
 
-        emp.on('add', function () {
-            ok(true, "Fired emp change...");
-        });
         emp.on('add:dependents', function () {
             ok(true, "Fired emp add:dependents...");
         });

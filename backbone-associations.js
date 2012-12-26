@@ -62,7 +62,7 @@
                 //Iterate over `this.relations` and `set` model and collection values
                 _.each(this.relations, function (relation) {
                     var relationKey = relation.key, relatedModel = relation.relatedModel, collectionType = relation.collectionType,
-                        val, relationOptions, data, defaults;
+                        val, relationOptions, data;
                     if (attributes[relationKey]) {
                         //Get value of attribute with relation key in `val`
                         val = _.result(attributes, relationKey);
@@ -92,17 +92,9 @@
                         } else if (relation.type === Backbone.One && relatedModel) {
                             if (val instanceof Backbone.AssociatedModel) {
                                 BackboneModel.set.call(this, relationKey, val, relationOptions);
-                            } else if (!this.attributes[relationKey]) {
+                            } else { //if (!this.attributes[relationKey]) {
                                 data = new relatedModel(val);
                                 BackboneModel.set.call(this, relationKey, data, relationOptions);
-                            } else {
-                                data = {};
-                                defaults = _.result(this.attributes[relationKey], 'defaults');
-                                _.each(this.attributes[relationKey].attributes, function (value, key) {
-                                    !_.has(val, key) && (data[key] = (defaults ? defaults[key] : void 0));
-                                });
-                                this.attributes[relationKey].set(data, {silent:true});
-                                this.attributes[relationKey].set(val, relationOptions);
                             }
                         }
 
@@ -272,7 +264,7 @@
                         attrValue = this.attributes[relation.key];
                         pattrValue = pa[relation.key];
                         pattrJSON = pattrValue ? pattrValue.toJSON() : undefined;
-                        if (pattrValue && (!_.isEqual(pattrJSON, attrValue.defaults))) {
+                        if (pattrValue && pattrValue == attrValue) {
                             if (attrValue instanceof Backbone.AssociatedModel) {
                                 pa[relation.key] = attrValue.previousAttributes();
                             } else if (attrValue instanceof Backbone.Collection) {
