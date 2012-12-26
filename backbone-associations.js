@@ -92,7 +92,7 @@
                         } else if (relation.type === Backbone.One && relatedModel) {
                             if (val instanceof Backbone.AssociatedModel) {
                                 BackboneModel.set.call(this, relationKey, val, relationOptions);
-                            } else { //if (!this.attributes[relationKey]) {
+                            } else {
                                 data = new relatedModel(val);
                                 BackboneModel.set.call(this, relationKey, data, relationOptions);
                             }
