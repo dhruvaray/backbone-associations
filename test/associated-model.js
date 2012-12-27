@@ -985,22 +985,6 @@ $(document).ready(function () {
 
             });
 
-            child3 = new Dependent({
-                fname:"Gregory",
-                lname:"Smith",
-                sex:"M",
-                relationship:"C"
-
-            });
-
-            child4 = new Dependent({
-                fname:"Jane",
-                lname:"Doe",
-                sex:"F",
-                relationship:"C"
-
-            });
-
             parent1 = new Dependent({
                 fname:"Edgar",
                 lname:"Smith",
@@ -1049,18 +1033,17 @@ $(document).ready(function () {
     });
 
 
-    test("example-1", 11, function () {
+    test("example-1", 42, function () {
 
-        emp.on('change', function () {
-            ok(true, "Fired emp change...");
+        emp.once('change', function () {
+            console.log("Fired emp > change...");
+            ok("Fired emp > change...");
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
-
         });
-        emp.on('change:works_for', function () {
-            ok(true, "Fired emp change:works_for...");
-            equal(true, emp.hasChanged());
-            equal(true, emp.hasChanged("works_for"));
+        emp.once('change:works_for', function () {
+            ok("Fired emp > change:works_for...");
+            console.log("Fired emp > change:works_for...");
             var changed = emp.changedAttributes();
             equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
             equal(emp.previousAttributes()['works_for'].name, "");
@@ -1068,155 +1051,288 @@ $(document).ready(function () {
             equal(emp.previousAttributes()['works_for'].locations.length, 0);
             equal(emp.previousAttributes()['works_for'].controls.length, 0);
         });
-        emp.set("works_for", dept1); //11
-    });
 
+        emp.set({"works_for":dept1});//9
 
-    test("example-2", 19, function () {
-
-        emp.set("works_for", dept1);
         var dept1snapshot = dept1.toJSON();
 
+        emp.get('works_for').on('change', function () {
+            console.log("Fired emp.works_for > change...");
+            ok("Fired emp.works_for > change...");
+            equal(true, emp.get("works_for").hasChanged());
+            equal(emp.get("works_for").previousAttributes()["name"], "R&D");
+        });
+        emp.get('works_for').on('change:name', function () {
+            console.log("Fired emp.works_for > change:name...");
+            ok("Fired emp.works_for > change:name...");
+
+        });
+
+        emp.on('change:works_for.name', function () {
+            console.log("Fired emp > change:works_for.name...");
+            ok("Fired emp > change:works_for.name...");
+            equal(true, emp.get("works_for").hasChanged());
+            equal(true, emp.hasChanged());
+            equal(true, emp.hasChanged("works_for"))
+            equal(JSON.stringify(emp.changedAttributes()['works_for']), JSON.stringify(emp.get("works_for")));
+            equal(emp.get("works_for").previousAttributes()["name"], "R&D");
+            equal(emp.get("works_for").previous("name"), "R&D");
+        });
+
         emp.on('change:works_for', function () {
-            ok(true, "Fired emp change:works_for...");
+            console.log("Fired emp > change:works_for...");
+            ok("Fired emp > change:works_for...");
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
-            var changed = emp.changedAttributes();
-            equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
+            equal(JSON.stringify(emp.changedAttributes()['works_for']), JSON.stringify(emp.get("works_for")));
             equal(emp.previousAttributes().works_for.name, "R&D");
             equal(true, _.isEqual(emp.previous("works_for"), dept1snapshot));
 
         });
 
-        emp.on('change:works_for.name', function () {
-            ok(true, "Fired emp change:works_for.name...");
-            equal(true, emp.get("works_for").hasChanged());
-            equal(true, emp.hasChanged());
-            equal(true, emp.hasChanged("works_for"));
-            var changed = emp.changedAttributes();
-            equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
-            equal(emp.get("works_for").previousAttributes()["name"], "R&D");
-            equal(emp.get("works_for").previous("name"), "R&D");
-        });
-
-
-        emp.get('works_for').on('change', function () {
-            ok(true, "Fired emp.works_for change...");
-            equal(true, emp.get("works_for").hasChanged());
-            equal(emp.get("works_for").previousAttributes()["name"], "R&D");
-        });
-        emp.get('works_for').on('change:name', function () {
-            ok(true, "Fired emp.works_for name change...");
-            equal(true, emp.get("works_for").hasChanged());
-            equal(emp.get("works_for").previousAttributes()["name"], "R&D");
-        });
-
-        emp.get('works_for').set({name:"Marketing"});//4+7
-
-
-    });
-
-    test("example-3", 11, function () {
-
-        emp.on('add:dependents', function () {
-            ok(true, "Fired emp add:dependents...");
-        });
-        emp.on('remove:dependents', function () {
-            ok(true, "Fired emp remove:dependents...");
-        });
-        emp.on('reset:dependents', function () {
-            ok(true, "Fired emp reset:dependents...");
-        });
-        emp.on('change:dependents[0].age', function () {
-            ok(true, "Fired emp change:dependents[0].age...");
-        });
-        emp.on('change:dependents[0]', function () {
-            ok(true, "Fired emp change:dependents[0]...");
-        });
-
-
-        emp.get('dependents').at(0).on('change', function () {
-            ok(true, "Fired at0 dependents change...");
-        });
-        emp.get('dependents').at(0).on('change:age', function () {
-            ok(true, "Fired at0 dependents change:age...");
-        });
-        emp.get('dependents').at(0).on('remove', function () {
-            ok(true, "Fired at0 dependents remove...");
-        });
-        emp.get('dependents').on('add', function () {
-            ok(true, "Fired dependents add...");
-        });
-        emp.get('dependents').on('remove', function () {
-            ok(true, "Fired dependents remove...");
-        });
-        emp.get('dependents').on('reset', function () {
-            ok(true, "Fired dependents reset...");
-        });
-
-        emp.get("dependents").at(0).set({age:15});//4
-
-        emp.get("dependents").add(child2);//2
-        emp.get("dependents").remove([child1]);//3
-        emp.get("dependents").reset();//2
-
-    });
-
-    test("example-4", 14, function () {
-
-        emp.set("works_for", dept1);
+        emp.get('works_for').set({name:"Marketing"});//17
 
         emp.get('works_for').get('locations').at(0).on('change:zip', function () {
-            ok(true, "Fired works_for locations0:zip change...");
+            console.log("Fired emp.works_for.locations[0] > change:zip...");
+            ok("Fired emp.works_for.locations[0] > change:zip...");
         });
 
         emp.get('works_for').get('locations').at(0).on('change', function () {
-            equal(true, emp.get('works_for').hasChanged());
-            equal(true, emp.hasChanged());
-            var changed = emp.get('works_for').changedAttributes();
-            equal(JSON.stringify(changed['locations']), "[{\"zip\":94403}]");
-            equal(JSON.stringify(changed['controls']), "[{\"locations\":[{\"zip\":94403}]}]");
-            ok(true, "Fired works_for locations0 change...");
+            console.log("Fired emp.works_for.locations[0] > change...");
+            ok("Fired emp.works_for.locations[0] > change...");
         });
 
         emp.get('works_for').on('change:locations[0].zip', function () {
-            ok(true, "Fired emp.works_for change:locations[0].zip...");
+            console.log("Fired emp.works_for > change:locations[0].zip...");
+            ok("Fired emp.works_for > change:locations[0].zip...");
         });
 
         emp.get('works_for').on('change:locations[0]', function () {
-            ok(true, "Fired emp.works_for change:locations[0]...");
+            console.log("Fired emp.works_for > change:locations[0]...");
+            ok("Fired emp.works_for > change:locations[0]...");
         });
 
         emp.on('change:works_for.locations[0].zip', function () {
-            ok(true, "Fired emp change:works_for.locations[0].zip...");
+            console.log("Fired emp > change:works_for.locations[0].zip...");
+            ok("Fired emp > change:works_for.locations[0].zip...");
         });
 
         emp.on('change:works_for.locations[0]', function () {
-            ok(true, "Fired emp change:works_for.locations[0]...");
+            console.log("Fired emp > change:works_for.locations[0]...");
+            ok("Fired emp > change:works_for.locations[0]...");
         });
 
 
         emp.on('change:works_for.controls.locations[0].zip', function () {
-            ok(true, "Fired emp change:works_for.controls.locations[0].zip...");
+            console.log("Fired emp > change:works_for.controls.locations[0].zip...");
+            ok("Fired emp > change:works_for.controls.locations[0].zip...");
         });
 
         emp.on('change:works_for.controls.locations[0]', function () {
-            ok(true, "Fired emp change:works_for.controls.locations[0]...");
+            console.log("Fired emp > change:works_for.controls.locations[0]...");
+            ok("Fired emp > change:works_for.controls.locations[0]...");
         });
 
         emp.get('works_for').on('change:controls.locations[0].zip', function () {
-            ok(true, "Fired emp.works_for change:controls.locations[0].zip...");
+            console.log("Fired emp.works_for > change:controls.locations[0].zip...");
+            ok("Fired emp.works_for > change:controls.locations[0].zip...");
         });
 
         emp.get('works_for').on('change:controls.locations[0]', function () {
-            ok(true, "Fired emp.works_for change:controls.locations[0]...");
+            console.log("Fired emp.works_for > change:controls.locations[0]...");
+            ok("Fired emp.works_for > change:controls.locations[0]...");
+        });
+
+        emp.get('works_for').get("locations").at(0).set('zip', 94403);//10
+
+
+        emp.on('add:dependents', function () {
+            console.log("Fired emp > add:dependents...");
+            ok("Fired emp > add:dependents...");
+        });
+        emp.on('remove:dependents', function () {
+            console.log("Fired emp > remove:dependents...");
+            ok("Fired emp > remove:dependents...");
+        });
+        emp.on('reset:dependents', function () {
+            console.log("Fired emp > reset:dependents...");
+            ok("Fired emp > reset:dependents...");
+        });
+
+        emp.get('dependents').on('add', function () {
+            console.log("Fired emp.dependents add...");
+            ok("Fired emp.dependents add...");
+        });
+        emp.get('dependents').on('remove', function () {
+            console.log("Fired emp.dependents remove...");
+            ok("Fired emp.dependents remove...");
+        });
+        emp.get('dependents').on('reset', function () {
+            console.log("Fired emp.dependents reset...");
+            ok("Fired emp.dependents reset...");
         });
 
 
-        emp.get('works_for').get("locations").at(0).set('zip', 94403);//10 + 4
+        //6 events
+        emp.get("dependents").add(child2);
+        emp.get("dependents").remove([child1]);
+        emp.get("dependents").reset();
+
 
     });
 
+
+    test("example-2", 42, function () {
+
+        var listener = {};
+        _.extend(listener, Backbone.Events);
+
+        listener.listenTo(emp, 'change', function () {
+            console.log("Fired emp > change...");
+            ok("Fired emp > change...");
+            equal(true, emp.hasChanged());
+            equal(true, emp.hasChanged("works_for"));
+        });
+        listener.listenTo(emp, 'change:works_for', function () {
+            ok("Fired emp > change:works_for...");
+            console.log("Fired emp > change:works_for...");
+            var changed = emp.changedAttributes();
+            equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
+            equal(emp.previousAttributes()['works_for'].name, "");
+            equal(emp.previousAttributes()['works_for'].number, -1);
+            equal(emp.previousAttributes()['works_for'].locations.length, 0);
+            equal(emp.previousAttributes()['works_for'].controls.length, 0);
+        });
+
+        emp.set({"works_for":dept1});//9
+
+        listener.stopListening();
+
+        var dept1snapshot = dept1.toJSON();
+
+        listener.listenTo(emp.get('works_for'), 'change', function () {
+            console.log("Fired emp.works_for > change...");
+            ok("Fired emp.works_for > change...");
+            equal(true, emp.get("works_for").hasChanged());
+            equal(emp.get("works_for").previousAttributes()["name"], "R&D");
+        });
+        listener.listenTo(emp.get('works_for'), 'change:name', function () {
+            console.log("Fired emp.works_for > change:name...");
+            ok("Fired emp.works_for > change:name...");
+
+        });
+
+        listener.listenTo(emp, 'change:works_for.name', function () {
+            console.log("Fired emp > change:works_for.name...");
+            ok("Fired emp > change:works_for.name...");
+            equal(true, emp.get("works_for").hasChanged());
+            equal(true, emp.hasChanged());
+            equal(true, emp.hasChanged("works_for"))
+            equal(JSON.stringify(emp.changedAttributes()['works_for']), JSON.stringify(emp.get("works_for")));
+            equal(emp.get("works_for").previousAttributes()["name"], "R&D");
+            equal(emp.get("works_for").previous("name"), "R&D");
+        });
+
+        listener.listenTo(emp, 'change:works_for', function () {
+            console.log("Fired emp > change:works_for...");
+            ok("Fired emp > change:works_for...");
+            equal(true, emp.hasChanged());
+            equal(true, emp.hasChanged("works_for"));
+            equal(JSON.stringify(emp.changedAttributes()['works_for']), JSON.stringify(emp.get("works_for")));
+            equal(emp.previousAttributes().works_for.name, "R&D");
+            equal(true, _.isEqual(emp.previous("works_for"), dept1snapshot));
+
+        });
+
+        emp.get('works_for').set({name:"Marketing"});//17
+
+        listener.listenTo(emp.get('works_for').get('locations').at(0), 'change:zip', function () {
+            console.log("Fired emp.works_for.locations[0] > change:zip...");
+            ok("Fired emp.works_for.locations[0] > change:zip...");
+        });
+
+        listener.listenTo(emp.get('works_for').get('locations').at(0), 'change', function () {
+            console.log("Fired emp.works_for.locations[0] > change...");
+            ok("Fired emp.works_for.locations[0] > change...");
+        });
+
+        listener.listenTo(emp.get('works_for'), 'change:locations[0].zip', function () {
+            console.log("Fired emp.works_for > change:locations[0].zip...");
+            ok("Fired emp.works_for > change:locations[0].zip...");
+        });
+
+        listener.listenTo(emp.get('works_for'), 'change:locations[0]', function () {
+            console.log("Fired emp.works_for > change:locations[0]...");
+            ok("Fired emp.works_for > change:locations[0]...");
+        });
+
+        listener.listenTo(emp, 'change:works_for.locations[0].zip', function () {
+            console.log("Fired emp > change:works_for.locations[0].zip...");
+            ok("Fired emp > change:works_for.locations[0].zip...");
+        });
+
+        listener.listenTo(emp, 'change:works_for.locations[0]', function () {
+            console.log("Fired emp > change:works_for.locations[0]...");
+            ok("Fired emp > change:works_for.locations[0]...");
+        });
+
+
+        listener.listenTo(emp, 'change:works_for.controls.locations[0].zip', function () {
+            console.log("Fired emp > change:works_for.controls.locations[0].zip...");
+            ok("Fired emp > change:works_for.controls.locations[0].zip...");
+        });
+
+        listener.listenTo(emp, 'change:works_for.controls.locations[0]', function () {
+            console.log("Fired emp > change:works_for.controls.locations[0]...");
+            ok("Fired emp > change:works_for.controls.locations[0]...");
+        });
+
+        listener.listenTo(emp.get('works_for'), 'change:controls.locations[0].zip', function () {
+            console.log("Fired emp.works_for > change:controls.locations[0].zip...");
+            ok("Fired emp.works_for > change:controls.locations[0].zip...");
+        });
+
+        listener.listenTo(emp.get('works_for'), 'change:controls.locations[0]', function () {
+            console.log("Fired emp.works_for > change:controls.locations[0]...");
+            ok("Fired emp.works_for > change:controls.locations[0]...");
+        });
+
+        emp.get('works_for').get("locations").at(0).set('zip', 94403);//10
+
+        listener.listenTo(emp, 'add:dependents', function () {
+            console.log("Fired emp > add:dependents...");
+            ok("Fired emp > add:dependents...");
+        });
+        listener.listenTo(emp, 'remove:dependents', function () {
+            console.log("Fired emp > remove:dependents...");
+            ok("Fired emp > remove:dependents...");
+        });
+        listener.listenTo(emp, 'reset:dependents', function () {
+            console.log("Fired emp > reset:dependents...");
+            ok("Fired emp > reset:dependents...");
+        });
+
+        listener.listenTo(emp.get('dependents'), 'add', function () {
+            console.log("Fired emp.dependents add...");
+            ok("Fired emp.dependents add...");
+        });
+        listener.listenTo(emp.get('dependents'), 'remove', function () {
+            console.log("Fired emp.dependents remove...");
+            ok("Fired emp.dependents remove...");
+        });
+        listener.listenTo(emp.get('dependents'), 'reset', function () {
+            console.log("Fired emp.dependents reset...");
+            ok("Fired emp.dependents reset...");
+        });
+
+
+        //6 events
+        emp.get("dependents").add(child2);
+        emp.get("dependents").remove([child1]);
+        emp.get("dependents").reset();
+
+
+    });
 
 });
 
