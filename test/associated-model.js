@@ -985,6 +985,22 @@ $(document).ready(function () {
 
             });
 
+            child3 = new Dependent({
+                fname:"Gregory",
+                lname:"Smith",
+                sex:"M",
+                relationship:"C"
+
+            });
+
+            child4 = new Dependent({
+                fname:"Jane",
+                lname:"Doe",
+                sex:"F",
+                relationship:"C"
+
+            });
+
             parent1 = new Dependent({
                 fname:"Edgar",
                 lname:"Smith",

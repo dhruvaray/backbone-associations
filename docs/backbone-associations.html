@@ -1,238 +1,1176 @@
-<!DOCTYPE html>  <html> <head>   <title>backbone-associations.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               backbone-associations.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>Backbone-associations.js 0.2.0</p>
+<!DOCTYPE html>
+<html>
+<head><title>backbone-associations.js</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" media="all" href="docco.css"/>
+</head>
+<body>
+<div id="container">
+<div id="background"></div>
+<table cellpadding="0" cellspacing="0">
+<thead>
+<tr>
+    <th class="docs"><h1> backbone-associations.js </h1></th>
+    <th class="code"></th>
+</tr>
+</thead>
+<tbody>
+<tr id="section-1">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-1">&#182;</a></div>
+        <p>Backbone-associations.js 0.3.0</p>
 
-<p>(c) 2012 Dhruva Ray, Jaynti Kanani</p>
-
-<p>Backbone-associations may be freely distributed under the MIT license; see the accompanying LICENSE.txt.</p>
-
-<p>Depends on <a href="https://github.com/documentcloud/backbone">Backbone</a> (and thus on <a href="https://github.com/documentcloud/underscore/">Underscore</a> as well)</p>
-
-<p>A complete <a href="../test/test-suite.html">Test &amp; Benchmark Suite</a> is included for your perusal.</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <h2>Initial Setup</h2>             </td>             <td class="code">               <div class="highlight"><pre><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-    <span class="s2">&quot;use strict&quot;</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>The top-level namespace. All public Backbone classes and modules will be attached to this.
-Exported for the browser and CommonJS.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="kd">var</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">Backbone</span><span class="p">,</span> <span class="nx">BackboneModel</span><span class="p">,</span> <span class="nx">defaultEvents</span><span class="p">;</span>
-    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">require</span> <span class="o">!==</span> <span class="s1">&#39;undefined&#39;</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;underscore&#39;</span><span class="p">);</span>
-        <span class="nx">Backbone</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;backbone&#39;</span><span class="p">);</span>
-        <span class="nx">exports</span> <span class="o">=</span> <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">;</span>
+        <p>(c) 2012 Dhruva Ray, Jaynti Kanani
+            Backbone-associations may be freely distributed under the MIT license;
+            see the accompanying LICENSE.txt.
+            Depends on <a href="https://github.com/documentcloud/backbone">Backbone</a>
+            and <a href="https://github.com/documentcloud/underscore/">Underscore</a> as well.
+            A complete <a href="../test/test-suite.html">Test &amp; Benchmark Suite</a> is included for your perusal.
+        </p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-2">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-2">&#182;</a></div>
+        <h2>Initial Setup</h2></td>
+    <td class="code">
+        <div class="highlight"><pre><span class="p">(</span><span class="kd">function</span> <span
+                class="p">()</span> <span class="p">{</span>
+    <span class="s2">&quot;use strict&quot;</span><span class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-3">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-3">&#182;</a></div>
+        <p>The top-level namespace. All public Backbone classes and modules will be attached to this.
+            Exported for the browser and CommonJS.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>    <span class="kd">var</span> <span class="nx">_</span><span
+                class="p">,</span> <span class="nx">Backbone</span><span class="p">,</span> <span class="nx">BackboneModel</span><span
+                class="p">,</span> <span class="nx">defaultEvents</span><span class="p">,</span> <span class="nx">AssociatedModel</span><span
+                class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span
+                    class="nx">require</span> <span class="o">!==</span> <span
+                    class="s1">&#39;undefined&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span
+                    class="s1">&#39;underscore&#39;</span><span class="p">);</span>
+        <span class="nx">Backbone</span> <span class="o">=</span> <span class="nx">require</span><span
+                    class="p">(</span><span class="s1">&#39;backbone&#39;</span><span class="p">);</span>
+        <span class="nx">exports</span> <span class="o">=</span> <span class="nx">module</span><span
+                    class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span
+                    class="nx">Backbone</span><span class="p">;</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-        <span class="nx">_</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">_</span><span class="p">;</span>
-        <span class="nx">Backbone</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">Backbone</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="nx">BackboneModel</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">prototype</span><span class="p">;</span>
-    <span class="nx">defaultEvents</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;remove&quot;</span><span class="p">,</span> <span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="s2">&quot;destroy&quot;</span><span class="p">,</span> <span class="s2">&quot;sync&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">];</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <h2>Backbone.AssociatedModel</h2>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>Add <code>Many</code> and <code>One</code> relations to Backbone Object</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Many</span> <span class="o">=</span> <span class="s2">&quot;Many&quot;</span><span class="p">;</span>
-    <span class="nx">Backbone</span><span class="p">.</span><span class="nx">One</span> <span class="o">=</span> <span class="s2">&quot;One&quot;</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>Define <code>AssociatedModel</code> (Extends Backbone.Model)</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">Backbone</span><span class="p">.</span><span class="nx">AssociatedModel</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>Define relations with Associated Model</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">relations</span><span class="o">:</span><span class="kc">undefined</span><span class="p">,</span>
-        <span class="nx">_proxyCalls</span><span class="o">:</span><span class="kc">undefined</span><span class="p">,</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>Set a hash of model attributes on the object,
-firing <code>"change"</code> unless you choose to silence it.
-It maintains relations between models during the set operation. It also bubbles up child events to the parent.</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">set</span><span class="o">:</span><span class="kd">function</span> <span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">attributes</span><span class="p">,</span> <span class="nx">processedRelations</span><span class="p">,</span> <span class="nx">tbp</span><span class="p">,</span> <span class="nx">attr</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>Duplicate backbone's behavior to allow separate key/value parameters, instead of a single 'attributes' object.</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="o">||</span> <span class="nx">key</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">attributes</span> <span class="o">=</span> <span class="nx">key</span><span class="p">;</span>
-                <span class="nx">options</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+        <span class="nx">_</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span
+                    class="nx">_</span><span class="p">;</span>
+        <span class="nx">Backbone</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span
+                    class="nx">Backbone</span><span class="p">;</span>
+    <span class="p">}</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-4">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-4">&#182;</a></div>
+        <p>Create local reference <code>Model</code> prototype.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>    <span class="nx">BackboneModel</span> <span class="o">=</span> <span
+                    class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span
+                    class="p">.</span><span class="nx">prototype</span><span class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-5">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-5">&#182;</a></div>
+        <p>Built-in Backbone <code>events</code>.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>    <span class="nx">defaultEvents</span> <span class="o">=</span> <span class="p">[</span><span
+                    class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span
+                    class="p">,</span> <span class="s2">&quot;remove&quot;</span><span class="p">,</span> <span
+                    class="s2">&quot;reset&quot;</span><span class="p">,</span> <span
+                    class="s2">&quot;destroy&quot;</span><span class="p">,</span> <span
+                    class="s2">&quot;sync&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span
+                    class="p">,</span> <span class="s2">&quot;sort&quot;</span><span class="p">,</span> <span
+                    class="s2">&quot;request&quot;</span><span class="p">];</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-6">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-6">&#182;</a></div>
+        <h2>Backbone.AssociatedModel</h2></td>
+    <td class="code">
+        <div class="highlight">
+            <pre></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-7">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-7">&#182;</a></div>
+        <p>Add <code>Many</code> and <code>One</code> relations to Backbone Object.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>    <span class="nx">Backbone</span><span class="p">.</span><span
+                class="nx">Many</span> <span class="o">=</span> <span class="s2">&quot;Many&quot;</span><span class="p">;</span>
+    <span class="nx">Backbone</span><span class="p">.</span><span class="nx">One</span> <span class="o">=</span> <span
+                    class="s2">&quot;One&quot;</span><span class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-8">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-8">&#182;</a></div>
+        <p>Define <code>AssociatedModel</code> (Extends Backbone.Model).</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>    <span class="nx">AssociatedModel</span> <span class="o">=</span> <span
+                    class="nx">Backbone</span><span class="p">.</span><span class="nx">AssociatedModel</span> <span
+                    class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span
+                    class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span
+                    class="p">({</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-9">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-9">&#182;</a></div>
+        <p>Define relations with Associated Model.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>        <span class="nx">relations</span><span class="o">:</span> <span
+                    class="kc">undefined</span><span class="p">,</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-10">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-10">&#182;</a></div>
+        <p>Define <code>Model</code> property which can keep track of already fired <code>events</code>,
+            and prevent redundant event to be triggered in case of circular model graph.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>        <span class="nx">_proxyCalls</span><span class="o">:</span> <span
+                    class="kc">undefined</span><span class="p">,</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-11">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-11">&#182;</a></div>
+        <p>Set a hash of model attributes on the object,
+            fire Backbone <code>event</code> with options.
+            It maintains relations between models during the set operation.
+            It also bubbles up child events to the parent.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>        <span class="nx">set</span><span class="o">:</span> <span class="kd">function</span> <span
+                class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span
+                class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">attributes</span><span class="p">,</span> <span class="nx">processedRelations</span><span
+                    class="p">,</span> <span class="nx">tbp</span><span class="p">,</span> <span
+                    class="nx">attr</span><span class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-12">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-12">&#182;</a></div>
+        <p>Duplicate backbone's behavior to allow separate key/value parameters,
+            instead of a single 'attributes' object.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span
+                class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span
+                class="nx">key</span><span class="p">)</span> <span class="o">||</span> <span
+                class="nx">key</span> <span class="o">==</span> <span class="kc">null</span><span
+                class="p">)</span> <span class="p">{</span>
+                <span class="nx">attributes</span> <span class="o">=</span> <span class="nx">key</span><span
+                    class="p">;</span>
+                <span class="nx">options</span> <span class="o">=</span> <span class="nx">value</span><span
+                    class="p">;</span>
             <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
                 <span class="nx">attributes</span> <span class="o">=</span> <span class="p">{};</span>
-                <span class="nx">attributes</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
-            <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>Extract attributes and options.</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="nx">options</span> <span class="o">||</span> <span class="p">(</span><span class="nx">options</span> <span class="o">=</span> <span class="p">{});</span>
-            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">attributes</span><span class="p">)</span> <span class="k">return</span> <span class="k">this</span><span class="p">;</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">unset</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="nx">attr</span> <span class="k">in</span> <span class="nx">attributes</span><span class="p">)</span> <span class="nx">attributes</span><span class="p">[</span><span class="nx">attr</span><span class="p">]</span> <span class="o">=</span> <span class="k">void</span> <span class="mi">0</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>Check for existence of relations in this model</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>Iterate over <code>this.relations</code> and <code>set</code> model and collection values</p>             </td>             <td class="code">               <div class="highlight"><pre>                <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">relation</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="kd">var</span> <span class="nx">relationKey</span> <span class="o">=</span> <span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span> <span class="nx">relatedModel</span> <span class="o">=</span> <span class="nx">relation</span><span class="p">.</span><span class="nx">relatedModel</span><span class="p">,</span> <span class="nx">collectionType</span> <span class="o">=</span> <span class="nx">relation</span><span class="p">.</span><span class="nx">collectionType</span><span class="p">,</span>
-                        <span class="nx">val</span><span class="p">,</span> <span class="nx">relationOptions</span><span class="p">,</span> <span class="nx">data</span><span class="p">;</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">])</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>Get value of attribute with relation key in <code>val</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                        <span class="nx">val</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">result</span><span class="p">(</span><span class="nx">attributes</span><span class="p">,</span> <span class="nx">relationKey</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>Get class if relation is stored as a string</p>             </td>             <td class="code">               <div class="highlight"><pre>                        <span class="nx">relatedModel</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">relatedModel</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">relatedModel</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="nx">relatedModel</span><span class="p">));</span>
-                        <span class="nx">collectionType</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">collectionType</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">collectionType</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="nx">collectionType</span><span class="p">));</span></pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>Merge in options specific to this relation</p>             </td>             <td class="code">               <div class="highlight"><pre>                        <span class="nx">relationOptions</span> <span class="o">=</span> <span class="nx">relation</span><span class="p">.</span><span class="nx">options</span> <span class="o">?</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">relation</span><span class="p">.</span><span class="nx">options</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="o">:</span> <span class="nx">options</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>If <code>relation</code> defines model as associated collection...</p>             </td>             <td class="code">               <div class="highlight"><pre>                        <span class="k">if</span> <span class="p">(</span><span class="nx">relation</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Many</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p><code>collectionType</code> should be instance of <code>Backbone.Collection</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                            <span class="k">if</span> <span class="p">(</span><span class="nx">collectionType</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">collectionType</span><span class="p">.</span><span class="nx">prototype</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">)</span> <span class="p">{</span>
-                                <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;collectionType must inherit from Backbone.Collection&#39;</span><span class="p">);</span>
+                <span class="nx">attributes</span><span class="p">[</span><span class="nx">key</span><span
+                    class="p">]</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+            <span class="p">}</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-13">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-13">&#182;</a></div>
+        <p>Extract attributes and options.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>            <span class="nx">options</span> <span class="o">||</span> <span
+                class="p">(</span><span class="nx">options</span> <span class="o">=</span> <span class="p">{});</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">attributes</span><span
+                    class="p">)</span> <span class="k">return</span> <span class="k">this</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span
+                    class="p">.</span><span class="nx">unset</span><span class="p">)</span> <span
+                    class="k">for</span> <span class="p">(</span><span class="nx">attr</span> <span class="k">in</span> <span
+                    class="nx">attributes</span><span class="p">)</span> <span class="nx">attributes</span><span
+                    class="p">[</span><span class="nx">attr</span><span class="p">]</span> <span
+                    class="o">=</span> <span class="k">void</span> <span class="mi">0</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span
+                    class="nx">relations</span><span class="p">)</span> <span class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-14">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-14">&#182;</a></div>
+        <p>Iterate over <code>this.relations</code> and <code>set</code> model and collection values
+            if <code>relations</code> are available.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span
+                class="p">(</span><span class="k">this</span><span class="p">.</span><span
+                class="nx">relations</span><span class="p">,</span> <span class="kd">function</span> <span
+                class="p">(</span><span class="nx">relation</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">relationKey</span> <span class="o">=</span> <span
+                    class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span
+                    class="p">,</span> <span class="nx">relatedModel</span> <span class="o">=</span> <span class="nx">relation</span><span
+                    class="p">.</span><span class="nx">relatedModel</span><span class="p">,</span>
+                        <span class="nx">collectionType</span> <span class="o">=</span> <span class="nx">relation</span><span
+                    class="p">.</span><span class="nx">collectionType</span><span class="p">,</span>
+                        <span class="nx">val</span><span class="p">,</span> <span class="nx">relationOptions</span><span
+                    class="p">,</span> <span class="nx">data</span><span class="p">;</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">attributes</span><span class="p">[</span><span
+                    class="nx">relationKey</span><span class="p">])</span> <span class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-15">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-15">&#182;</a></div>
+        <p>Get value of attribute with relation key in <code>val</code>.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>                        <span class="nx">val</span> <span class="o">=</span> <span
+                    class="nx">_</span><span class="p">.</span><span class="nx">result</span><span
+                    class="p">(</span><span class="nx">attributes</span><span class="p">,</span> <span class="nx">relationKey</span><span
+                    class="p">);</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-16">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-16">&#182;</a></div>
+        <p>Get class if relation is stored as a string.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                        <span class="nx">relatedModel</span> <span class="o">&amp;&amp;</span> <span
+                class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span
+                class="nx">relatedModel</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span
+                class="p">(</span><span class="nx">relatedModel</span> <span class="o">=</span> <span
+                class="nb">eval</span><span class="p">(</span><span class="nx">relatedModel</span><span
+                class="p">));</span>
+                        <span class="nx">collectionType</span> <span class="o">&amp;&amp;</span> <span
+                    class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span
+                    class="p">(</span><span class="nx">collectionType</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span
+                    class="p">(</span><span class="nx">collectionType</span> <span class="o">=</span> <span class="nb">eval</span><span
+                    class="p">(</span><span class="nx">collectionType</span><span class="p">));</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-17">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-17">&#182;</a></div>
+        <p>Merge in <code>options</code> specific to this relation.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>                        <span class="nx">relationOptions</span> <span class="o">=</span> <span
+                    class="nx">relation</span><span class="p">.</span><span class="nx">options</span> <span
+                    class="o">?</span> <span class="nx">_</span><span class="p">.</span><span
+                    class="nx">extend</span><span class="p">({},</span> <span class="nx">relation</span><span class="p">.</span><span
+                    class="nx">options</span><span class="p">,</span> <span class="nx">options</span><span
+                    class="p">)</span> <span class="o">:</span> <span class="nx">options</span><span class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-18">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-18">&#182;</a></div>
+        <p>If <code>relation.type</code> is <code>Backbone.Many</code>,
+            create <code>Backbone.Collection</code> with passed data and perform Backbone <code>set</code>.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>                        <span class="k">if</span> <span class="p">(</span><span
+                    class="nx">relation</span><span class="p">.</span><span class="nx">type</span> <span
+                    class="o">===</span> <span class="nx">Backbone</span><span class="p">.</span><span
+                    class="nx">Many</span><span class="p">)</span> <span class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-19">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-19">&#182;</a></div>
+        <p><code>collectionType</code> of defined <code>relation</code> should be instance of
+            <code>Backbone.Collection</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                            <span class="k">if</span> <span class="p">(</span><span
+                class="nx">collectionType</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span
+                class="nx">collectionType</span><span class="p">.</span><span class="nx">prototype</span> <span
+                class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span
+                class="p">)</span> <span class="p">{</span>
+                                <span class="k">throw</span> <span class="k">new</span> <span
+                    class="nb">Error</span><span class="p">(</span><span class="s1">&#39;collectionType must inherit from Backbone.Collection&#39;</span><span
+                    class="p">);</span>
                             <span class="p">}</span>
 
-                            <span class="k">if</span> <span class="p">(</span><span class="nx">val</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">)</span> <span class="p">{</span>
-                                <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">set</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">relationKey</span><span class="p">,</span> <span class="nx">val</span><span class="p">,</span> <span class="nx">relationOptions</span><span class="p">);</span>
-                            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">])</span> <span class="p">{</span>
-                                <span class="nx">data</span> <span class="o">=</span> <span class="nx">collectionType</span> <span class="o">?</span> <span class="k">new</span> <span class="nx">collectionType</span><span class="p">()</span> <span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">_createCollection</span><span class="p">(</span><span class="nx">relatedModel</span><span class="p">);</span>
-                                <span class="nx">data</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">val</span><span class="p">,</span> <span class="nx">relationOptions</span><span class="p">);</span>
-                                <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">set</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">relationKey</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">relationOptions</span><span class="p">);</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="nx">val</span> <span
+                    class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span
+                    class="nx">Collection</span><span class="p">)</span> <span class="p">{</span>
+                                <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">set</span><span
+                    class="p">.</span><span class="nx">call</span><span class="p">(</span><span
+                    class="k">this</span><span class="p">,</span> <span class="nx">relationKey</span><span
+                    class="p">,</span> <span class="nx">val</span><span class="p">,</span> <span class="nx">relationOptions</span><span
+                    class="p">);</span>
+                            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span
+                    class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span
+                    class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span
+                    class="p">])</span> <span class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-20">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-20">&#182;</a></div>
+        <p>If <code>attributes</code> has no property present,
+            create <code>Collection</code> having <code>relation.collectionType</code> as type and
+            <code>relation.Model</code> as model reference, and perform Backbone <code>set</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                                <span class="nx">data</span> <span
+                class="o">=</span> <span class="nx">collectionType</span> <span class="o">?</span> <span
+                class="k">new</span> <span class="nx">collectionType</span><span class="p">()</span> <span
+                class="o">:</span> <span class="k">this</span><span class="p">.</span><span
+                class="nx">_createCollection</span><span class="p">(</span><span class="nx">relatedModel</span><span
+                class="p">);</span>
+                                <span class="nx">data</span><span class="p">.</span><span class="nx">add</span><span
+                    class="p">(</span><span class="nx">val</span><span class="p">,</span> <span class="nx">relationOptions</span><span
+                    class="p">);</span>
+                                <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">set</span><span
+                    class="p">.</span><span class="nx">call</span><span class="p">(</span><span
+                    class="k">this</span><span class="p">,</span> <span class="nx">relationKey</span><span
+                    class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">relationOptions</span><span
+                    class="p">);</span>
                             <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                                <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span class="nx">reset</span><span class="p">(</span><span class="nx">val</span><span class="p">,</span> <span class="nx">relationOptions</span><span class="p">);</span>
-                            <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>If <code>relation</code> defines model as associated model...</p>             </td>             <td class="code">               <div class="highlight"><pre>                        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">relation</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">One</span> <span class="o">&amp;&amp;</span> <span class="nx">relatedModel</span><span class="p">)</span> <span class="p">{</span>
-                            <span class="k">if</span> <span class="p">(</span><span class="nx">val</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">AssociatedModel</span><span class="p">)</span> <span class="p">{</span>
-                                <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">set</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">relationKey</span><span class="p">,</span> <span class="nx">val</span><span class="p">,</span> <span class="nx">relationOptions</span><span class="p">);</span>
-                            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                                <span class="nx">data</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">relatedModel</span><span class="p">(</span><span class="nx">val</span><span class="p">);</span>
-                                <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">set</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">relationKey</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">relationOptions</span><span class="p">);</span>
+                                <span class="k">this</span><span class="p">.</span><span
+                    class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span
+                    class="p">].</span><span class="nx">reset</span><span class="p">(</span><span
+                    class="nx">val</span><span class="p">,</span> <span class="nx">relationOptions</span><span
+                    class="p">);</span>
                             <span class="p">}</span>
-                        <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p>Add proxy events to respective parents. Only add callback if not defined</p>             </td>             <td class="code">               <div class="highlight"><pre>                        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span class="nx">_proxyCallback</span><span class="p">)</span> <span class="p">{</span>
-                            <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span class="nx">_proxyCallback</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-                                <span class="kd">var</span> <span class="nx">args</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">,</span>
-                                    <span class="nx">opt</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">),</span>
-                                    <span class="nx">eventType</span> <span class="o">=</span> <span class="nx">opt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                                    <span class="nx">eventObject</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                                    <span class="nx">indexEventObject</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
-                                    <span class="nx">_proxyCalls</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span class="nx">_proxyCalls</span><span class="p">,</span>
+
+                        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span
+                    class="p">(</span><span class="nx">relation</span><span class="p">.</span><span
+                    class="nx">type</span> <span class="o">===</span> <span class="nx">Backbone</span><span
+                    class="p">.</span><span class="nx">One</span> <span class="o">&amp;&amp;</span> <span class="nx">relatedModel</span><span
+                    class="p">)</span> <span class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-21">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-21">&#182;</a></div>
+        <p>If passed data is not instance of <code>Backbone.AssociatedModel</code>,
+            create <code>AssociatedModel</code> and perform backbone <code>set</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                            <span class="nx">data</span> <span
+                class="o">=</span> <span class="nx">val</span> <span class="k">instanceof</span> <span class="nx">AssociatedModel</span> <span
+                class="o">?</span> <span class="nx">val</span> <span class="o">:</span> <span class="k">new</span> <span
+                class="nx">relatedModel</span><span class="p">(</span><span class="nx">val</span><span
+                class="p">);</span>
+                            <span class="nx">BackboneModel</span><span class="p">.</span><span
+                    class="nx">set</span><span class="p">.</span><span class="nx">call</span><span
+                    class="p">(</span><span class="k">this</span><span class="p">,</span> <span
+                    class="nx">relationKey</span><span class="p">,</span> <span class="nx">data</span><span
+                    class="p">,</span> <span class="nx">relationOptions</span><span class="p">)</span>
+                        <span class="p">}</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-22">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-22">&#182;</a></div>
+        <p>Add proxy events to respective parents.
+            Only add callback if not defined.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                        <span class="k">if</span> <span class="p">(</span><span
+                class="o">!</span><span class="k">this</span><span class="p">.</span><span
+                class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span
+                class="nx">_proxyCallback</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span
+                    class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span class="nx">_proxyCallback</span> <span
+                    class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span
+                    class="p">{</span>
+                                <span class="kd">var</span> <span class="nx">args</span> <span class="o">=</span> <span
+                    class="nx">arguments</span><span class="p">,</span>
+                                    <span class="nx">opt</span> <span class="o">=</span> <span
+                    class="nx">args</span><span class="p">[</span><span class="mi">0</span><span
+                    class="p">].</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span
+                    class="p">),</span>
+                                    <span class="nx">eventType</span> <span class="o">=</span> <span
+                    class="nx">opt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                    <span class="nx">eventObject</span> <span class="o">=</span> <span
+                    class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                    <span class="nx">indexEventObject</span> <span class="o">=</span> <span
+                    class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                                    <span class="nx">_proxyCalls</span> <span class="o">=</span> <span
+                    class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span
+                    class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span class="nx">_proxyCalls</span><span
+                    class="p">,</span>
                                     <span class="nx">eventPath</span><span class="p">,</span>
-                                    <span class="nx">eventAvailable</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <p>Change the event name to a fully qualified path</p>             </td>             <td class="code">               <div class="highlight"><pre>                                <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">defaultEvents</span><span class="p">,</span> <span class="nx">eventType</span><span class="p">))</span> <span class="p">{</span>
-                                    <span class="k">if</span> <span class="p">(</span><span class="nx">opt</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">size</span><span class="p">(</span><span class="nx">opt</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-                                        <span class="nx">eventPath</span> <span class="o">=</span> <span class="nx">opt</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-                                    <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p>find the specific object in the collection which has changed</p>             </td>             <td class="code">               <div class="highlight"><pre>                                    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">]</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span> <span class="o">&amp;&amp;</span> <span class="s2">&quot;change&quot;</span> <span class="o">===</span> <span class="nx">eventType</span><span class="p">)</span> <span class="p">{</span>
-                                        <span class="nx">indexEventObject</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span class="nx">models</span><span class="p">,</span> <span class="nx">eventObject</span><span class="p">);</span>
-                                    <span class="p">}</span>
+                                    <span class="nx">eventAvailable</span><span class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-23">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-23">&#182;</a></div>
+        <p>Change the event name to a fully qualified path.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                                <span class="k">if</span> <span
+                class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span
+                class="p">(</span><span class="nx">defaultEvents</span><span class="p">,</span> <span class="nx">eventType</span><span
+                class="p">))</span> <span class="p">{</span>
+                                    <span class="k">if</span> <span class="p">(</span><span class="nx">opt</span> <span
+                    class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span
+                    class="nx">size</span><span class="p">(</span><span class="nx">opt</span><span
+                    class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span
+                    class="p">)</span> <span class="p">{</span>
+                                        <span class="nx">eventPath</span> <span class="o">=</span> <span
+                    class="nx">opt</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+                                    <span class="p">}</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-24">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-24">&#182;</a></div>
+        <p>Find the specific object in the collection which has changed.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                                    <span class="k">if</span> <span
+                class="p">(</span><span class="k">this</span><span class="p">.</span><span
+                class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span
+                class="p">]</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span
+                class="p">.</span><span class="nx">Collection</span> <span class="o">&amp;&amp;</span> <span class="s2">&quot;change&quot;</span> <span
+                class="o">===</span> <span class="nx">eventType</span><span class="p">)</span> <span class="p">{</span>
+                                        <span class="nx">indexEventObject</span> <span class="o">=</span> <span
+                    class="nx">_</span><span class="p">.</span><span class="nx">indexOf</span><span
+                    class="p">(</span><span class="k">this</span><span class="p">.</span><span
+                    class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span
+                    class="p">].</span><span class="nx">models</span><span class="p">,</span> <span class="nx">eventObject</span><span
+                    class="p">);</span>
+                                    <span class="p">}</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-25">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-25">&#182;</a></div>
+        <p>Manipulate <code>eventPath</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                                    <span class="nx">eventPath</span> <span
+                class="o">=</span> <span class="nx">relationKey</span> <span class="o">+</span> <span class="p">(</span><span
+                class="nx">indexEventObject</span> <span class="o">!==</span> <span class="o">-</span><span
+                class="mi">1</span> <span class="o">?</span>
+                                                <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span
+                    class="nx">indexEventObject</span> <span class="o">+</span> <span
+                    class="s2">&quot;]&quot;</span> <span class="o">:</span> <span class="s2">&quot;&quot;</span><span
+                    class="p">)</span> <span class="o">+</span> <span class="p">(</span><span
+                    class="nx">eventPath</span> <span class="o">?</span> <span class="s2">&quot;.&quot;</span> <span
+                    class="o">+</span> <span class="nx">eventPath</span> <span class="o">:</span> <span class="s2">&quot;&quot;</span><span
+                    class="p">);</span>
+                                    <span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span
+                    class="p">]</span> <span class="o">=</span> <span class="nx">eventType</span> <span
+                    class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="nx">eventPath</span><span
+                    class="p">;</span>
 
-                                    <span class="nx">eventPath</span> <span class="o">=</span> <span class="nx">relationKey</span> <span class="o">+</span> <span class="p">(</span><span class="nx">indexEventObject</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span> <span class="o">?</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="nx">indexEventObject</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span> <span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nx">eventPath</span> <span class="o">?</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="nx">eventPath</span> <span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">);</span>
-                                    <span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">eventType</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="nx">eventPath</span><span class="p">;</span>
-
-                                    <span class="k">if</span> <span class="p">(</span><span class="nx">_proxyCalls</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>If event has been already triggered as result of same source <code>eventPath</code>,
-no need to re-trigger event to prevent cycle</p>             </td>             <td class="code">               <div class="highlight"><pre>                                        <span class="nx">eventAvailable</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">_proxyCalls</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">eventKey</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p><code>event</code> ends with eventKey</p>             </td>             <td class="code">               <div class="highlight"><pre>                                            <span class="kd">var</span> <span class="nx">d</span> <span class="o">=</span> <span class="nx">eventPath</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="nx">eventKey</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
-                                            <span class="k">return</span> <span class="nx">eventPath</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">eventKey</span><span class="p">,</span> <span class="nx">d</span><span class="p">)</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+                                    <span class="k">if</span> <span class="p">(</span><span
+                    class="nx">_proxyCalls</span><span class="p">)</span> <span class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-26">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-26">&#182;</a></div>
+        <p>If event has been already triggered as result of same source <code>eventPath</code>,
+            no need to re-trigger event to prevent cycle.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>                                        <span class="nx">eventAvailable</span> <span class="o">=</span> <span
+                    class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span
+                    class="nx">_proxyCalls</span><span class="p">,</span> <span class="kd">function</span> <span
+                    class="p">(</span><span class="nx">value</span><span class="p">,</span> <span
+                    class="nx">eventKey</span><span class="p">)</span> <span class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-27">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-27">&#182;</a></div>
+        <p><code>event</code> ends with eventKey.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                                            <span class="kd">var</span> <span
+                class="nx">d</span> <span class="o">=</span> <span class="nx">eventPath</span><span
+                class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span
+                class="nx">eventKey</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+                                            <span class="k">return</span> <span class="nx">eventPath</span><span
+                    class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span
+                    class="nx">eventKey</span><span class="p">,</span> <span class="nx">d</span><span class="p">)</span> <span
+                    class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
                                         <span class="p">});</span>
-                                        <span class="k">if</span> <span class="p">(</span><span class="nx">eventAvailable</span><span class="p">)</span> <span class="p">{</span>
-                                            <span class="k">return</span> <span class="k">this</span><span class="p">;</span>
+                                        <span class="k">if</span> <span class="p">(</span><span class="nx">eventAvailable</span><span
+                    class="p">)</span> <span class="p">{</span>
+                                            <span class="k">return</span> <span class="k">this</span><span
+                    class="p">;</span>
                                         <span class="p">}</span>
                                     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                                        <span class="nx">_proxyCalls</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span class="nx">_proxyCalls</span> <span class="o">=</span> <span class="p">{};</span>
-                                    <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-24">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-24">&#182;</a>               </div>               <p>Add <code>eventPath</code> in <code>_proxyCalls</code> hash to track of.</p>             </td>             <td class="code">               <div class="highlight"><pre>                                    <span class="nx">_proxyCalls</span><span class="p">[</span><span class="nx">eventPath</span><span class="p">]</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-                                <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-25">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-25">&#182;</a>               </div>               <p>bubble up event to parent <code>model</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                                <span class="k">this</span><span class="p">.</span><span class="nx">trigger</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">args</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-26">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-26">&#182;</a>               </div>               <p>remove <code>eventPath</code> from <code>_proxyCalls</code>, if <code>eventPath</code> and <code>_proxCalls</code> are available.</p>             </td>             <td class="code">               <div class="highlight"><pre>                                <span class="k">if</span> <span class="p">(</span><span class="nx">eventPath</span> <span class="o">&amp;&amp;</span> <span class="nx">_proxyCalls</span><span class="p">)</span> <span class="p">{</span>
-                                    <span class="k">delete</span> <span class="nx">_proxyCalls</span><span class="p">[</span><span class="nx">eventPath</span><span class="p">];</span>
+                                        <span class="nx">_proxyCalls</span> <span class="o">=</span> <span class="k">this</span><span
+                    class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span
+                    class="p">].</span><span class="nx">_proxyCalls</span> <span class="o">=</span> <span
+                    class="p">{};</span>
+                                    <span class="p">}</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-28">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-28">&#182;</a></div>
+        <p>Add <code>eventPath</code> in <code>_proxyCalls</code> to keep track of already triggered <code>event</code>.
+        </p></td>
+    <td class="code">
+        <div class="highlight"><pre>                                    <span class="nx">_proxyCalls</span><span
+                class="p">[</span><span class="nx">eventPath</span><span class="p">]</span> <span
+                class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+                                <span class="p">}</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-29">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-29">&#182;</a></div>
+        <p>Bubble up event to parent <code>model</code> with new changed arguments.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>                                <span class="k">this</span><span class="p">.</span><span class="nx">trigger</span><span
+                    class="p">.</span><span class="nx">apply</span><span class="p">(</span><span
+                    class="k">this</span><span class="p">,</span> <span class="nx">args</span><span class="p">);</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-30">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-30">&#182;</a></div>
+        <p>Remove <code>eventPath</code> from <code>_proxyCalls</code>,
+            if <code>eventPath</code> and <code>_proxCalls</code> are available,
+            which allow event to be triggered on for next operation of <code>set</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                                <span class="k">if</span> <span
+                class="p">(</span><span class="nx">eventPath</span> <span class="o">&amp;&amp;</span> <span class="nx">_proxyCalls</span><span
+                class="p">)</span> <span class="p">{</span>
+                                    <span class="k">delete</span> <span class="nx">_proxyCalls</span><span
+                    class="p">[</span><span class="nx">eventPath</span><span class="p">];</span>
                                 <span class="p">}</span>
                                 <span class="k">return</span> <span class="k">this</span><span class="p">;</span>
                             <span class="p">};</span>
-                            <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span class="nx">_proxyCallback</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
-                        <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-27">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-27">&#182;</a>               </div>               <p>Create a local <code>processedRelations</code> array to store the relation key which has been processed.
-We cannot use <code>this.relations</code> because if there is no value defined for <code>relationKey</code>, it will not get processed by either Backbone <code>set</code> or the <code>AssociatedModel</code> set</p>             </td>             <td class="code">               <div class="highlight"><pre>                        <span class="o">!</span><span class="nx">processedRelations</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">processedRelations</span> <span class="o">=</span> <span class="p">[]);</span>
-                        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">processedRelations</span><span class="p">,</span> <span class="nx">relationKey</span><span class="p">)</span> <span class="o">===</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-                            <span class="nx">processedRelations</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">relationKey</span><span class="p">);</span>
+                            <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span
+                    class="p">[</span><span class="nx">relationKey</span><span class="p">].</span><span
+                    class="nx">on</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span
+                    class="p">,</span> <span class="k">this</span><span class="p">.</span><span
+                    class="nx">attributes</span><span class="p">[</span><span class="nx">relationKey</span><span
+                    class="p">].</span><span class="nx">_proxyCallback</span><span class="p">,</span> <span class="k">this</span><span
+                    class="p">);</span>
+                        <span class="p">}</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-31">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-31">&#182;</a></div>
+        <p>Create a local <code>processedRelations</code> array to store the relation key which has been processed.
+            We cannot use <code>this.relations</code> because if there is no value defined for <code>relationKey</code>,
+            it will not get processed by either <code>BackboneModel</code> <code>set</code> or the
+            <code>AssociatedModel</code> <code>set</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                        <span class="o">!</span><span
+                class="nx">processedRelations</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span
+                class="nx">processedRelations</span> <span class="o">=</span> <span class="p">[]);</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span
+                    class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">processedRelations</span><span
+                    class="p">,</span> <span class="nx">relationKey</span><span class="p">)</span> <span
+                    class="o">===</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span
+                    class="p">{</span>
+                            <span class="nx">processedRelations</span><span class="p">.</span><span
+                    class="nx">push</span><span class="p">(</span><span class="nx">relationKey</span><span
+                    class="p">);</span>
                         <span class="p">}</span>
                     <span class="p">}</span>
                 <span class="p">},</span> <span class="k">this</span><span class="p">);</span>
             <span class="p">}</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">processedRelations</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-28">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-28">&#182;</a>               </div>               <p>Find attributes yet to be processed - <code>tbp</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                <span class="nx">tbp</span> <span class="o">=</span> <span class="p">{};</span>
-                <span class="k">for</span> <span class="p">(</span><span class="nx">attr</span> <span class="k">in</span> <span class="nx">attributes</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">processedRelations</span><span class="p">,</span> <span class="nx">attr</span><span class="p">)</span> <span class="o">===</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-                        <span class="nx">tbp</span><span class="p">[</span><span class="nx">attr</span><span class="p">]</span> <span class="o">=</span> <span class="nx">attributes</span><span class="p">[</span><span class="nx">attr</span><span class="p">];</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">processedRelations</span><span class="p">)</span> <span
+                    class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-32">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-32">&#182;</a></div>
+        <p>Find attributes yet to be processed - <code>tbp</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                <span class="nx">tbp</span> <span class="o">=</span> <span
+                class="p">{};</span>
+                <span class="k">for</span> <span class="p">(</span><span class="nx">attr</span> <span
+                    class="k">in</span> <span class="nx">attributes</span><span class="p">)</span> <span
+                    class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span
+                    class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">processedRelations</span><span
+                    class="p">,</span> <span class="nx">attr</span><span class="p">)</span> <span
+                    class="o">===</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span
+                    class="p">{</span>
+                        <span class="nx">tbp</span><span class="p">[</span><span class="nx">attr</span><span
+                    class="p">]</span> <span class="o">=</span> <span class="nx">attributes</span><span
+                    class="p">[</span><span class="nx">attr</span><span class="p">];</span>
                     <span class="p">}</span>
                 <span class="p">}</span>
-            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <p>Set all <code>attributes</code> to <code>tbp</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                <span class="nx">tbp</span> <span class="o">=</span> <span class="nx">attributes</span><span class="p">;</span>
-            <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p>Returns results for <code>BackboneModel.set</code></p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="k">return</span> <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">set</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">tbp</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-        <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p>Returns New <code>collection</code> of type <code>relation.relatedModel</code></p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">_createCollection</span><span class="o">:</span><span class="kd">function</span> <span class="p">(</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">collection</span><span class="p">,</span> <span class="nx">relatedModel</span> <span class="o">=</span> <span class="nx">type</span><span class="p">;</span>
-            <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">relatedModel</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">relatedModel</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="nx">relatedModel</span><span class="p">));</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">relatedModel</span> <span class="o">&amp;&amp;</span> <span class="nx">relatedModel</span><span class="p">.</span><span class="nx">prototype</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">AssociatedModel</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-32">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-32">&#182;</a>               </div>               <p>Creates new <code>Backbone.Collection</code> and defines model class</p>             </td>             <td class="code">               <div class="highlight"><pre>                <span class="nx">collection</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">();</span>
-                <span class="nx">collection</span><span class="p">.</span><span class="nx">model</span> <span class="o">=</span> <span class="nx">relatedModel</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-33">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-33">&#182;</a></div>
+        <p>Set all <code>attributes</code> to <code>tbp</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                <span class="nx">tbp</span> <span class="o">=</span> <span
+                class="nx">attributes</span><span class="p">;</span>
+            <span class="p">}</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-34">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-34">&#182;</a></div>
+        <p>Return results for <code>BackboneModel.set</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>            <span class="k">return</span> <span class="nx">BackboneModel</span><span
+                class="p">.</span><span class="nx">set</span><span class="p">.</span><span class="nx">call</span><span
+                class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">tbp</span><span
+                class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+        <span class="p">},</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-35">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-35">&#182;</a></div>
+        <p>Returns New <code>collection</code> of type <code>relation.relatedModel</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>        <span class="nx">_createCollection</span><span class="o">:</span> <span
+                class="kd">function</span> <span class="p">(</span><span class="nx">type</span><span class="p">)</span> <span
+                class="p">{</span>
+            <span class="kd">var</span> <span class="nx">collection</span><span class="p">,</span> <span class="nx">relatedModel</span> <span
+                    class="o">=</span> <span class="nx">type</span><span class="p">;</span>
+            <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span
+                    class="p">(</span><span class="nx">relatedModel</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span
+                    class="p">(</span><span class="nx">relatedModel</span> <span class="o">=</span> <span class="nb">eval</span><span
+                    class="p">(</span><span class="nx">relatedModel</span><span class="p">));</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-36">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-36">&#182;</a></div>
+        <p>Creates new <code>Backbone.Collection</code> and defines model class.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span class="nx">relatedModel</span> <span
+                class="o">&amp;&amp;</span> <span class="nx">relatedModel</span><span class="p">.</span><span
+                class="nx">prototype</span> <span class="k">instanceof</span> <span
+                class="nx">AssociatedModel</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">collection</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Backbone</span><span
+                    class="p">.</span><span class="nx">Collection</span><span class="p">();</span>
+                <span class="nx">collection</span><span class="p">.</span><span class="nx">model</span> <span class="o">=</span> <span
+                    class="nx">relatedModel</span><span class="p">;</span>
             <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;type must inherit from Backbone.AssociatedModel&#39;</span><span class="p">);</span>
+                <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span
+                    class="p">(</span><span
+                    class="s1">&#39;type must inherit from Backbone.AssociatedModel&#39;</span><span class="p">);</span>
             <span class="p">}</span>
             <span class="k">return</span> <span class="nx">collection</span><span class="p">;</span>
-        <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <p>Has the model changed. Traverse the object hierarchy to compute dirtyness</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">hasChanged</span><span class="o">:</span><span class="kd">function</span> <span class="p">(</span><span class="nx">attr</span><span class="p">)</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">isDirty</span><span class="p">,</span> <span class="nx">relation</span><span class="p">,</span> <span class="nx">attrValue</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">dirtyObjects</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p>To prevent cycles, check if this node is visited</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">visitedHC</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">this</span><span class="p">.</span><span class="nx">visitedHC</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-                <span class="nx">isDirty</span> <span class="o">=</span> <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">hasChanged</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
-                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">isDirty</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-35">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-35">&#182;</a>               </div>               <p>Go down the hierarchy to see if anything has <code>changed</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-                        <span class="nx">relation</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-                        <span class="nx">attrValue</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">];</span>
-                        <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span><span class="p">)</span> <span class="p">{</span>
-                            <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">)</span> <span class="p">{</span>
-                                <span class="nx">dirtyObjects</span> <span class="o">=</span> <span class="nx">attrValue</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="p">{</span>
-                                    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span class="nx">hasChanged</span><span class="p">()</span> <span class="o">===</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">},</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-37">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-37">&#182;</a></div>
+        <p>Has the model changed. Traverse the object hierarchy to compute dirtyness.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>        <span class="nx">hasChanged</span><span class="o">:</span> <span class="kd">function</span> <span
+                class="p">(</span><span class="nx">attr</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">isDirty</span><span class="p">,</span> <span class="nx">relation</span><span
+                    class="p">,</span> <span class="nx">attrValue</span><span class="p">,</span> <span
+                    class="nx">i</span><span class="p">,</span> <span class="nx">dirtyObjects</span><span
+                    class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-38">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-38">&#182;</a></div>
+        <p>To prevent cycles, check if this node is visited.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span
+                class="o">!</span><span class="k">this</span><span class="p">.</span><span
+                class="nx">visitedHC</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">visitedHC</span> <span
+                    class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+                <span class="nx">isDirty</span> <span class="o">=</span> <span class="nx">BackboneModel</span><span
+                    class="p">.</span><span class="nx">hasChanged</span><span class="p">.</span><span
+                    class="nx">apply</span><span class="p">(</span><span class="k">this</span><span
+                    class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span
+                    class="nx">isDirty</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span
+                    class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-39">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-39">&#182;</a></div>
+        <p>Go down the hierarchy to see if anything has <code>changed</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                    <span class="k">for</span> <span class="p">(</span><span
+                class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span
+                class="nx">i</span> <span class="o">&lt;</span> <span class="k">this</span><span class="p">.</span><span
+                class="nx">relations</span><span class="p">.</span><span class="nx">length</span><span
+                class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span> <span
+                class="p">{</span>
+                        <span class="nx">relation</span> <span class="o">=</span> <span class="k">this</span><span
+                    class="p">.</span><span class="nx">relations</span><span class="p">[</span><span class="nx">i</span><span
+                    class="p">];</span>
+                        <span class="nx">attrValue</span> <span class="o">=</span> <span class="k">this</span><span
+                    class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span
+                    class="p">.</span><span class="nx">key</span><span class="p">];</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span><span
+                    class="p">)</span> <span class="p">{</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span> <span
+                    class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span
+                    class="nx">Collection</span><span class="p">)</span> <span class="p">{</span>
+                                <span class="nx">dirtyObjects</span> <span class="o">=</span> <span
+                    class="nx">attrValue</span><span class="p">.</span><span class="nx">filter</span><span
+                    class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">m</span><span
+                    class="p">)</span> <span class="p">{</span>
+                                    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span
+                    class="nx">hasChanged</span><span class="p">()</span> <span class="o">===</span> <span class="kc">true</span><span
+                    class="p">;</span>
                                 <span class="p">});</span>
-                                <span class="nx">_</span><span class="p">.</span><span class="nx">size</span><span class="p">(</span><span class="nx">dirtyObjects</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">isDirty</span> <span class="o">=</span> <span class="kc">true</span><span class="p">);</span>
+                                <span class="nx">_</span><span class="p">.</span><span class="nx">size</span><span
+                    class="p">(</span><span class="nx">dirtyObjects</span><span class="p">)</span> <span
+                    class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span
+                    class="p">(</span><span class="nx">isDirty</span> <span class="o">=</span> <span
+                    class="kc">true</span><span class="p">);</span>
                             <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                                <span class="nx">isDirty</span> <span class="o">=</span> <span class="nx">attrValue</span><span class="p">.</span><span class="nx">hasChanged</span> <span class="o">&amp;&amp;</span> <span class="nx">attrValue</span><span class="p">.</span><span class="nx">hasChanged</span><span class="p">();</span>
+                                <span class="nx">isDirty</span> <span class="o">=</span> <span
+                    class="nx">attrValue</span><span class="p">.</span><span class="nx">hasChanged</span> <span
+                    class="o">&amp;&amp;</span> <span class="nx">attrValue</span><span class="p">.</span><span
+                    class="nx">hasChanged</span><span class="p">();</span>
                             <span class="p">}</span>
-                            <span class="k">if</span> <span class="p">(</span><span class="nx">isDirty</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="nx">isDirty</span><span
+                    class="p">)</span> <span class="p">{</span>
                                 <span class="k">break</span><span class="p">;</span>
                             <span class="p">}</span>
                         <span class="p">}</span>
                     <span class="p">}</span>
                 <span class="p">}</span>
-                <span class="k">delete</span> <span class="k">this</span><span class="p">.</span><span class="nx">visitedHC</span><span class="p">;</span>
+                <span class="k">delete</span> <span class="k">this</span><span class="p">.</span><span class="nx">visitedHC</span><span
+                    class="p">;</span>
             <span class="p">}</span>
-            <span class="k">return</span> <span class="o">!!</span><span class="nx">isDirty</span><span class="p">;</span>
-        <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-36">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-36">&#182;</a>               </div>               <p>Returns a hash of the changed attributes</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">changedAttributes</span><span class="o">:</span><span class="kd">function</span> <span class="p">(</span><span class="nx">diff</span><span class="p">)</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">delta</span><span class="p">,</span> <span class="nx">relation</span><span class="p">,</span> <span class="nx">attrValue</span><span class="p">,</span> <span class="nx">changedCollection</span><span class="p">,</span> <span class="nx">i</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-37">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-37">&#182;</a>               </div>               <p>To prevent cycles, check if this node is visited</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">this</span><span class="p">.</span><span class="nx">visited</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-                <span class="nx">delta</span> <span class="o">=</span> <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">changedAttributes</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
-                <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-                        <span class="nx">relation</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-                        <span class="nx">attrValue</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">];</span>
-                        <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span><span class="p">)</span> <span class="p">{</span>
-                            <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">)</span> <span class="p">{</span>
-                                <span class="nx">changedCollection</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">attrValue</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="p">{</span>
-                                    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span class="nx">changedAttributes</span><span class="p">();</span>
-                                <span class="p">}),</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="p">{</span>
-                                    <span class="k">return</span> <span class="o">!!</span><span class="nx">m</span><span class="p">;</span>
+            <span class="k">return</span> <span class="o">!!</span><span class="nx">isDirty</span><span
+                    class="p">;</span>
+        <span class="p">},</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-40">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-40">&#182;</a></div>
+        <p>Returns a hash of the changed attributes.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>        <span class="nx">changedAttributes</span><span class="o">:</span> <span
+                class="kd">function</span> <span class="p">(</span><span class="nx">diff</span><span class="p">)</span> <span
+                class="p">{</span>
+            <span class="kd">var</span> <span class="nx">delta</span><span class="p">,</span> <span
+                    class="nx">relation</span><span class="p">,</span> <span class="nx">attrValue</span><span class="p">,</span> <span
+                    class="nx">changedCollection</span><span class="p">,</span> <span class="nx">i</span><span
+                    class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-41">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-41">&#182;</a></div>
+        <p>To prevent cycles, check if this node is visited.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span
+                class="o">!</span><span class="k">this</span><span class="p">.</span><span
+                class="nx">visited</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">visited</span> <span
+                    class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+                <span class="nx">delta</span> <span class="o">=</span> <span class="nx">BackboneModel</span><span
+                    class="p">.</span><span class="nx">changedAttributes</span><span class="p">.</span><span class="nx">apply</span><span
+                    class="p">(</span><span class="k">this</span><span class="p">,</span> <span
+                    class="nx">arguments</span><span class="p">);</span>
+                <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span
+                    class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span
+                    class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span
+                    class="o">&lt;</span> <span class="k">this</span><span class="p">.</span><span
+                    class="nx">relations</span><span class="p">.</span><span class="nx">length</span><span
+                    class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span> <span
+                    class="p">{</span>
+                        <span class="nx">relation</span> <span class="o">=</span> <span class="k">this</span><span
+                    class="p">.</span><span class="nx">relations</span><span class="p">[</span><span class="nx">i</span><span
+                    class="p">];</span>
+                        <span class="nx">attrValue</span> <span class="o">=</span> <span class="k">this</span><span
+                    class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span
+                    class="p">.</span><span class="nx">key</span><span class="p">];</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span><span
+                    class="p">)</span> <span class="p">{</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span> <span
+                    class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span
+                    class="nx">Collection</span><span class="p">)</span> <span class="p">{</span>
+                                <span class="nx">changedCollection</span> <span class="o">=</span> <span
+                    class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span
+                    class="p">(</span><span class="nx">attrValue</span><span class="p">.</span><span
+                    class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span
+                    class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="p">{</span>
+                                    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span
+                    class="nx">changedAttributes</span><span class="p">();</span>
+                                <span class="p">}),</span> <span class="kd">function</span> <span
+                    class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="p">{</span>
+                                    <span class="k">return</span> <span class="o">!!</span><span
+                    class="nx">m</span><span class="p">;</span>
                                 <span class="p">});</span>
-                                <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">size</span><span class="p">(</span><span class="nx">changedCollection</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-                                    <span class="nx">delta</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">changedCollection</span><span class="p">;</span>
+                                <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span
+                    class="p">.</span><span class="nx">size</span><span class="p">(</span><span class="nx">changedCollection</span><span
+                    class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span
+                    class="p">)</span> <span class="p">{</span>
+                                    <span class="nx">delta</span><span class="p">[</span><span
+                    class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span
+                    class="p">]</span> <span class="o">=</span> <span class="nx">changedCollection</span><span
+                    class="p">;</span>
                                 <span class="p">}</span>
-                            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">AssociatedModel</span> <span class="o">&amp;&amp;</span> <span class="nx">attrValue</span><span class="p">.</span><span class="nx">hasChanged</span><span class="p">())</span> <span class="p">{</span>
-                                <span class="nx">delta</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">attrValue</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">();</span>
+                            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span
+                    class="p">(</span><span class="nx">attrValue</span> <span class="k">instanceof</span> <span
+                    class="nx">AssociatedModel</span> <span class="o">&amp;&amp;</span> <span
+                    class="nx">attrValue</span><span class="p">.</span><span class="nx">hasChanged</span><span
+                    class="p">())</span> <span class="p">{</span>
+                                <span class="nx">delta</span><span class="p">[</span><span
+                    class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span
+                    class="p">]</span> <span class="o">=</span> <span class="nx">attrValue</span><span
+                    class="p">.</span><span class="nx">toJSON</span><span class="p">();</span>
                             <span class="p">}</span>
                         <span class="p">}</span>
                     <span class="p">}</span>
                 <span class="p">}</span>
-                <span class="k">delete</span> <span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span class="p">;</span>
+                <span class="k">delete</span> <span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span
+                    class="p">;</span>
             <span class="p">}</span>
-            <span class="k">return</span> <span class="o">!</span><span class="nx">delta</span> <span class="o">?</span> <span class="kc">false</span> <span class="o">:</span> <span class="nx">delta</span><span class="p">;</span>
-        <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-38">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-38">&#182;</a>               </div>               <p>Returns the hash of the previous attributes of the graph</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">previousAttributes</span><span class="o">:</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">pa</span><span class="p">,</span> <span class="nx">attrValue</span><span class="p">,</span> <span class="nx">pattrValue</span><span class="p">,</span> <span class="nx">pattrJSON</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-39">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-39">&#182;</a>               </div>               <p>To prevent cycles, check if this node is visited</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">this</span><span class="p">.</span><span class="nx">visited</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-                <span class="nx">pa</span> <span class="o">=</span> <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">previousAttributes</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
-                <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">relation</span><span class="p">)</span> <span class="p">{</span>
-                        <span class="nx">attrValue</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">];</span>
-                        <span class="nx">pattrValue</span> <span class="o">=</span> <span class="nx">pa</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">];</span>
-                        <span class="nx">pattrJSON</span> <span class="o">=</span> <span class="nx">pattrValue</span> <span class="o">?</span> <span class="nx">pattrValue</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">()</span> <span class="o">:</span> <span class="kc">undefined</span><span class="p">;</span>
-                        <span class="k">if</span> <span class="p">(</span><span class="nx">pattrValue</span> <span class="o">&amp;&amp;</span> <span class="nx">pattrValue</span> <span class="o">==</span> <span class="nx">attrValue</span><span class="p">)</span> <span class="p">{</span>
-                            <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">AssociatedModel</span><span class="p">)</span> <span class="p">{</span>
-                                <span class="nx">pa</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">attrValue</span><span class="p">.</span><span class="nx">previousAttributes</span><span class="p">();</span>
-                            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">)</span> <span class="p">{</span>
-                                <span class="nx">pa</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">attrValue</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="p">{</span>
-                                    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span class="nx">previousAttributes</span><span class="p">();</span>
+            <span class="k">return</span> <span class="o">!</span><span class="nx">delta</span> <span class="o">?</span> <span
+                    class="kc">false</span> <span class="o">:</span> <span class="nx">delta</span><span
+                    class="p">;</span>
+        <span class="p">},</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-42">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-42">&#182;</a></div>
+        <p>Returns the hash of the previous attributes of the graph.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>        <span class="nx">previousAttributes</span><span class="o">:</span> <span
+                class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">pa</span><span class="p">,</span> <span
+                    class="nx">attrValue</span><span class="p">,</span> <span class="nx">pattrValue</span><span
+                    class="p">,</span> <span class="nx">pattrJSON</span><span class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-43">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-43">&#182;</a></div>
+        <p>To prevent cycles, check if this node is visited.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span
+                class="o">!</span><span class="k">this</span><span class="p">.</span><span
+                class="nx">visited</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">visited</span> <span
+                    class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+                <span class="nx">pa</span> <span class="o">=</span> <span class="nx">BackboneModel</span><span
+                    class="p">.</span><span class="nx">previousAttributes</span><span class="p">.</span><span
+                    class="nx">apply</span><span class="p">(</span><span class="k">this</span><span
+                    class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+                <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span
+                    class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span
+                    class="p">(</span><span class="k">this</span><span class="p">.</span><span
+                    class="nx">relations</span><span class="p">,</span> <span class="kd">function</span> <span
+                    class="p">(</span><span class="nx">relation</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">attrValue</span> <span class="o">=</span> <span class="k">this</span><span
+                    class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span
+                    class="p">.</span><span class="nx">key</span><span class="p">];</span>
+                        <span class="nx">pattrValue</span> <span class="o">=</span> <span class="nx">pa</span><span
+                    class="p">[</span><span class="nx">relation</span><span class="p">.</span><span
+                    class="nx">key</span><span class="p">];</span>
+                        <span class="nx">pattrJSON</span> <span class="o">=</span> <span
+                    class="nx">pattrValue</span> <span class="o">?</span> <span class="nx">pattrValue</span><span
+                    class="p">.</span><span class="nx">toJSON</span><span class="p">()</span> <span
+                    class="o">:</span> <span class="kc">undefined</span><span class="p">;</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">pattrValue</span> <span
+                    class="o">&amp;&amp;</span> <span class="nx">pattrValue</span> <span class="o">==</span> <span
+                    class="nx">attrValue</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="nx">attrValue</span> <span
+                    class="k">instanceof</span> <span class="nx">AssociatedModel</span><span class="p">)</span> <span
+                    class="p">{</span>
+                                <span class="nx">pa</span><span class="p">[</span><span class="nx">relation</span><span
+                    class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span
+                    class="nx">attrValue</span><span class="p">.</span><span class="nx">previousAttributes</span><span
+                    class="p">();</span>
+                            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span
+                    class="p">(</span><span class="nx">attrValue</span> <span class="k">instanceof</span> <span
+                    class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">)</span> <span
+                    class="p">{</span>
+                                <span class="nx">pa</span><span class="p">[</span><span class="nx">relation</span><span
+                    class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span
+                    class="nx">attrValue</span><span class="p">.</span><span class="nx">map</span><span
+                    class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">m</span><span
+                    class="p">)</span> <span class="p">{</span>
+                                    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span
+                    class="nx">previousAttributes</span><span class="p">();</span>
                                 <span class="p">});</span>
                             <span class="p">}</span>
                         <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                            <span class="k">if</span> <span class="p">(</span><span class="nx">pattrValue</span><span class="p">)</span>
-                                <span class="nx">pa</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">pattrJSON</span><span class="p">;</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="nx">pattrValue</span><span
+                    class="p">)</span>
+                                <span class="nx">pa</span><span class="p">[</span><span class="nx">relation</span><span
+                    class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span
+                    class="nx">pattrJSON</span><span class="p">;</span>
                         <span class="p">}</span>
                     <span class="p">},</span> <span class="k">this</span><span class="p">);</span>
                 <span class="p">}</span>
-                <span class="k">delete</span> <span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span class="p">;</span>
+                <span class="k">delete</span> <span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span
+                    class="p">;</span>
             <span class="p">}</span>
             <span class="k">return</span> <span class="nx">pa</span><span class="p">;</span>
-        <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-40">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-40">&#182;</a>               </div>               <p>Return the previous value of the passed in attribute</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">previous</span><span class="o">:</span><span class="kd">function</span> <span class="p">(</span><span class="nx">attr</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">previousAttributes</span><span class="p">()[</span><span class="nx">attr</span><span class="p">];</span>
-        <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-41">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-41">&#182;</a>               </div>               <p>The JSON representation of the model.</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">toJSON</span><span class="o">:</span><span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">json</span><span class="p">,</span> <span class="nx">aJson</span><span class="p">;</span>
-            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">this</span><span class="p">.</span><span class="nx">visited</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-42">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-42">&#182;</a>               </div>               <p>Get json representation from <code>BackboneModel.toJSON</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                <span class="nx">json</span> <span class="o">=</span> <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-43">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-43">&#182;</a>               </div>               <p>If <code>this.relations</code> is defined, iterate through each <code>relation</code> and added it's json representation to parents' json representation</p>             </td>             <td class="code">               <div class="highlight"><pre>                <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">relation</span><span class="p">)</span> <span class="p">{</span>
-                        <span class="kd">var</span> <span class="nx">attr</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">];</span>
-                        <span class="k">if</span> <span class="p">(</span><span class="nx">attr</span><span class="p">)</span> <span class="p">{</span>
-                            <span class="nx">aJson</span> <span class="o">=</span> <span class="nx">attr</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
-                            <span class="nx">json</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">aJson</span><span class="p">)</span> <span class="o">?</span> <span class="nx">_</span><span class="p">.</span><span class="nx">compact</span><span class="p">(</span><span class="nx">aJson</span><span class="p">)</span> <span class="o">:</span> <span class="nx">aJson</span><span class="p">;</span>
+        <span class="p">},</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-44">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-44">&#182;</a></div>
+        <p>Return the previous value of the passed in attribute.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>        <span class="nx">previous</span><span class="o">:</span> <span class="kd">function</span> <span
+                class="p">(</span><span class="nx">attr</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">previousAttributes</span><span
+                    class="p">()[</span><span class="nx">attr</span><span class="p">];</span>
+        <span class="p">},</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-45">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-45">&#182;</a></div>
+        <p>The JSON representation of the model.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>        <span class="nx">toJSON</span><span class="o">:</span> <span class="kd">function</span> <span
+                class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">json</span><span class="p">,</span> <span
+                    class="nx">aJson</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span
+                    class="p">.</span><span class="nx">visited</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">visited</span> <span
+                    class="o">=</span> <span class="kc">true</span><span class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-46">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-46">&#182;</a></div>
+        <p>Get json representation from <code>BackboneModel.toJSON</code>.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>                <span class="nx">json</span> <span class="o">=</span> <span
+                    class="nx">BackboneModel</span><span class="p">.</span><span class="nx">toJSON</span><span
+                    class="p">.</span><span class="nx">apply</span><span class="p">(</span><span
+                    class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span
+                    class="p">);</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-47">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-47">&#182;</a></div>
+        <p>If <code>this.relations</code> is defined, iterate through each <code>relation</code>
+            and added it's json representation to parents' json representation.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span
+                class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span
+                    class="p">(</span><span class="k">this</span><span class="p">.</span><span
+                    class="nx">relations</span><span class="p">,</span> <span class="kd">function</span> <span
+                    class="p">(</span><span class="nx">relation</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="kd">var</span> <span class="nx">attr</span> <span class="o">=</span> <span
+                    class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span
+                    class="p">[</span><span class="nx">relation</span><span class="p">.</span><span
+                    class="nx">key</span><span class="p">];</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">attr</span><span
+                    class="p">)</span> <span class="p">{</span>
+                            <span class="nx">aJson</span> <span class="o">=</span> <span class="nx">attr</span><span
+                    class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span
+                    class="nx">options</span><span class="p">);</span>
+                            <span class="nx">json</span><span class="p">[</span><span class="nx">relation</span><span
+                    class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span
+                    class="nx">_</span><span class="p">.</span><span class="nx">isArray</span><span
+                    class="p">(</span><span class="nx">aJson</span><span class="p">)</span> <span
+                    class="o">?</span> <span class="nx">_</span><span class="p">.</span><span
+                    class="nx">compact</span><span class="p">(</span><span class="nx">aJson</span><span
+                    class="p">)</span> <span class="o">:</span> <span class="nx">aJson</span><span class="p">;</span>
                         <span class="p">}</span>
                     <span class="p">},</span> <span class="k">this</span><span class="p">);</span>
                 <span class="p">}</span>
-                <span class="k">delete</span> <span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span class="p">;</span>
+                <span class="k">delete</span> <span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span
+                    class="p">;</span>
             <span class="p">}</span>
             <span class="k">return</span> <span class="nx">json</span><span class="p">;</span>
-        <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-44">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-44">&#182;</a>               </div>               <p>deep <code>clone</code> the model.</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">clone</span><span class="o">:</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">cloneObj</span><span class="p">,</span> <span class="nx">newCollection</span><span class="p">;</span>
-            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">this</span><span class="p">.</span><span class="nx">visited</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-45">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-45">&#182;</a>               </div>               <p>Get shallow clone from <code>BackboneModel.clone</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                <span class="nx">cloneObj</span> <span class="o">=</span> <span class="nx">BackboneModel</span><span class="p">.</span><span class="nx">clone</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-46">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-46">&#182;</a>               </div>               <p>If <code>this.relations</code> is defined, iterate through each <code>relation</code> and <code>clone</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">relations</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">relation</span><span class="p">)</span> <span class="p">{</span>
-                        <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">])</span> <span class="p">{</span>
-                            <span class="kd">var</span> <span class="nx">sourceObj</span> <span class="o">=</span> <span class="nx">cloneObj</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">];</span>
-                            <span class="k">if</span> <span class="p">(</span><span class="nx">sourceObj</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-47">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-47">&#182;</a>               </div>               <p>Creates new <code>collection</code> using <code>relation</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                                <span class="nx">newCollection</span> <span class="o">=</span> <span class="nx">relation</span><span class="p">.</span><span class="nx">collectionType</span> <span class="o">?</span> <span class="k">new</span> <span class="nx">relation</span><span class="p">.</span><span class="nx">collectionType</span><span class="p">()</span> <span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">_createCollection</span><span class="p">(</span><span class="nx">relation</span><span class="p">.</span><span class="nx">relatedModel</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-48">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-48">&#182;</a>               </div>               <p>Added each <code>clone</code> model to <code>newCollection</code></p>             </td>             <td class="code">               <div class="highlight"><pre>                                <span class="nx">sourceObj</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
-                                    <span class="kd">var</span> <span class="nx">mClone</span> <span class="o">=</span> <span class="nx">model</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
-                                    <span class="nx">mClone</span> <span class="o">&amp;&amp;</span> <span class="nx">newCollection</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">mClone</span><span class="p">);</span>
+        <span class="p">},</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-48">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-48">&#182;</a></div>
+        <p>Deep <code>clone</code> the model.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>        <span class="nx">clone</span><span class="o">:</span> <span class="kd">function</span> <span
+                class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">cloneObj</span><span class="p">,</span> <span class="nx">newCollection</span><span
+                    class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span
+                    class="p">.</span><span class="nx">visited</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">visited</span> <span
+                    class="o">=</span> <span class="kc">true</span><span class="p">;</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-49">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-49">&#182;</a></div>
+        <p>Get shallow clone from <code>BackboneModel.clone</code>.</p></td>
+    <td class="code">
+        <div class="highlight">
+            <pre>                <span class="nx">cloneObj</span> <span class="o">=</span> <span class="nx">BackboneModel</span><span
+                    class="p">.</span><span class="nx">clone</span><span class="p">.</span><span class="nx">apply</span><span
+                    class="p">(</span><span class="k">this</span><span class="p">,</span> <span
+                    class="nx">arguments</span><span class="p">);</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-50">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-50">&#182;</a></div>
+        <p>If <code>this.relations</code> is defined, iterate through each <code>relation</code> and <code>clone</code>.
+        </p></td>
+    <td class="code">
+        <div class="highlight"><pre>                <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span
+                class="p">.</span><span class="nx">relations</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span
+                    class="p">(</span><span class="k">this</span><span class="p">.</span><span
+                    class="nx">relations</span><span class="p">,</span> <span class="kd">function</span> <span
+                    class="p">(</span><span class="nx">relation</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span
+                    class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span
+                    class="p">.</span><span class="nx">key</span><span class="p">])</span> <span class="p">{</span>
+                            <span class="kd">var</span> <span class="nx">sourceObj</span> <span class="o">=</span> <span
+                    class="nx">cloneObj</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span
+                    class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span
+                    class="p">];</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="nx">sourceObj</span> <span
+                    class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span
+                    class="nx">Collection</span><span class="p">)</span> <span class="p">{</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-51">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-51">&#182;</a></div>
+        <p>Creates new <code>collection</code> using <code>relation</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                                <span class="nx">newCollection</span> <span
+                class="o">=</span> <span class="nx">relation</span><span class="p">.</span><span class="nx">collectionType</span> <span
+                class="o">?</span> <span class="k">new</span> <span class="nx">relation</span><span
+                class="p">.</span><span class="nx">collectionType</span><span class="p">()</span> <span
+                class="o">:</span>
+                                                <span class="k">this</span><span class="p">.</span><span class="nx">_createCollection</span><span
+                    class="p">(</span><span class="nx">relation</span><span class="p">.</span><span class="nx">relatedModel</span><span
+                    class="p">);</span></pre>
+        </div>
+    </td>
+</tr>
+<tr id="section-52">
+    <td class="docs">
+        <div class="pilwrap"><a class="pilcrow" href="#section-52">&#182;</a></div>
+        <p>Added each <code>clone</code> model to <code>newCollection</code>.</p></td>
+    <td class="code">
+        <div class="highlight"><pre>                                <span class="nx">sourceObj</span><span
+                class="p">.</span><span class="nx">each</span><span class="p">(</span><span
+                class="kd">function</span> <span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span
+                class="p">{</span>
+                                    <span class="kd">var</span> <span class="nx">mClone</span> <span class="o">=</span> <span
+                    class="nx">model</span><span class="p">.</span><span class="nx">clone</span><span
+                    class="p">();</span>
+                                    <span class="nx">mClone</span> <span class="o">&amp;&amp;</span> <span class="nx">newCollection</span><span
+                    class="p">.</span><span class="nx">add</span><span class="p">(</span><span
+                    class="nx">mClone</span><span class="p">);</span>
                                 <span class="p">});</span>
-                                <span class="nx">cloneObj</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">newCollection</span><span class="p">;</span>
-                            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">sourceObj</span> <span class="k">instanceof</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">)</span> <span class="p">{</span>
-                                <span class="nx">cloneObj</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">sourceObj</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+                                <span class="nx">cloneObj</span><span class="p">.</span><span
+                    class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span
+                    class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">newCollection</span><span
+                    class="p">;</span>
+                            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span
+                    class="p">(</span><span class="nx">sourceObj</span> <span class="k">instanceof</span> <span
+                    class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span
+                    class="p">)</span> <span class="p">{</span>
+                                <span class="nx">cloneObj</span><span class="p">.</span><span
+                    class="nx">attributes</span><span class="p">[</span><span class="nx">relation</span><span class="p">.</span><span
+                    class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span
+                    class="nx">sourceObj</span><span class="p">.</span><span class="nx">clone</span><span
+                    class="p">();</span>
                             <span class="p">}</span>
                         <span class="p">}</span>
                     <span class="p">},</span> <span class="k">this</span><span class="p">);</span>
                 <span class="p">}</span>
-                <span class="k">delete</span> <span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span class="p">;</span>
+                <span class="k">delete</span> <span class="k">this</span><span class="p">.</span><span class="nx">visited</span><span
+                    class="p">;</span>
             <span class="p">}</span>
             <span class="k">return</span> <span class="nx">cloneObj</span><span class="p">;</span>
         <span class="p">}</span>
     <span class="p">});</span>
 <span class="p">})();</span>
 
-</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
+</pre>
+        </div>
+    </td>
+</tr>
+</tbody>
+</table>
+</div>
+</body>
+</html>
