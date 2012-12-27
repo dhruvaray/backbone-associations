@@ -190,27 +190,25 @@
 
     // An inversion-of-control version of `on`. Tell *this* object to listen to
     // an event in another object ... keeping track of what it's listening to.
-    listenTo: function(object, events, callback, context) {
-      context = context || this;
+    listenTo: function(object, events, callback) {
       var listeners = this._listeners || (this._listeners = {});
       var id = object._listenerId || (object._listenerId = _.uniqueId('l'));
       listeners[id] = object;
-      object.on(events, callback || context, context);
+      object.on(events, callback || this, this);
       return this;
     },
 
     // Tell this object to stop listening to either specific events ... or
     // to every object it's currently listening to.
-    stopListening: function(object, events, callback, context) {
-      context = context || this;
+    stopListening: function(object, events, callback) {
       var listeners = this._listeners;
       if (!listeners) return;
       if (object) {
-        object.off(events, callback, context);
+        object.off(events, callback, this);
         if (!events && !callback) delete listeners[object._listenerId];
       } else {
         for (var id in listeners) {
-          listeners[id].off(null, null, context);
+          listeners[id].off(null, null, this);
         }
         this._listeners = {};
       }
@@ -239,11 +237,9 @@
     this.attributes = {};
     this._changes = [];
     if (options && options.collection) this.collection = options.collection;
-    if (options && options.parse) attrs = this.parse(attrs, options);
-    if (defaults = _.result(this, 'defaults')) {
-      attrs = _.defaults({}, attrs, defaults);
-    }
-    this.set(attrs, _.extend({silent: true}, options));
+    if (options && options.parse) attrs = this.parse(attrs);
+    if (defaults = _.result(this, 'defaults')) _.defaults(attrs, defaults);
+    this.set(attrs, {silent: true});
     this._currentAttributes = _.clone(this.attributes);
     this._previousAttributes = _.clone(this.attributes);
     this.initialize.apply(this, arguments);
@@ -296,7 +292,7 @@
       if (key == null) return this;
 
       // Handle both `"key", value` and `{key: value}` -style arguments.
-      if (typeof key === 'object') {
+      if (_.isObject(key)) {
         attrs = key;
         options = val;
       } else {
@@ -356,7 +352,7 @@
       var model = this;
       var success = options.success;
       options.success = function(resp, status, xhr) {
-        if (!model.set(model.parse(resp, options), options)) return false;
+        if (!model.set(model.parse(resp), options)) return false;
         if (success) success(model, resp, options);
       };
       return this.sync('read', this, options);
@@ -369,13 +365,13 @@
       var attrs, current, done;
 
       // Handle both `"key", value` and `{key: value}` -style arguments.
-      if (key === void 0 || typeof key === 'object') {
+      if (key == null || _.isObject(key)) {
         attrs = key;
         options = val;
       } else if (key != null) {
         (attrs = {})[key] = val;
       }
-      options = _.extend({validate: true}, options);
+      options = options ? _.clone(options) : {};
 
       // If we're "wait"-ing to set changed attributes, validate early.
       if (options.wait) {
@@ -398,7 +394,7 @@
       var success = options.success;
       options.success = function(resp, status, xhr) {
         done = true;
-        var serverAttrs = model.parse(resp, options);
+        var serverAttrs = model.parse(resp);
         if (options.wait) serverAttrs = _.extend(attrs || {}, serverAttrs);
         if (!model.set(serverAttrs, options)) return false;
         if (success) success(model, resp, options);
@@ -457,7 +453,7 @@
 
     // **parse** converts a response into the hash of attributes to be `set` on
     // the model. The default implementation is just to pass the response along.
-    parse: function(resp, options) {
+    parse: function(resp) {
       return resp;
     },
 
@@ -475,23 +471,19 @@
     // a `"change:attribute"` event for each changed attribute.
     // Calling this will cause all objects observing the model to update.
     change: function(options) {
-      options || (options = {});
       var changing = this._changing;
       this._changing = true;
 
       // Generate the changes to be triggered on the model.
       var triggers = this._computeChanges(true);
 
-      var pending = this._pending = !!triggers.length;
+      this._pending = !!triggers.length;
 
       for (var i = triggers.length - 2; i >= 0; i -= 2) {
         this.trigger('change:' + triggers[i], this, triggers[i + 1], options);
       }
 
       if (changing) return this;
-
-      // Ensure the original `change` event is fired regardless of interim changes
-      if (pending) this._pending = true;
 
       // Trigger a `change` while there have been changes.
       while (this._pending) {
@@ -547,7 +539,7 @@
         // Check if the attribute has been modified since the last change,
         // and update `this.changed` accordingly. If we're inside of a `change`
         // call, also add a trigger to the list.
-        if (!_.isEqual(current[key], val)) {
+        if (current[key] !== val) {
           this.changed[key] = val;
           if (!loud) continue;
           triggers.push(key, val);
@@ -574,22 +566,16 @@
       return _.clone(this._previousAttributes);
     },
 
-    // Check if the model is currently in a valid state. It's only possible to
-    // get into an *invalid* state if you're using silent changes.
-    isValid: function(options) {
-      return !this.validate || !this.validate(this.attributes, options);
-    },
-
     // Run validation against the next complete set of model attributes,
-    // returning `true` if all is well. Otherwise, fire a general
-    // `"error"` event and call the error callback, if specified.
+    // returning `true` if all is well. If a specific `error` callback has
+    // been passed, call that instead of firing the general `"error"` event.
     _validate: function(attrs, options) {
-      if (!options || !options.validate || !this.validate) return true;
-      options || (options = {});
+      if (!this.validate) return true;
       attrs = _.extend({}, this.attributes, attrs);
-      var error = this.validationError = this.validate(attrs, options) || null;
+      var error = this.validate(attrs, options);
       if (!error) return true;
-      this.trigger('invalid', this, error, options);
+      if (options && options.error) options.error(this, error, options);
+      this.trigger('error', this, error, options);
       return false;
     }
 
@@ -635,28 +621,27 @@
     // Add a model, or list of models to the set. Pass **silent** to avoid
     // firing the `add` event for every new model.
     add: function(models, options) {
-      options || (options = {});
-      var i, args, length, model, attrs, existing, needsSort;
-      var at = options.at;
-      var sort = options.sort == null ? true : options.sort;
+      var i, args, length, model, existing, needsSort;
+      var at = options && options.at;
+      var sort = ((options && options.sort) == null ? true : options.sort);
       models = _.isArray(models) ? models.slice() : [models];
 
       // Turn bare objects into model references, and prevent invalid models
       // from being added.
       for (i = models.length - 1; i >= 0; i--) {
-        attrs = models[i];
-        if(!(model = this._prepareModel(attrs, options))) {
-          this.trigger('invalid', this, attrs, options);
+        if(!(model = this._prepareModel(models[i], options))) {
+          this.trigger("error", this, models[i], options);
           models.splice(i, 1);
           continue;
         }
         models[i] = model;
 
+        existing = model.id != null && this._byId[model.id];
         // If a duplicate is found, prevent it from being added and
         // optionally merge it into the existing model.
-        if (existing = this.get(model)) {
-          if (options.merge) {
-            existing.set(attrs != model ? attrs : model.attributes, options);
+        if (existing || this._byCid[model.cid]) {
+          if (options && options.merge && existing) {
+            existing.set(model.attributes, options);
             needsSort = sort;
           }
           models.splice(i, 1);
@@ -666,7 +651,7 @@
         // Listen to added models' events, and index models for lookup by
         // `id` and by `cid`.
         model.on('all', this._onModelEvent, this);
-        this._byId[model.cid] = model;
+        this._byCid[model.cid] = model;
         if (model.id != null) this._byId[model.id] = model;
       }
 
@@ -677,19 +662,15 @@
       push.apply(args, models);
       splice.apply(this.models, args);
 
-      // Silently sort the collection if appropriate.
-      needsSort = needsSort && this.comparator && at == null;
-      if (needsSort) this.sort({silent: true});
+      // Sort the collection if appropriate.
+      if (needsSort && this.comparator && at == null) this.sort({silent: true});
 
-      if (options.silent) return this;
+      if (options && options.silent) return this;
 
       // Trigger `add` events.
       while (model = models.shift()) {
         model.trigger('add', model, this, options);
       }
-
-      // Trigger `sort` if the collection was sorted.
-      if (needsSort) this.trigger('sort', this, options);
 
       return this;
     },
@@ -697,14 +678,14 @@
     // Remove a model, or a list of models from the set. Pass silent to avoid
     // firing the `remove` event for every model removed.
     remove: function(models, options) {
+      var i, l, index, model;
       options || (options = {});
       models = _.isArray(models) ? models.slice() : [models];
-      var i, l, index, model;
       for (i = 0, l = models.length; i < l; i++) {
         model = this.get(models[i]);
         if (!model) continue;
         delete this._byId[model.id];
-        delete this._byId[model.cid];
+        delete this._byCid[model.cid];
         index = this.indexOf(model);
         this.models.splice(index, 1);
         this.length--;
@@ -753,8 +734,7 @@
     // Get a model from the set by id.
     get: function(obj) {
       if (obj == null) return void 0;
-      this._idAttr || (this._idAttr = this.model.prototype.idAttribute);
-      return this._byId[obj.id || obj.cid || obj[this._idAttr] || obj];
+      return this._byId[obj.id != null ? obj.id : obj] || this._byCid[obj.cid || obj];
     },
 
     // Get the model at the given index.
@@ -780,16 +760,14 @@
       if (!this.comparator) {
         throw new Error('Cannot sort a set without a comparator');
       }
-      options || (options = {});
 
-      // Run sort based on type of `comparator`.
       if (_.isString(this.comparator) || this.comparator.length === 1) {
         this.models = this.sortBy(this.comparator, this);
       } else {
         this.models.sort(_.bind(this.comparator, this));
       }
 
-      if (!options.silent) this.trigger('sort', this, options);
+      if (!options || !options.silent) this.trigger('sort', this, options);
       return this;
     },
 
@@ -801,10 +779,11 @@
     // Smartly update a collection with a change set of models, adding,
     // removing, and merging as necessary.
     update: function(models, options) {
-      options = _.extend({add: true, merge: true, remove: true}, options);
-      if (options.parse) models = this.parse(models, options);
       var model, i, l, existing;
       var add = [], remove = [], modelMap = {};
+      var idAttr = this.model.prototype.idAttribute;
+      options = _.extend({add: true, merge: true, remove: true}, options);
+      if (options.parse) models = this.parse(models);
 
       // Allow a single model (or no argument) to be passed.
       if (!_.isArray(models)) models = models ? [models] : [];
@@ -815,7 +794,7 @@
       // Determine which models to add and merge, and which to remove.
       for (i = 0, l = models.length; i < l; i++) {
         model = models[i];
-        existing = this.get(model);
+        existing = this.get(model.id || model.cid || model[idAttr]);
         if (options.remove && existing) modelMap[existing.cid] = true;
         if ((options.add && !existing) || (options.merge && existing)) {
           add.push(model);
@@ -839,7 +818,7 @@
     // any `add` or `remove` events. Fires `reset` when finished.
     reset: function(models, options) {
       options || (options = {});
-      if (options.parse) models = this.parse(models, options);
+      if (options.parse) models = this.parse(models);
       for (var i = 0, l = this.models.length; i < l; i++) {
         this._removeReference(this.models[i]);
       }
@@ -870,9 +849,9 @@
     // collection immediately, unless `wait: true` is passed, in which case we
     // wait for the server to agree.
     create: function(model, options) {
+      var collection = this;
       options = options ? _.clone(options) : {};
       model = this._prepareModel(model, options);
-      var collection = this;
       if (!model) return false;
       if (!options.wait) collection.add(model, options);
       var success = options.success;
@@ -886,7 +865,7 @@
 
     // **parse** converts a response into a list of models to be added to the
     // collection. The default implementation is just to pass it through.
-    parse: function(resp, options) {
+    parse: function(resp) {
       return resp;
     },
 
@@ -907,6 +886,7 @@
       this.length = 0;
       this.models = [];
       this._byId  = {};
+      this._byCid = {};
     },
 
     // Prepare a model or hash of attributes to be added to this collection.
@@ -1493,7 +1473,7 @@
     };
 
     // Make the request, allowing the user to override any Ajax options.
-    var xhr = options.xhr = Backbone.ajax(_.extend(params, options));
+    var xhr = Backbone.ajax(_.extend(params, options));
     model.trigger('request', model, xhr, options);
     return xhr;
   };
@@ -1519,7 +1499,7 @@
     if (protoProps && _.has(protoProps, 'constructor')) {
       child = protoProps.constructor;
     } else {
-      child = function(){ return parent.apply(this, arguments); };
+      child = function(){ parent.apply(this, arguments); };
     }
 
     // Add static properties to the constructor function, if supplied.

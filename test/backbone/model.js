@@ -206,9 +206,9 @@ $(document).ready(function() {
     ok(changeCount == 1, "Change count should NOT have incremented.");
 
     a.validate = function(attrs) {
-      equal(attrs.foo, void 0, "validate:true passed while unsetting");
+      equal(attrs.foo, void 0, "don't ignore values when unsetting");
     };
-    a.unset('foo', {validate: true});
+    a.unset('foo');
     equal(a.get('foo'), void 0, "Foo should have changed");
     delete a.validate;
     ok(changeCount == 2, "Change count should have incremented for unset.");
@@ -330,6 +330,7 @@ $(document).ready(function() {
     equal(model.hasChanged('name'), true);
     model.change();
     equal(model.get('name'), 'Rob');
+
   });
 
   test("changedAttributes", 3, function() {
@@ -372,7 +373,7 @@ $(document).ready(function() {
     model.set({lastName: 'Hicks'});
   });
 
-  test("validate after save", 2, function() {
+  test("validate after save", 1, function() {
     var lastError, model = new Backbone.Model();
     model.validate = function(attrs) {
       if (attrs.admin) return "Can't change admin status.";
@@ -380,13 +381,11 @@ $(document).ready(function() {
     model.sync = function(method, model, options) {
       options.success.call(this, {admin: true});
     };
-    model.on('invalid', function(model, error) {
+    model.save(null, {error: function(model, error) {
       lastError = error;
-    });
-    model.save(null);
+    }});
 
     equal(lastError, "Can't change admin status.");
-    equal(model.validationError, "Can't change admin status.");
   });
 
   test("save", 2, function() {
@@ -448,16 +447,14 @@ $(document).ready(function() {
     model.validate = function(attrs) {
       if (attrs.admin != this.get('admin')) return "Can't change admin status.";
     };
-    model.on('invalid', function(model, error) {
+    model.on('error', function(model, error) {
       lastError = error;
     });
     var result = model.set({a: 100});
     equal(result, model);
     equal(model.get('a'), 100);
     equal(lastError, undefined);
-    result = model.set({admin: true});
-    equal(model.get('admin'), true);
-    result = model.set({a: 200, admin: false}, {validate:true});
+    result = model.set({a: 200, admin: false});
     equal(lastError, "Can't change admin status.");
     equal(result, false);
     equal(model.get('a'), 100);
@@ -475,10 +472,10 @@ $(document).ready(function() {
     model.set({name: "Two"});
     equal(model.get('name'), 'Two');
     equal(error, undefined);
-    model.unset('name', {validate: true});
+    model.unset('name');
     equal(error, true);
     equal(model.get('name'), 'Two');
-    model.clear({validate:true});
+    model.clear();
     equal(model.get('name'), 'Two');
     delete model.validate;
     model.clear();
@@ -491,18 +488,21 @@ $(document).ready(function() {
     model.validate = function(attrs) {
       if (attrs.admin) return "Can't change admin status.";
     };
-    model.on('invalid', function(model, error) {
+    var callback = function(model, error) {
+      lastError = error;
+    };
+    model.on('error', function(model, error) {
       boundError = true;
     });
-    var result = model.set({a: 100}, {validate:true});
+    var result = model.set({a: 100}, {error: callback});
     equal(result, model);
     equal(model.get('a'), 100);
-    equal(model.validationError, null);
+    equal(lastError, undefined);
     equal(boundError, undefined);
-    result = model.set({a: 200, admin: true}, {validate:true});
+    result = model.set({a: 200, admin: true}, {error: callback});
     equal(result, false);
     equal(model.get('a'), 100);
-    equal(model.validationError, "Can't change admin status.");
+    equal(lastError, "Can't change admin status.");
     equal(boundError, true);
   });
 
@@ -595,13 +595,6 @@ $(document).ready(function() {
     var a = [];
     model.set({x: a});
     ok(model.get('x') === a);
-  });
-
-  test("set same value does not trigger change", 0, function() {
-    var model = new Backbone.Model({x: 1});
-    model.on('change change:x', function() { ok(false); });
-    model.set({x: 1});
-    model.set({x: 1});
   });
 
   test("unset does not fire a change for undefined attributes", 0, function() {
@@ -878,7 +871,7 @@ $(document).ready(function() {
       validate: function(){ return 'invalid'; }
     });
     var model = new Model({id: 1});
-    model.on('invalid', function(){ ok(true); });
+    model.on('error', function(){ ok(true); });
     model.save();
   });
 
@@ -953,52 +946,6 @@ $(document).ready(function() {
     model.set({a:'a'}, {silent:true});
     model.change();
     deepEqual(changes, ['a']);
-  });
-
-  test("#1943 change calculations should use _.isEqual", function() {
-    var model = new Backbone.Model({a: {key: 'value'}});
-    model.set('a', {key:'value'}, {silent:true});
-    equal(model.changedAttributes(), false);
-  });
-
-  test("#1964 - final `change` event is always fired, regardless of interim changes", 1, function () {
-    var model = new Backbone.Model();
-    model.on('change:property', function() {
-      model.set('property', 'bar');
-    });
-    model.on('change', function() {
-      ok(true);
-    });
-    model.set('property', 'foo');
-  });
-
-  test("isValid", function() {
-    var model = new Backbone.Model({valid: true});
-    model.validate = function(attrs) {
-      if (!attrs.valid) return "invalid";
-    };
-    equal(model.isValid(), true);
-    equal(model.set({valid: false}, {validate:true}), false);
-    equal(model.isValid(), true);
-    model.set({valid:false});
-    equal(model.isValid(), false);
-    ok(!model.set('valid', false, {validate: true}));
-  });
-
-  test("#1179 - isValid returns true in the absence of validate.", 1, function() {
-    var model = new Backbone.Model();
-    model.validate = null;
-    ok(model.isValid());
-  });
-
-  test("#1961 - Creating a model with {validate:true} will call validate and use the error callback", function () {
-    var Model = Backbone.Model.extend({
-      validate: function (attrs) {
-        if (attrs.id === 1) return "This shouldn't happen";
-      }
-    });
-    var model = new Model({id: 1}, {validate: true});
-    equal(model.validationError, "This shouldn't happen");
   });
 
 });
