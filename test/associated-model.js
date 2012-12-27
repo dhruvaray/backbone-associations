@@ -274,7 +274,7 @@ $(document).ready(function () {
         equal(emp.get('works_for').get('name'), 'R&D');
         equal(emp2.get('fname'), emp.get('fname'), "fname should be the same on the clone.");
         equal(emp2.get('works_for').get('name'), emp.get('works_for').get('name'), "name of department should be the same on the clone.");
-        ok(_.isEqual(emp.toJSON(), emp2.toJSON()), "emp should be the same on the clone");
+        deepEqual(emp.toJSON(), emp2.toJSON(), "emp should be the same on the clone");
         emp.set({
             works_for:{
                 name:'Marketing',
@@ -303,14 +303,6 @@ $(document).ready(function () {
     });
 
     test("child `change`", 17, function () {
-
-        /*emp.on('all',function(event){
-         ok(true,"Fired emp " + event);
-         });
-
-         emp.get('works_for').on('all',function(event){
-         ok(true,"Fired emp.works_for " + event);
-         });*/
 
         emp.on('change', function () {
             ok(true, "Fired emp change...");
@@ -523,7 +515,7 @@ $(document).ready(function () {
             {"fname":"Jane", "lname":"Smith", "sex":"F", "age":0, "relationship":"C"},
             {"fname":"Edgar", "lname":"Smith", "sex":"M", "age":0, "relationship":"P"}
         ];
-        ok(_.isEqual(json1, rawJson1), "collection.toJSON() and json object are identical");
+        deepEqual(json1, rawJson1, "collection.toJSON() and json object are identical");
 
         var json2 = emp.toJSON();
         var rawJson2 = {"works_for":{"controls":[
@@ -540,7 +532,7 @@ $(document).ready(function () {
             {"fname":"Jane", "lname":"Smith", "sex":"F", "age":0, "relationship":"C"},
             {"fname":"Edgar", "lname":"Smith", "sex":"M", "age":0, "relationship":"P"}
         ], "sex":"M", "age":21, "fname":"John", "lname":"Smith", "manager":null};
-        ok(_.isEqual(json2, rawJson2), "model.toJSON() and json object are identical");
+        deepEqual(json2, rawJson2, "model.toJSON() and json object are identical");
     });
 
     test("Collection `length`", 2, function () {
@@ -605,7 +597,7 @@ $(document).ready(function () {
             "lname":"",
             "manager":undefined
         };
-        ok(_.isEqual(emp2.toJSON(), rawJson), "emp2.toJSON() is identical as rawJson");
+        deepEqual(emp2.toJSON(), rawJson, "emp2.toJSON() is identical as rawJson");
     });
 
     test("Defaults clear", function () {
@@ -627,7 +619,6 @@ $(document).ready(function () {
         );
         equal(emp.get('works_for').get('number'), -1);
         equal(emp.get('works_for').get('type'), void 0);
-
     });
 
     test("save", 1, function () {
@@ -744,8 +735,8 @@ $(document).ready(function () {
             equal("Tom", model.toJSON().fname, "fname of `model.toJSON()` should be Tom");
         });
         dependents.on("add", function (model) {
-            ok(_.isEqual(json, model.toJSON()));
-            ok(_.isEqual(json, model.clone().toJSON()));
+            deepEqual(json, model.toJSON());
+            deepEqual(json, model.clone().toJSON());
         });
         emp.set({"fname":"Tom"});
         dependents.add(child1);
@@ -942,7 +933,7 @@ $(document).ready(function () {
                 }
             }
         };
-        ok(_.isEqual(node1.toJSON(), rawJSON));
+        deepEqual(node1.toJSON(), rawJSON);
     });
 
     test("clone", 6, function () {
@@ -1084,8 +1075,7 @@ $(document).ready(function () {
             var changed = emp.changedAttributes();
             equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
             equal(emp.previousAttributes().works_for.name, "R&D");
-            equal(true, _.isEqual(emp.previous("works_for"), dept1snapshot));
-
+            deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
         emp.on('change:works_for.name', function () {
@@ -1195,7 +1185,6 @@ $(document).ready(function () {
             ok(true, "Fired emp change:works_for.locations[0]...");
         });
 
-
         emp.on('change:works_for.controls.locations[0].zip', function () {
             ok(true, "Fired emp change:works_for.controls.locations[0].zip...");
         });
@@ -1211,12 +1200,7 @@ $(document).ready(function () {
         emp.get('works_for').on('change:controls.locations[0]', function () {
             ok(true, "Fired emp.works_for change:controls.locations[0]...");
         });
-
-
         emp.get('works_for').get("locations").at(0).set('zip', 94403);//10 + 4
-
     });
-
-
 });
 
