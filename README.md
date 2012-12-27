@@ -463,7 +463,7 @@ Other examples can be found in the [test suite](http://dhruvaray.github.com/back
 
 ## <a name="performance"/>Performance
 
-![Performance]((http://dhruvaray.github.com/backbone-associations/docs/img/speed.png)
+![Performance](http://dhruvaray.github.com/backbone-associations/docs/img/speed.png)
 
 Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations.
 
