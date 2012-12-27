@@ -1,3 +1,4 @@
+//adopted from Backbone 0.9.9 test suite
 (function() {
 
   var Environment = this.Environment = function(){};
