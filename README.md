@@ -4,7 +4,7 @@ Backbone-associations provides a way of specifying 1:1 and 1:N relationships bet
 It comes with
 * The [annotated](http://dhruvaray.github.com/backbone-associations/docs/backbone-associations.html) source code.
 * An online [test suite](http://dhruvaray.github.com/backbone-associations/test/test-suite.html) which includes backbone test cases.
-* Performance [tests](http://jsperf.com/backbone-associations-speed-suit/2).
+* Performance [tests](http://jsperf.com/backbone-associations-speed-suit/3).
 
 It was originally born out of a need to provide a simpler and speedier implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/)
 
@@ -467,7 +467,7 @@ Other examples can be found in the [test suite](http://dhruvaray.github.com/back
 
 Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations.
 
-Want to change the test? You can do it [here](http://jsperf.com/backbone-associations-speed-suit/2)
+Want to change the test? You can do it [here](http://jsperf.com/backbone-associations-speed-suit/3)
 
 ## <a name="changelog"/>Change Log
 #### Version 0.3.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.2.0...v0.3.0)
