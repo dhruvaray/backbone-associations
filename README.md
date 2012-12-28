@@ -492,7 +492,7 @@ emp.on('change:works_for', function () {
 
 Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations.
 
-Run tests on your machine configuration instantly ![here](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html)
+Run tests on your machine configuration instantly [here](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html)
 
 Write your own test case [here](http://jsperf.com/backbone-associations-speed-suit/3)
 
