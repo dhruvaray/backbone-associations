@@ -4,7 +4,7 @@ Backbone-associations provides a way of specifying 1:1 and 1:N relationships bet
 It comes with
 * The [annotated](http://dhruvaray.github.com/backbone-associations/docs/backbone-associations.html) source code.
 * An online [test suite](http://dhruvaray.github.com/backbone-associations/test/test-suite.html) which includes backbone test cases.
-* Performance [tests](http://jsperf.com/backbone-associations-speed-suit/2).
+* Performance [tests](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html).
 
 It was originally born out of a need to provide a simpler and speedier implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/)
 
@@ -12,15 +12,18 @@ It was originally born out of a need to provide a simpler and speedier implement
 * [Download](#download)
 * [Installation](#installation)
 * [Specifying Associations](#associations)
+* [Tutorial : Defining a graph of `AssociatedModel` relationships](#tutorial-associationsdef)
 * [Eventing with Associations](#eventing)
-* [Performance](#performance)
+* [Tutorial : Eventing with a graph of `AssociatedModel` objects](#tutorial-eventing)
+* [Pitfalls](#pitfalls)
+* [Performance Comparison](#performance)
 * [Change Log](#changelog)
 
 
 ## <a name="download"/>Download
 
-* [Minified & gzipped version (1.6KB) 0.3.0](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js)
-* [Development version 0.3.0](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
+* [Production version - 0.3.0](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.6KB packed and gzipped)
+* [Development version - 0.3.0](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
 
 
 ## <a name="installation"/>Installation
@@ -108,12 +111,11 @@ Used for specifying one-to-one or one-to-many relationships.
 ##### collectionType (optional) : 
 A string (which can be resolved to an object type on the global scope), or a reference to a `Backbone.Collection` type. Determine the type of collections used for a `Many` relation.
 
-### Tutorial : Defining a graph of `AssociatedModel` relationships
+## <a name="tutorial-associationsdef"/> Tutorial : Defining a graph of `AssociatedModel` relationships
 
-#### A sample entity relationship graph
+This tutorial demonstrates how to convert the following relationships into an `AssociatedModels` representation
 ![er-example](http://dhruvaray.github.com/backbone-associations/docs/img/er-example.png)
 
-#### The corresponding representation using `AssociatedModels`
 ````javascript
    var Location = Backbone.AssociatedModel.extend({
         defaults:{
@@ -226,7 +228,9 @@ emp.get('works_for').get('locations').at(0).on('change:zip', callback_function);
 ````
 A detailed example is provided below to illustrate the behavior for other event types as well as the appropriate usage of the Backbone [change-related methods](http://backbonejs.org/#Model-hasChanged) used in callbacks.
 
-### Tutorial : Eventing with a graph of `AssociatedModel` objects
+## <a name="tutorial-eventing"/>  Tutorial : Eventing with a graph of `AssociatedModel` objects
+
+This tutorial demonstrates the usage of eventing and change-related methods with `AssociatedModels`
 
 ````javascript
 
@@ -317,7 +321,6 @@ A detailed example is provided below to illustrate the behavior for other event 
     //Console log
     //Fired emp > change:works_for...
     //Fired emp > change...
-
 
     var dept1snapshot = dept1.toJSON();
 
@@ -461,13 +464,37 @@ A detailed example is provided below to illustrate the behavior for other event 
 The above example corresponds to this [test case](http://dhruvaray.github.com/backbone-associations/test/test-suite.html?module=Examples&testNumber=32).
 Other examples can be found in the [test suite](http://dhruvaray.github.com/backbone-associations/test/test-suite.html).
 
-## <a name="performance"/>Performance
+## <a name="performance"/>Pitfalls
 
-![Performance]((http://dhruvaray.github.com/backbone-associations/docs/img/speed.png)
+* When assigning a previously created object graph to a property in an associated model, be careful on how you query the Backbone change related methods in the `change` handler.
+
+````javascript
+//dept1 previously defined
+emp.set('works_for', dept1);
+````
+
+then inside a defined change event handler
+
+````javascript
+
+emp.on('change:works_for', function () {
+    //emp.get('works_for').hasChanged() === false; as we are querying a previously created `dept1` instance
+    //equal(emp.hasChanged('works_for') === true; as we are querying the emp instance
+});
+
+````
+
+
+
+## <a name="performance"/>Performance Comparison
+
+![Performance](http://dhruvaray.github.com/backbone-associations/docs/img/speed.png)
 
 Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations.
 
-Want to change the test? You can do it [here](http://jsperf.com/backbone-associations-speed-suit/2)
+Run tests on your machine configuration instantly ![here](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html)
+
+Write your own test case [here](http://jsperf.com/backbone-associations-speed-suit/3)
 
 ## <a name="changelog"/>Change Log
 #### Version 0.3.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.2.0...v0.3.0)
@@ -475,7 +502,6 @@ Want to change the test? You can do it [here](http://jsperf.com/backbone-associa
 * Event arguments and event paths are semantically consistent.
 * Now supports backbone 0.9.9 and underscore 1.4.3.
 * New tutorials on usage (part of README.md)
-
 
 
 #### Version 0.2.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.1.0...v0.2.0)
