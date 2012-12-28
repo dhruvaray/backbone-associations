@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Backbone-associations v/s Backbone-relational performance comparison</title>
+	<link rel="stylesheet" href="./lib/qunit.css" type="text/css" media="screen" />
+
+	<script src="utility.js"></script>
+
+	<script src="./lib/jquery-1.7.1.js"></script>
+	<script src="./lib/underscore.js"></script>
+	<script src="./lib/backbone.js"></script>
+	<script src="./lib/backbone-relational.js"></script>
+	<script src="../backbone-associations.js"></script>
+	<script src="./lib/jslitmus.js"></script>
+
+	<script src="speed.js"></script>
+
+    <script src="https://www.google.com/jsapi"></script>
+    <script>
+        if (typeof google !== 'undefined') {
+            google.load("visualization", "1", {packages:["corechart"]});
+            google.setOnLoadCallback(function(){
+                Utility.loadJSLitmusProxy.call(Utility,JSLitmus);
+            });
+        }
+	</script>
+</head>
+<body>
+	<div>
+		<br/>
+		<br/>
+		<h1 id="qunit-header" style="width: inherit;">Backbone-associations Speed Suite</h1>
+		<div id="jslitmus_container" style="margin: 20px 10px;">
+		</div>
+	</div>
+    <div id="speed_chart_div1" style="width: 60%;"></div>
+    <div id="speed_chart_div2" style="width: 60%;"></div>
+</body>
+</html>

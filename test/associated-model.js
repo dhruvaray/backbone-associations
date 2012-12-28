@@ -285,17 +285,19 @@ $(document).ready(function () {
         equal(emp2.get('works_for').get('name'), 'R&D', "Changing a parent attribute does not change the clone.");
     });
 
-    test("change, hasChanged, changedAttributes, previous, previousAttributes", 7, function () {
+    test("change, hasChanged, changedAttributes, previous, previousAttributes", 9, function () {
 
         emp.on('change', function () {
             ok(emp.hasChanged('works_for'), "emp->change, employee has changed");
         });
         emp.on('change:works_for', function () {
-            ok(emp.hasChanged(), "emp->change:works_for, emp has changed");
-            ok(emp.hasChanged('works_for'), "department has changed");
-            equal(emp.get('works_for').hasChanged(), false, "department's name/number has just changed");
+            equal(true, emp.hasChanged());
+            equal(true, emp.hasChanged('works_for'));
+            equal(emp.get('works_for').hasChanged(), false, '`hasChanged` for `works_for` returns false as it is new object');
+            equal(emp.hasChanged('works_for'), true);
             equal(emp.get('works_for').changedAttributes(), false, 'changedAttributes for `works_for` returns false as it is new object');
             equal(emp.previous('works_for')['name'], 'R&D');
+            equal(emp.get('works_for').previous('name'), 'Marketing');
             equal(emp.previousAttributes().works_for['name'], 'R&D', 'previousAttributes is correct');
 
         });
