@@ -36,20 +36,20 @@ Backbone-associations depends on [backbone](https://github.com/documentcloud/bac
 <script type="text/javascript" src="./js/backbone-associations.js"></script>
 ```
 
-Backbone-associations works with both Backbone 0.9.9 and 0.9.2. Underscore v1.3.3 upwards is supported.
+Backbone-associations works with both Backbone **v0.9.9 and v0.9.2**. Underscore v1.3.3 upwards is supported.
 
 
 ## <a name="associations"/>Specifying Associations
 
 Each `Backbone.AssociatedModel` can contain an array of `relations`. Each relation defines a `relatedModel`, `key`, `type` and (optionally) `collectionType`. This can be easily understood by some examples.
 
-### Specifying One-to-One Relationship 
+### Specifying One-to-One Relationship
 
 
 ```javascript
 
-var Employee = Backbone.AssociatedModel.extend({  	  
-	relations: [
+var Employee = Backbone.AssociatedModel.extend({
+    relations: [
         {
             type: Backbone.One, //nature of the relationship
             key: 'manager', // attribute of Employee
@@ -61,7 +61,7 @@ var Employee = Backbone.AssociatedModel.extend({
     fname : "",
     lname : "",
     manager : null
-  }        
+  }
 });
 
 
@@ -70,51 +70,53 @@ var Employee = Backbone.AssociatedModel.extend({
 
 ```javascript
 
-var Location = Backbone.AssociatedModel.extend({		  
+var Location = Backbone.AssociatedModel.extend({
   defaults: {
     add1 : "",
     add2 : null,
     zip : "",
     state : ""
-  }        
+  }
 });
 
-var Project = Backbone.AssociatedModel.extend({		  
+var Project = Backbone.AssociatedModel.extend({
   relations: [
-	  {
-	    type: Backbone.Many,//nature of the relation
-	    key: 'locations', //attribute of Project 
-	    relatedModel:Location //AssociatedModel for attribute key
-	  }
+      {
+        type: Backbone.Many,//nature of the relation
+        key: 'locations', //attribute of Project
+        relatedModel:Location //AssociatedModel for attribute key
+      }
   ],
   defaults: {
     name : "",
     number : 0,
     locations : []
-  }        
+  }
 });
 
 ```
 
-#### Valid values for 
+#### Valid values for
 
 
-##### relatedModel 
+##### relatedModel
 A string (which can be resolved to an object type on the global scope), or a reference to a `Backbone.AssociatedModel` type.
 
-##### key 
+##### key
 A string which references an attribute name on `relatedModel`.
 
 ##### type : `Backbone.One` or `Backbone.Many`
 Used for specifying one-to-one or one-to-many relationships.
 
-##### collectionType (optional) : 
+##### collectionType (optional) :
 A string (which can be resolved to an object type on the global scope), or a reference to a `Backbone.Collection` type. Determine the type of collections used for a `Many` relation.
 
 ## <a name="tutorial-associationsdef"/> Tutorial : Defining a graph of `AssociatedModel` relationships
 
-This tutorial demonstrates how to convert the following relationships into an `AssociatedModels` representation
+This tutorial demonstrates how to convert the following relationship graph into an `AssociatedModels` representation
 ![er-example](http://dhruvaray.github.com/backbone-associations/docs/img/er-example.png)
+> The example is adapted from _Fundamentals of database systems - Elmasri/Navathe_.
+> The source code for this image is [here](http://dhruvaray.github.com/backbone-associations/docs/er-example.tex).
 
 ````javascript
    var Location = Backbone.AssociatedModel.extend({
@@ -219,19 +221,38 @@ emp.get('works_for').get("locations").at(0).set('zip', 94403);
 ````
 can be listened to at various levels by spelling out the appropriate path
 ````javascript
-emp.on('change:works_for.controls.locations[0].zip', callback_function);
+emp.on('change:works_for.locations[0].zip', callback_function);
 
-emp.get('works_for').on('change:controls.locations[0].zip', callback_function);
+emp.get('works_for').on('change:locations[0].zip', callback_function);
 
 emp.get('works_for').get('locations').at(0).on('change:zip', callback_function);
 
 ````
+
+With backbone v0.9.9 onwards, another object can also listen in to events like this
+
+````javascript
+
+var listener = {};
+_.extend(listener, Backbone.Events);
+
+listener.listenTo(emp, 'change:works_for.locations[0].zip', callback_function);
+
+listener.listenTo(emp.get('works_for'), 'change:locations[0].zip', callback_function);
+
+listener.listenTo(emp.get('works_for').get('locations').at(0), 'change:zip', callback_function);
+
+
+````
+
+
 A detailed example is provided below to illustrate the behavior for other event types as well as the appropriate usage of the Backbone [change-related methods](http://backbonejs.org/#Model-hasChanged) used in callbacks.
 
 ## <a name="tutorial-eventing"/>  Tutorial : Eventing with a graph of `AssociatedModel` objects
 
 This tutorial demonstrates the usage of eventing and change-related methods with `AssociatedModels`
 
+#### Setup of relationships between `AssociatedModel` instances
 ````javascript
 
     emp = new Employee({
@@ -301,7 +322,10 @@ This tutorial demonstrates the usage of eventing and change-related methods with
 
     emp.set({"dependents":[child1, parent1]});
 
+````
 
+#### Assign `Associated Model` instances to other properties
+````javascript
     emp.on('change', function () {
         console.log("Fired emp > change...");
         //emp.hasChanged() === true;
@@ -317,14 +341,20 @@ This tutorial demonstrates the usage of eventing and change-related methods with
         //emp.previousAttributes()['works_for'].controls.length === 0;
     });
 
-    emp.set({"works_for":dept1});
+    emp.set({works_for:dept1});
     //Console log
     //Fired emp > change:works_for...
     //Fired emp > change...
 
+````
+
+#### Update attributes of `AssociatedModel` instances
+
+````javascript
+
     var dept1snapshot = dept1.toJSON();
 
-    //Remove event handlers. Can also use backbone 0.0.0 once API (on the earlier emp event handlers) instead of `off`
+    //Remove event handlers. Can also use backbone 0.9.9 once API (on the previous emp event handlers)
     emp.off()
 
     emp.get('works_for').on('change', function () {
@@ -359,14 +389,16 @@ This tutorial demonstrates the usage of eventing and change-related methods with
 
     emp.get('works_for').set({name:"Marketing"});
 
-
     //Console log
     //Fired emp.works_for > change:name
     //Fired emp > change:works_for.name...
     //Fired emp.works_for > change...
     //Fired emp > change:works_for...
 
+````
 
+#### Update an item in a `Collection` of `AssociatedModel`s
+````javascript
     emp.get('works_for').get('locations').at(0).on('change:zip', function () {
         console.log("Fired emp.works_for.locations[0] > change:zip...");
     });
@@ -424,6 +456,10 @@ This tutorial demonstrates the usage of eventing and change-related methods with
 
     //Fired emp.works_for.locations[0] > change...
     //Fired emp.works_for.locations[0].zip > change...
+````
+
+#### Add, remove and reset operations
+````javascript
 
     emp.on('add:dependents', function () {
         console.log("Fired emp > add:dependents...");
@@ -459,30 +495,37 @@ This tutorial demonstrates the usage of eventing and change-related methods with
     //Fired emp > remove:dependents...
     //Fired emp > reset:dependents...
 
-
 ````
-The above example corresponds to this [test case](http://dhruvaray.github.com/backbone-associations/test/test-suite.html?module=Examples&testNumber=32).
+The preceding examples corresponds to this [test case](http://dhruvaray.github.com/backbone-associations/test/test-suite.html?module=Examples&testNumber=32).
 Other examples can be found in the [test suite](http://dhruvaray.github.com/backbone-associations/test/test-suite.html).
 
 ## <a name="performance"/>Pitfalls
 
-* When assigning a previously created object graph to a property in an associated model, be careful on how you query the Backbone change related methods in the `change` handler.
+When assigning a previously created object graph to a property in an associated model, care must be taken to query the appropriate object for the changed properties.
 
 ````javascript
-//dept1 previously defined
+dept1 = new Department({
+    name:"R&D",
+    number:"23"
+});
+
+//dept1.hasChanged() === false;
+
 emp.set('works_for', dept1);
 ````
 
-then inside a defined change event handler
+then inside a previously defined `change` event handler
 
 ````javascript
 
 emp.on('change:works_for', function () {
     //emp.get('works_for').hasChanged() === false; as we are querying a previously created `dept1` instance
-    //equal(emp.hasChanged('works_for') === true; as we are querying the emp instance
+    //emp.hasChanged('works_for') === true; as we are querying the emp instance whose 'works_for' property has changed
 });
 
 ````
+
+
 
 
 
@@ -490,7 +533,7 @@ emp.on('change:works_for', function () {
 
 ![Performance](http://dhruvaray.github.com/backbone-associations/docs/img/speed.png)
 
-Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations.
+Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations. (backbone-associations v0.3.0 v/s backbone-relational v0.7.0)
 
 Run tests on your machine configuration instantly [here](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html)
 
