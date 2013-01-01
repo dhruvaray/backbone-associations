@@ -3,7 +3,7 @@ Backbone-associations provides a way of specifying 1:1 and 1:N relationships bet
 
 It comes with
 * The [annotated](http://dhruvaray.github.com/backbone-associations/docs/backbone-associations.html) source code.
-* An online [test suite](http://dhruvaray.github.com/backbone-associations/test/test-suite.html) which includes backbone test cases.
+* An online [test suite](http://dhruvaray.github.com/backbone-associations/test/test-suite.html) which includes backbone test cases run with `AssociatedModel`s.
 * Performance [tests](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html).
 
 It was originally born out of a need to provide a simpler and speedier implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/)
@@ -424,33 +424,12 @@ This tutorial demonstrates the usage of eventing and change-related methods with
     });
 
 
-    emp.on('change:works_for.controls.locations[0].zip', function () {
-        console.log("Fired emp > change:works_for.controls.locations[0].zip...");
-    });
-
-    emp.on('change:works_for.controls.locations[0]', function () {
-        console.log("Fired emp > change:works_for.controls.locations[0]...");
-    });
-
-    emp.get('works_for').on('change:controls.locations[0].zip', function () {
-        console.log("Fired emp.works_for > change:controls.locations[0].zip...");
-    });
-
-    emp.get('works_for').on('change:controls.locations[0]', function () {
-        console.log("Fired emp.works_for > change:controls.locations[0]...");
-    });
-
-
     emp.get('works_for').get("locations").at(0).set('zip', 94403);
 
     //Console log
-    //Fired emp.works_for > change:controls.locations[0]...
-    //Fired emp.works_for > change:controls.locations[0].zip...
     //Fired emp.works_for > change:locations[0]...
     //Fired emp.works_for > change:locations[0].zip...
 
-    //Fired emp > change:works_for.controls.locations[0]...
-    //Fired emp > change:works_for.controls.locations[0].zip...
     //Fired emp > change:works_for.locations[0]...
     //Fired emp > change:works_for.locations[0].zip...
 
@@ -543,8 +522,9 @@ Write your own test case [here](http://jsperf.com/backbone-associations-speed-su
 #### Version 0.3.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.2.0...v0.3.0)
 * Added support for fully qualified event "path" names.
 * Event arguments and event paths are semantically consistent.
-* Now supports backbone 0.9.9 and underscore 1.4.3.
+* Now supports both backbone 0.9.9 and 0.9.2.
 * New tutorials on usage (part of README.md)
+
 
 
 #### Version 0.2.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.1.0...v0.2.0)
