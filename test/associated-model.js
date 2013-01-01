@@ -1,4 +1,14 @@
 $(document).ready(function () {
+
+    if ( !window.console ) {
+        window.console = {};
+        var names = [ 'log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml',
+                    'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd' ];
+        for ( var i = 0; i < names.length; ++i ) {
+            window.console[ names[i] ] = function() {};
+        }
+    }
+
     var attr
         , child1, child2, child3, child4
         , dept1
@@ -274,7 +284,7 @@ $(document).ready(function () {
         equal(emp.get('works_for').get('name'), 'R&D');
         equal(emp2.get('fname'), emp.get('fname'), "fname should be the same on the clone.");
         equal(emp2.get('works_for').get('name'), emp.get('works_for').get('name'), "name of department should be the same on the clone.");
-        ok(_.isEqual(emp.toJSON(), emp2.toJSON()), "emp should be the same on the clone");
+        deepEqual(emp.toJSON(), emp2.toJSON(), "emp should be the same on the clone");
         emp.set({
             works_for:{
                 name:'Marketing',
@@ -374,8 +384,8 @@ $(document).ready(function () {
             equal(true, emp.get('works_for').hasChanged());
             equal(true, emp.hasChanged());
             var changed = emp.get('works_for').changedAttributes();
-            equal(JSON.stringify(changed['locations']), "[{\"zip\":94403}]");
-            equal(JSON.stringify(changed['controls']), "[{\"locations\":[{\"zip\":94403}]}]");
+            deepEqual(changed['locations'], [{"zip":94403}]);
+            deepEqual(changed['controls'], [{"locations":[{"zip":94403}]}]);
             ok(true, "Fired works_for locations0 change...");
         });
 
@@ -525,7 +535,7 @@ $(document).ready(function () {
             {"fname":"Jane", "lname":"Smith", "sex":"F", "age":0, "relationship":"C"},
             {"fname":"Edgar", "lname":"Smith", "sex":"M", "age":0, "relationship":"P"}
         ];
-        ok(_.isEqual(json1, rawJson1), "collection.toJSON() and json object are identical");
+        deepEqual(json1, rawJson1, "collection.toJSON() and json object are identical");
 
         var json2 = emp.toJSON();
         var rawJson2 = {"works_for":{"controls":[
@@ -542,7 +552,7 @@ $(document).ready(function () {
             {"fname":"Jane", "lname":"Smith", "sex":"F", "age":0, "relationship":"C"},
             {"fname":"Edgar", "lname":"Smith", "sex":"M", "age":0, "relationship":"P"}
         ], "sex":"M", "age":21, "fname":"John", "lname":"Smith", "manager":null};
-        ok(_.isEqual(json2, rawJson2), "model.toJSON() and json object are identical");
+        deepEqual(json2, rawJson2, "model.toJSON() and json object are identical");
     });
 
     test("Collection `length`", 2, function () {
@@ -607,7 +617,7 @@ $(document).ready(function () {
             "lname":"",
             "manager":undefined
         };
-        ok(_.isEqual(emp2.toJSON(), rawJson), "emp2.toJSON() is identical as rawJson");
+        deepEqual(emp2.toJSON(), rawJson, "emp2.toJSON() is identical as rawJson");
     });
 
     test("Defaults clear", function () {
@@ -746,8 +756,8 @@ $(document).ready(function () {
             equal("Tom", model.toJSON().fname, "fname of `model.toJSON()` should be Tom");
         });
         dependents.on("add", function (model) {
-            ok(_.isEqual(json, model.toJSON()));
-            ok(_.isEqual(json, model.clone().toJSON()));
+            deepEqual(json, model.toJSON());
+            deepEqual(json, model.clone().toJSON());
         });
         emp.set({"fname":"Tom"});
         dependents.add(child1);
@@ -944,7 +954,7 @@ $(document).ready(function () {
                 }
             }
         };
-        ok(_.isEqual(node1.toJSON(), rawJSON));
+        deepEqual(node1.toJSON(), rawJSON);
     });
 
     test("clone", 6, function () {
@@ -1063,7 +1073,7 @@ $(document).ready(function () {
             ok("Fired emp > change:works_for...");
             console.log("Fired emp > change:works_for...");
             var changed = emp.changedAttributes();
-            equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
+            deepEqual(changed['works_for'].toJSON(), emp.get("works_for").toJSON());
             equal(emp.previousAttributes()['works_for'].name, "");
             equal(emp.previousAttributes()['works_for'].number, -1);
             equal(emp.previousAttributes()['works_for'].locations.length, 0);
@@ -1092,7 +1102,7 @@ $(document).ready(function () {
             equal(true, emp.get("works_for").hasChanged());
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"))
-            equal(JSON.stringify(emp.changedAttributes()['works_for']), JSON.stringify(emp.get("works_for")));
+            deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
             equal(emp.get("works_for").previousAttributes()["name"], "R&D");
             equal(emp.get("works_for").previous("name"), "R&D");
         });
@@ -1102,10 +1112,9 @@ $(document).ready(function () {
             ok("Fired emp > change:works_for...");
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
-            equal(JSON.stringify(emp.changedAttributes()['works_for']), JSON.stringify(emp.get("works_for")));
+            deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
             equal(emp.previousAttributes().works_for.name, "R&D");
-            equal(true, _.isEqual(emp.previous("works_for"), dept1snapshot));
-
+            deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
         emp.get('works_for').set({name:"Marketing"});//17
@@ -1190,13 +1199,10 @@ $(document).ready(function () {
             ok("Fired emp.dependents reset...");
         });
 
-
         //6 events
         emp.get("dependents").add(child2);
         emp.get("dependents").remove([child1]);
         emp.get("dependents").reset();
-
-
     });
 
 
@@ -1215,7 +1221,7 @@ $(document).ready(function () {
             ok("Fired emp > change:works_for...");
             console.log("Fired emp > change:works_for...");
             var changed = emp.changedAttributes();
-            equal(JSON.stringify(changed['works_for']), JSON.stringify(emp.get("works_for")));
+            deepEqual(changed['works_for'].toJSON(), emp.get("works_for").toJSON());
             equal(emp.previousAttributes()['works_for'].name, "");
             equal(emp.previousAttributes()['works_for'].number, -1);
             equal(emp.previousAttributes()['works_for'].locations.length, 0);
@@ -1246,7 +1252,7 @@ $(document).ready(function () {
             equal(true, emp.get("works_for").hasChanged());
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"))
-            equal(JSON.stringify(emp.changedAttributes()['works_for']), JSON.stringify(emp.get("works_for")));
+            deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
             equal(emp.get("works_for").previousAttributes()["name"], "R&D");
             equal(emp.get("works_for").previous("name"), "R&D");
         });
@@ -1256,10 +1262,9 @@ $(document).ready(function () {
             ok("Fired emp > change:works_for...");
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
-            equal(JSON.stringify(emp.changedAttributes()['works_for']), JSON.stringify(emp.get("works_for")));
+            deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
             equal(emp.previousAttributes().works_for.name, "R&D");
-            equal(true, _.isEqual(emp.previous("works_for"), dept1snapshot));
-
+            deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
         emp.get('works_for').set({name:"Marketing"});//17
