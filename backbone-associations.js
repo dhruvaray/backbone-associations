@@ -163,12 +163,20 @@
                 eventAvailable;
             // Change the event name to a fully qualified path.
             if (_.contains(defaultEvents, eventType)) {
-                if (opt && _.size(opt) > 1) {
-                    eventPath = opt[1];
-                }
+                _.size(opt) > 1 && (eventPath = opt[1]);
                 // Find the specific object in the collection which has changed.
-                if (relationValue instanceof BackboneCollection && "change" === eventType) {
-                    indexEventObject = _.indexOf(relationValue.models, eventObject);
+                if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject) {
+                    //indexEventObject = _.indexOf(relationValue.models, eventObject);
+                    var pathTokens = getPathArray(eventPath),
+                        initialTokens = _.initial(pathTokens),
+                        colModel;
+                    colModel = relationValue.find(function (model) {
+                        var changedModel = model.get(pathTokens);
+                        return eventObject === !(changedModel instanceof BackboneModel
+                                || changedModel instanceof BackboneCollection)
+                                    ? model.get(initialTokens) : changedModel;
+                    });
+                    colModel && (indexEventObject = relationValue.indexOf(colModel));
                 }
                 // Manipulate `eventPath`.
                 eventPath = relationKey + (indexEventObject !== -1 ?
