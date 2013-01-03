@@ -406,24 +406,59 @@ $(document).ready(function () {
         });
 
 
-        emp.on('change:works_for.controls.locations[0].zip', function () {
-            ok(true, "Fired emp change:works_for.controls.locations[0].zip...");
+        emp.on('change:works_for.controls[0].locations[0].zip', function () {
+            ok(true, "Fired emp change:works_for.controls[0].locations[0].zip...");
         });
 
-        emp.on('change:works_for.controls.locations[0]', function () {
-            ok(true, "Fired emp change:works_for.controls.locations[0]...");
+        emp.on('change:works_for.controls[0].locations[0]', function () {
+            ok(true, "Fired emp change:works_for.controls[0].locations[0]...");
         });
 
-        emp.get('works_for').on('change:controls.locations[0].zip', function () {
-            ok(true, "Fired emp.works_for change:controls.locations[0].zip...");
+        emp.get('works_for').on('change:controls[0].locations[0].zip', function () {
+            ok(true, "Fired emp.works_for change:controls[0].locations[0].zip...");
         });
 
-        emp.get('works_for').on('change:controls.locations[0]', function () {
-            ok(true, "Fired emp.works_for change:controls.locations[0]...");
+        emp.get('works_for').on('change:controls[0].locations[0]', function () {
+            ok(true, "Fired emp.works_for change:controls[0].locations[0]...");
         });
 
 
         emp.get('works_for').get("locations").at(0).set('zip', 94403);//10 + 4
+
+    });
+
+
+    test("add multiple refs to the same collection", 6, function () {
+
+        project2.get("locations").add(loc1);
+        project2.get("locations").add(loc1); //add it twice deliberately
+
+        emp.on('change:works_for.controls[0].locations[0].zip',function(event){
+             ok(true,"Fired emp > change:works_for.controls[0].locations[0].zip");
+        });
+
+        emp.on('change:works_for.controls[0].locations[0]',function(event){
+            ok(true,"Fired emp > change:works_for.controls[0].locations[0]");
+        });
+
+        emp.on('change:works_for.controls[1].locations[1].zip',function(event){
+            ok(true,"Fired emp > change:works_for.controls[1].locations[1].zip");
+        });
+
+        emp.on('change:works_for.controls[1].locations[1]',function(event){
+            ok(true,"Fired emp > change:works_for.controls[1].locations[1]");
+        });
+
+
+        emp.on('change:works_for.locations[0].zip',function(event){
+            ok(true,"Fired emp > change:works_for.locations[0].zip");
+        });
+
+        emp.on('change:works_for.locations[0]',function(event){
+            ok(true,"Fired emp > change:works_for.locations[0]");
+        });
+
+        emp.get('works_for').get("locations").at(0).set('zip', 94403);
 
     });
 
@@ -916,7 +951,6 @@ $(document).ready(function () {
             ok(true, "node3 change:children[0] fired...");
         });
 
-
         node1.set({parent:node2, children:[node3]}, {silent:true});
         node2.set({parent:node3, children:[node1]}, {silent:true});
         node3.set({parent:node1, children:[node2]}, {silent:true});
@@ -1056,13 +1090,10 @@ $(document).ready(function () {
             dept1.set({controls:[project1, project2]});
 
             emp.set({"dependents":[child1, parent1]});
-
         }
     });
 
-
     test("example-1", 42, function () {
-
         emp.once('change', function () {
             console.log("Fired emp > change...");
             ok("Fired emp > change...");
@@ -1150,24 +1181,24 @@ $(document).ready(function () {
         });
 
 
-        emp.on('change:works_for.controls.locations[0].zip', function () {
-            console.log("Fired emp > change:works_for.controls.locations[0].zip...");
-            ok("Fired emp > change:works_for.controls.locations[0].zip...");
+        emp.on('change:works_for.controls[0].locations[0].zip', function () {
+            console.log("Fired emp > change:works_for.controls[0].locations[0].zip...");
+            ok("Fired emp > change:works_for.controls[0].locations[0].zip...");
         });
 
-        emp.on('change:works_for.controls.locations[0]', function () {
-            console.log("Fired emp > change:works_for.controls.locations[0]...");
-            ok("Fired emp > change:works_for.controls.locations[0]...");
+        emp.on('change:works_for.controls[0].locations[0]', function () {
+            console.log("Fired emp > change:works_for.controls[0].locations[0]...");
+            ok("Fired emp > change:works_for.controls[0].locations[0]...");
         });
 
-        emp.get('works_for').on('change:controls.locations[0].zip', function () {
-            console.log("Fired emp.works_for > change:controls.locations[0].zip...");
-            ok("Fired emp.works_for > change:controls.locations[0].zip...");
+        emp.get('works_for').on('change:controls[0].locations[0].zip', function () {
+            console.log("Fired emp.works_for > change:controls[0].locations[0].zip...");
+            ok("Fired emp.works_for > change:controls[0].locations[0].zip...");
         });
 
-        emp.get('works_for').on('change:controls.locations[0]', function () {
-            console.log("Fired emp.works_for > change:controls.locations[0]...");
-            ok("Fired emp.works_for > change:controls.locations[0]...");
+        emp.get('works_for').on('change:controls[0].locations[0]', function () {
+            console.log("Fired emp.works_for > change:controls[0].locations[0]...");
+            ok("Fired emp.works_for > change:controls[0].locations[0]...");
         });
 
         emp.get('works_for').get("locations").at(0).set('zip', 94403);//10
@@ -1205,9 +1236,7 @@ $(document).ready(function () {
         emp.get("dependents").reset();
     });
 
-
     test("example-2", 42, function () {
-
         var listener = {};
         _.extend(listener, Backbone.Events);
 
@@ -1300,24 +1329,24 @@ $(document).ready(function () {
         });
 
 
-        listener.listenTo(emp, 'change:works_for.controls.locations[0].zip', function () {
-            console.log("Fired emp > change:works_for.controls.locations[0].zip...");
-            ok("Fired emp > change:works_for.controls.locations[0].zip...");
+        listener.listenTo(emp, 'change:works_for.controls[0].locations[0].zip', function () {
+            console.log("Fired emp > change:works_for.controls[0].locations[0].zip...");
+            ok("Fired emp > change:works_for.controls[0].locations[0].zip...");
         });
 
-        listener.listenTo(emp, 'change:works_for.controls.locations[0]', function () {
-            console.log("Fired emp > change:works_for.controls.locations[0]...");
-            ok("Fired emp > change:works_for.controls.locations[0]...");
+        listener.listenTo(emp, 'change:works_for.controls[0].locations[0]', function () {
+            console.log("Fired emp > change:works_for.controls[0].locations[0]...");
+            ok("Fired emp > change:works_for.controls[0].locations[0]...");
         });
 
-        listener.listenTo(emp.get('works_for'), 'change:controls.locations[0].zip', function () {
-            console.log("Fired emp.works_for > change:controls.locations[0].zip...");
-            ok("Fired emp.works_for > change:controls.locations[0].zip...");
+        listener.listenTo(emp.get('works_for'), 'change:controls[0].locations[0].zip', function () {
+            console.log("Fired emp.works_for > change:controls[0].locations[0].zip...");
+            ok("Fired emp.works_for > change:controls[0].locations[0].zip...");
         });
 
-        listener.listenTo(emp.get('works_for'), 'change:controls.locations[0]', function () {
-            console.log("Fired emp.works_for > change:controls.locations[0]...");
-            ok("Fired emp.works_for > change:controls.locations[0]...");
+        listener.listenTo(emp.get('works_for'), 'change:controls[0].locations[0]', function () {
+            console.log("Fired emp.works_for > change:controls[0].locations[0]...");
+            ok("Fired emp.works_for > change:controls[0].locations[0]...");
         });
 
         emp.get('works_for').get("locations").at(0).set('zip', 94403);//10
@@ -1347,15 +1376,9 @@ $(document).ready(function () {
             console.log("Fired emp.dependents reset...");
             ok("Fired emp.dependents reset...");
         });
-
-
         //6 events
         emp.get("dependents").add(child2);
         emp.get("dependents").remove([child1]);
         emp.get("dependents").reset();
-
-
     });
-
 });
-
