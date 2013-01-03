@@ -42,6 +42,12 @@
         // Define `Model` property which can keep track of already fired `events`,
         // and prevent redundant event to be triggered in case of circular model graph.
         _proxyCalls:undefined,
+
+         // Get the value of an attribute.
+        get: function(attr){
+            return this.getAttr.apply(this, arguments);
+        },
+
         // Set a hash of model attributes on the object,
         // fire Backbone `event` with options.
         // It maintains relations between models during the set operation.
