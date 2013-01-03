@@ -78,7 +78,7 @@
                 _.each(this.relations, function (relation) {
                     var relationKey = relation.key, relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
-                        val, relationOptions, data;
+                        val, relationOptions, data, relationValue;
                     if (attributes[relationKey]) {
                         //Get value of attribute with relation key in `val`.
                         val = _.result(attributes, relationKey);
@@ -95,12 +95,12 @@
                                 throw new Error('collectionType must inherit from Backbone.Collection');
                             }
 
+                            // If `attributes` has no property present,
+                            // create `Collection` having `relation.collectionType` as type and
+                            // `relation.Model` as model reference and perform Backbone `set`.
                             if (val instanceof BackboneCollection) {
                                 ModelProto.set.call(this, relationKey, val, relationOptions);
                             } else if (!this.attributes[relationKey]) {
-                                // If `attributes` has no property present,
-                                // create `Collection` having `relation.collectionType` as type and
-                                // `relation.Model` as model reference, and perform Backbone `set`.
                                 data = collectionType ? new collectionType() : this._createCollection(relatedModel);
                                 data.add(val, relationOptions);
                                 ModelProto.set.call(this, relationKey, data, relationOptions);
@@ -114,63 +114,15 @@
                             ModelProto.set.call(this, relationKey, data, relationOptions)
                         }
 
+                        relationValue = this.attributes[relationKey];
+
                         // Add proxy events to respective parents.
                         // Only add callback if not defined.
-                        if (!this.attributes[relationKey]._proxyCallback) {
-                            this.attributes[relationKey]._proxyCallback = function () {
-                                var args = arguments,
-                                    opt = args[0].split(":"),
-                                    eventType = opt[0],
-                                    eventObject = args[1],
-                                    indexEventObject = -1,
-                                    _proxyCalls = this.attributes[relationKey]._proxyCalls,
-                                    eventPath,
-                                    eventAvailable;
-
-                                // Change the event name to a fully qualified path.
-                                if (_.contains(defaultEvents, eventType)) {
-                                    if (opt && _.size(opt) > 1) {
-                                        eventPath = opt[1];
-                                    }
-                                    // Find the specific object in the collection which has changed.
-                                    if (this.attributes[relationKey] instanceof BackboneCollection && "change" === eventType) {
-                                        indexEventObject = _.indexOf(this.attributes[relationKey].models, eventObject);
-                                    }
-                                    // Manipulate `eventPath`.
-                                    eventPath = relationKey + (indexEventObject !== -1 ?
-                                        "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
-                                    args[0] = eventType + ":" + eventPath;
-
-                                    if (_proxyCalls) {
-                                        // If event has been already triggered as result of same source `eventPath`,
-                                        // no need to re-trigger event to prevent cycle.
-                                        eventAvailable = _.find(_proxyCalls, function (value, eventKey) {
-                                            // `event` ends with eventKey.
-                                            var d = eventPath.length - eventKey.length;
-                                            return eventPath.indexOf(eventKey, d) !== -1;
-                                        });
-                                        if (eventAvailable) {
-                                            return this;
-                                        }
-                                    } else {
-                                        _proxyCalls = this.attributes[relationKey]._proxyCalls = {};
-                                    }
-                                    // Add `eventPath` in `_proxyCalls` to keep track of already triggered `event`.
-                                    _proxyCalls[eventPath] = true;
-                                }
-
-                                // Bubble up event to parent `model` with new changed arguments.
-                                this.trigger.apply(this, args);
-
-                                // Remove `eventPath` from `_proxyCalls`,
-                                // if `eventPath` and `_proxCalls` are available,
-                                // which allow event to be triggered on for next operation of `set`.
-                                if (eventPath && _proxyCalls) {
-                                    delete _proxyCalls[eventPath];
-                                }
-                                return this;
+                        if (relationValue && !relationValue._proxyCallback) {
+                            relationValue._proxyCallback = function () {
+                                return this._bubbleEvent.call(this, relationKey, arguments);
                             };
-                            this.attributes[relationKey].on("all", this.attributes[relationKey]._proxyCallback, this);
+                            relationValue.on("all", relationValue._proxyCallback, this);
                         }
 
                         // Create a local `processedRelations` array to store the relation key which has been processed.
@@ -197,6 +149,56 @@
             }
             // Return results for `BackboneModel.set`.
             return ModelProto.set.call(this, tbp, options);
+        },
+        // Bubble-up event to `parent` Model
+        _bubbleEvent: function (relationKey, eventArguments) {
+            var args = eventArguments,
+                opt = args[0].split(":"),
+                eventType = opt[0],
+                eventObject = args[1],
+                indexEventObject = -1,
+                relationValue = this.attributes[relationKey],
+                _proxyCalls = relationValue._proxyCalls,
+                eventPath,
+                eventAvailable;
+            // Change the event name to a fully qualified path.
+            if (_.contains(defaultEvents, eventType)) {
+                if (opt && _.size(opt) > 1) {
+                    eventPath = opt[1];
+                }
+                // Find the specific object in the collection which has changed.
+                if (relationValue instanceof BackboneCollection && "change" === eventType) {
+                    indexEventObject = _.indexOf(relationValue.models, eventObject);
+                }
+                // Manipulate `eventPath`.
+                eventPath = relationKey + (indexEventObject !== -1 ?
+                    "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
+                args[0] = eventType + ":" + eventPath;
+
+                // If event has been already triggered as result of same source `eventPath`,
+                // no need to re-trigger event to prevent cycle.
+                if (_proxyCalls) {
+                    eventAvailable = _.find(_proxyCalls, function (value, eventKey) {
+                        return eventPath.indexOf(eventKey, eventPath.length - eventKey.length) !== -1;
+                    });
+                    if (eventAvailable) return this;
+                } else {
+                    _proxyCalls = relationValue._proxyCalls = {};
+                }
+                // Add `eventPath` in `_proxyCalls` to keep track of already triggered `event`.
+                _proxyCalls[eventPath] = true;
+            }
+
+            // Bubble up event to parent `model` with new changed arguments.
+            this.trigger.apply(this, args);
+
+            // Remove `eventPath` from `_proxyCalls`,
+            // if `eventPath` and `_proxCalls` are available,
+            // which allow event to be triggered on for next operation of `set`.
+            if (eventPath && _proxyCalls) {
+                delete _proxyCalls[eventPath];
+            }
+            return this;
         },
         // Returns New `collection` of type `relation.relatedModel`.
         _createCollection: function (type) {
