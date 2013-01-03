@@ -172,7 +172,7 @@
                         colModel;
                     colModel = relationValue.find(function (model) {
                         var changedModel = model.get(pathTokens);
-                        return eventObject === !(changedModel instanceof BackboneModel
+                        return eventObject === !(changedModel instanceof AssociatedModel
                                 || changedModel instanceof BackboneCollection)
                                     ? model.get(initialTokens) : changedModel;
                     });
@@ -317,6 +317,7 @@
         previous: function (attr) {
             return this.previousAttributes()[attr];
         },
+
         // The JSON representation of the model.
         toJSON: function (options) {
             var json, aJson;
@@ -339,37 +340,10 @@
             }
             return json;
         },
-        // Deep `clone` the model.
+
+        // Create a new model with identical attributes to this one.
         clone: function () {
-            var cloneObj, newCollection;
-            if (!this.visited) {
-                this.visited = true;
-                // Get shallow clone from `BackboneModel.clone`.
-                cloneObj = ModelProto.clone.apply(this, arguments);
-                // If `this.relations` is defined, iterate through each `relation` and `clone`.
-                if (this.relations) {
-                    _.each(this.relations, function (relation) {
-                        if (this.attributes[relation.key]) {
-                            var sourceObj = cloneObj.attributes[relation.key];
-                            if (sourceObj instanceof BackboneCollection) {
-                                // Creates new `collection` using `relation`.
-                                newCollection = relation.collectionType ? new relation.collectionType() :
-                                    this._createCollection(relation.relatedModel);
-                                // Added each `clone` model to `newCollection`.
-                                sourceObj.each(function (model) {
-                                    var mClone = model.clone();
-                                    mClone && newCollection.add(mClone);
-                                });
-                                cloneObj.attributes[relation.key] = newCollection;
-                            } else if (sourceObj instanceof BackboneModel) {
-                                cloneObj.attributes[relation.key] = sourceObj.clone();
-                            }
-                        }
-                    }, this);
-                }
-                delete this.visited;
-            }
-            return cloneObj;
+           return new this.constructor(this.toJSON());
         },
 
         // Get `reduced` result using passed `path` array or string.
