@@ -154,7 +154,7 @@
                                 this.trigger.apply(this, args);
 
                                 // Remove `eventPath` from `_proxyCalls`,
-                                // if `eventPath` and `_proxCalls` are available, 
+                                // if `eventPath` and `_proxCalls` are available,
                                 // which allow event to be triggered on for next operation of `set`.
                                 if (eventPath && _proxyCalls) {
                                     delete _proxyCalls[eventPath];
@@ -165,7 +165,7 @@
                         }
 
                         // Create a local `processedRelations` array to store the relation key which has been processed.
-                        // We cannot use `this.relations` because if there is no value defined for `relationKey`, 
+                        // We cannot use `this.relations` because if there is no value defined for `relationKey`,
                         // it will not get processed by either `BackboneModel` `set` or the `AssociatedModel` `set`.
                         !processedRelations && (processedRelations = []);
                         if (_.indexOf(processedRelations, relationKey) === -1) {
@@ -351,6 +351,36 @@
                 delete this.visited;
             }
             return cloneObj;
+        },
+
+        // Get the value of an attribute with `path`.
+        getAttr: function (path, iterator) {
+            var result = this,
+                attrs = getPathArray(path),
+                key,
+                i;
+            iterator || (iterator = function (memo, key) {
+                return memo instanceof Backbone.Collection && _.isNumber(key) ? memo.at(key) : memo.attributes[key];
+            });
+            for (i = 0; i < attrs.length; i++) {
+                key = attrs[i];
+                if (!result) break;
+                result = iterator.call(this, result, key, attrs);
+            }
+            return result;
         }
     });
+
+    // Get Path `attrs` as Array
+    // Example:
+    //  'employee.works_for.locations[2].name' -> ['employee', 'works_for', 'locations', 2, 'name']
+    var getPathArray = function (path, iterator, context) {
+        if (_.isString(path)) {
+            iterator || (iterator = function (value) {
+                return value.match(/^\d+$/) ? parseInt(value, 10) : value;
+            });
+            return _.map(path.match(/[^\.\[\]]+/g) || [], iterator, context);
+        }
+        return path || [];
+    }
 })();
