@@ -537,7 +537,7 @@ Write your own test case [here](http://jsperf.com/backbone-associations-speed-su
 
 ## <a name="changelog"/>Change Log
 
-#### Version 0.3.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.2.0...v0.3.1)
+#### Version 0.3.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.3.0...v0.3.1)
 * Bug fix for event paths involving collections at multiple levels in the object graph
 * Updated README with class diagram and example for paths involving collections
 
