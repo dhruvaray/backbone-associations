@@ -22,7 +22,7 @@ It was originally born out of a need to provide a simpler and speedier implement
 
 ## <a name="download"/>Download
 
-* [Production version - 0.3.1](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (_1.7KB packed and gzipped_)
+* [Production version - 0.3.1](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.7KB packed and gzipped)
 * [Development version - 0.3.1](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
 
 
