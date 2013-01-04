@@ -114,9 +114,8 @@ A string (which can be resolved to an object type on the global scope), or a ref
 ## <a name="tutorial-associationsdef"/> Tutorial : Defining a graph of `AssociatedModel` relationships
 
 This tutorial demonstrates how to convert the following relationship graph into an `AssociatedModels` representation
-![er-example](http://dhruvaray.github.com/backbone-associations/docs/img/er-example.png)
-> The example is adapted from _Fundamentals of database systems - Elmasri/Navathe_.
-> The source code for this image is [here](http://dhruvaray.github.com/backbone-associations/docs/er-example.tex).
+![cd-example](http://dhruvaray.github.com/backbone-associations/docs/img/cd-example.png)
+> The source code for this image is [here](http://dhruvaray.github.com/backbone-associations/docs/cd-example.tex).
 
 ````javascript
    var Location = Backbone.AssociatedModel.extend({
@@ -537,6 +536,12 @@ Run tests on your machine configuration instantly [here](http://dhruvaray.github
 Write your own test case [here](http://jsperf.com/backbone-associations-speed-suit/3)
 
 ## <a name="changelog"/>Change Log
+
+#### Version 0.3.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.2.0...v0.3.1)
+* Bug fix for event paths involving collections at multiple levels in the object graph
+* Updated README with class diagram and example for paths involving collections
+
+
 #### Version 0.3.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.2.0...v0.3.0)
 * Added support for fully qualified event "path" names.
 * Event arguments and event paths are semantically consistent.
