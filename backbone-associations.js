@@ -1,7 +1,7 @@
 //
-//      Backbone-associations.js 0.3.0
+//      Backbone-associations.js 0.3.1
 //
-//      (c) 2012 Dhruva Ray, Jaynti Kanani
+//      (c) 2013 Dhruva Ray, Jaynti Kanani
 //      Backbone-associations may be freely distributed under the MIT license;
 //      see the accompanying LICENSE.txt.
 //      Depends on [Backbone](https://github.com/documentcloud/backbone) and [Underscore](https://github.com/documentcloud/underscore/) as well.
