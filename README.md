@@ -22,8 +22,8 @@ It was originally born out of a need to provide a simpler and speedier implement
 
 ## <a name="download"/>Download
 
-* [Production version - 0.3.0](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.6KB packed and gzipped)
-* [Development version - 0.3.0](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
+* [Production version - 0.3.1](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (_1.7KB packed and gzipped_)
+* [Development version - 0.3.1](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
 
 
 ## <a name="installation"/>Installation
@@ -529,7 +529,7 @@ emp.on('change:works_for', function () {
 
 ![Performance](http://dhruvaray.github.com/backbone-associations/docs/img/speed.png)
 
-Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations. (backbone-associations v0.3.0 v/s backbone-relational v0.7.0)
+Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations. (backbone-associations v0.3.1 v/s backbone-relational v0.7.0)
 
 Run tests on your machine configuration instantly [here](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html)
 
