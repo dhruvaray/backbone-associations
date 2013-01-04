@@ -423,13 +423,32 @@ This tutorial demonstrates the usage of eventing and change-related methods with
         console.log("Fired emp > change:works_for.locations[0]...");
     });
 
+    emp.on('change:works_for.controls[0].locations[0].zip', function () {
+        console.log("Fired emp > change:works_for.controls[0].locations[0].zip...");
+    });
+
+    emp.on('change:works_for.controls[0].locations[0]', function () {
+        console.log("Fired emp > change:works_for.controls[0].locations[0]...");
+    });
+
+    emp.get('works_for').on('change:controls[0].locations[0].zip', function () {
+        console.log("Fired emp.works_for > change:controls[0].locations[0].zip...");
+    });
+
+    emp.get('works_for').on('change:controls[0].locations[0]', function () {
+        console.log("Fired emp.works_for > change:controls[0].locations[0]...");
+    });
 
     emp.get('works_for').get("locations").at(0).set('zip', 94403);
 
     //Console log
+    //Fired emp.works_for > change:controls[0].locations[0]...
+    //Fired emp.works_for > change:controls[0].locations[0].zip...
     //Fired emp.works_for > change:locations[0]...
     //Fired emp.works_for > change:locations[0].zip...
 
+    //Fired emp > change:works_for.controls[0].locations[0]...
+    //Fired emp > change:works_for.controls[0].locations[0].zip...
     //Fired emp > change:works_for.locations[0]...
     //Fired emp > change:works_for.locations[0].zip...
 
@@ -459,7 +478,6 @@ This tutorial demonstrates the usage of eventing and change-related methods with
     emp.get('dependents').on('reset', function () {
         console.log("Fired emp.dependents reset...");
     });
-
 
     emp.get("dependents").add(child2);
     emp.get("dependents").remove([child1]);
