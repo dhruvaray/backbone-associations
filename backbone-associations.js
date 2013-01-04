@@ -31,7 +31,7 @@
 
     // Built-in Backbone `events`.
     defaultEvents = ["change", "add", "remove", "reset", "destroy",
-                    "sync", "error", "sort", "request"];
+        "sync", "error", "sort", "request"];
 
     // Backbone.AssociatedModel
     // --------------
@@ -48,16 +48,13 @@
         _proxyCalls: undefined,
 
         // Get the value of an attribute.
-        get: function(attr){
+        get: function (attr){
             return this.getAttr.apply(this, arguments);
         },
 
-        // Set a hash of model attributes on the object,
-        // fire Backbone `event` with options.
-        // It maintains relations between models during the set operation.
-        // It also bubbles up child events to the parent.
+        // Set a hash of model attributes on the Backbone Model.
         set: function (key, value, options) {
-            var attributes, processedRelations, tbp, attr;
+            var attributes, attr, modelMap, modelId, obj, result = this;
             // Duplicate backbone's behavior to allow separate key/value parameters,
             // instead of a single 'attributes' object.
             if (_.isObject(key) || key == null) {
@@ -67,9 +64,36 @@
                 attributes = {};
                 attributes[key] = value;
             }
+            if (!attributes) return this;
+            for (attr in attributes) {
+                var pathTokens = getPathArray(attr), initials = _.initial(pathTokens), last = _.last(pathTokens),
+                    root = this, parentModel = this.get(initials);
+
+                modelMap || (modelMap = {});
+                if ((!parentModel && _.size(initials) > 0) || parentModel instanceof BackboneCollection) continue;
+                parentModel instanceof AssociatedModel && (root = parentModel);
+                obj = modelMap[root.cid] || (modelMap[root.cid] = {'model': root, 'data': {}});
+                obj.data[last] = attributes[attr];
+            }
+            if (modelMap) {
+                for (modelId in modelMap) {
+                    obj = modelMap[modelId];
+                    this.setAttr.call(obj.model, obj.data, options) || (result = false);
+                }
+            } else {
+                result = this.setAttr.call(this, attributes, options);
+            }
+            return result;
+        },
+
+        // Set a hash of model attributes on the object,
+        // fire Backbone `event` with options.
+        // It maintains relations between models during the set operation.
+        // It also bubbles up child events to the parent.
+        setAttr: function (attributes, options) {
+            var processedRelations, tbp, attr;
             // Extract attributes and options.
             options || (options = {});
-            if (!attributes) return this;
             if (options.unset) for (attr in attributes) attributes[attr] = void 0;
 
             if (this.relations) {
@@ -168,13 +192,13 @@
                 if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject) {
                     //indexEventObject = _.indexOf(relationValue.models, eventObject);
                     var pathTokens = getPathArray(eventPath),
-                        initialTokens = _.initial(pathTokens),
-                        colModel;
+                        initialTokens = _.initial(pathTokens), colModel;
+
                     colModel = relationValue.find(function (model) {
                         var changedModel = model.get(pathTokens);
-                        return eventObject === !(changedModel instanceof AssociatedModel
-                                || changedModel instanceof BackboneCollection)
-                                    ? model.get(initialTokens) : changedModel;
+                        return eventObject === (changedModel instanceof AssociatedModel
+                            || changedModel instanceof BackboneCollection)
+                            ? changedModel : (model.get(initialTokens) || model);
                     });
                     colModel && (indexEventObject = relationValue.indexOf(colModel));
                 }
@@ -343,7 +367,7 @@
 
         // Create a new model with identical attributes to this one.
         clone: function () {
-           return new this.constructor(this.toJSON());
+            return new this.constructor(this.toJSON());
         },
 
         // Get `reduced` result using passed `path` array or string.
@@ -352,6 +376,7 @@
                 attrs = getPathArray(path),
                 key,
                 i;
+            if (_.size(attrs) < 1) return;
             iterator || (iterator = function (memo, key) {
                 return memo instanceof BackboneCollection && _.isNumber(key) ? memo.at(key) : memo.attributes[key];
             });
@@ -365,15 +390,13 @@
     });
 
     // Get Path `attrs` as Array
-    // Example:
-    //  'employee.works_for.locations[2].name' -> ['employee', 'works_for', 'locations', 2, 'name']
     var getPathArray = function (path, iterator, context) {
         if (_.isString(path)) {
             iterator || (iterator = function (value) {
                 return value.match(/^\d+$/) ? parseInt(value, 10) : value;
             });
-            return _.map(path.match(/[^\.\[\]]+/g) || [], iterator, context);
+            return _.map(path.match(/[^\.\[\]]+/g) || [''], iterator, context);
         }
-        return path || [];
+        return path || [''];
     }
 })();
