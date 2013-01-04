@@ -1,78 +1,22 @@
 \documentclass[landscape]{article}
 
-\usepackage[landscape]{geometry}
-\usepackage{graphicx}
-\usepackage{tikz-er2}
-%%%<
-\usepackage{verbatim}
-\usepackage[active,tightpage]{preview}
-\PreviewEnvironment{tikzpicture}
-\setlength\PreviewBorder{5pt}%
-%%%>
+\usepackage{tikz-uml}
 
 
 \begin{document}
-
-\thispagestyle{empty}
-
-\usetikzlibrary{positioning}
-\usetikzlibrary{shadows}
-
-\tikzstyle{every entity} = [top color=white, bottom color=blue!30, 
-                            draw=blue!50!black!100, drop shadow]
-\tikzstyle{every weak entity} = [drop shadow={shadow xshift=.7ex, 
-                                 shadow yshift=-.7ex}]
-\tikzstyle{every attribute} = [top color=white, bottom color=yellow!20, 
-                               draw=yellow, node distance=1cm, drop shadow]
-\tikzstyle{every relationship} = [top color=white, bottom color=red!20, 
-                                  draw=red!50!black!100, drop shadow]
-\tikzstyle{every isa} = [top color=white, bottom color=green!20, 
-                         draw=green!50!black!100, drop shadow]
-
-\centering
-\scalebox{.87}{
-\begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-  \node[entity] (emp) {Employee};
-  \node[attribute] (fname) [above = of emp]{fname} edge (emp);
-  \node[attribute] (lname) [above right = of emp]{lname} edge (emp);
-  \node[attribute] (sex)   [below left = of emp]{sex} edge (emp);
-  \node[attribute] (age)   [above left = of emp]{age} edge (emp);
-
-  \node[relationship] (works-for) [left=of emp] {Works for} edge (emp);
-  \node[entity] (dept) [left=of works-for] {Department} edge (works-for);
-  \node[attribute] (dname)   [above left=of dept]{name} edge (dept);
-  \node[attribute] (dnumber)   [below left=of dept]{number} edge (dept);
-
-  \node[relationship] (locations) [left=3 cm of dept] {Locations} edge (dept);
-  \node[relationship] (controls) [above=of dept] {Controls} edge (dept);
-
-  \node[entity] (loc) [below=of locations] {Location} edge (locations);
-  \node[attribute] (add1)   [above left = of loc]{add1} edge (loc);
-  \node[attribute] (add2)   [left = of loc]{add2} edge (loc);
-  \node[attribute] (zip)    [below = of loc]{zip} edge (loc);
-  \node[attribute] (state)  [below left = of loc]{state} edge (loc);
-
-  \node[entity] (proj) [above=of controls] {Project} edge (controls);
-  \node[attribute] (pname)   [above left = of proj]{name} edge (proj);
-  \node[attribute] (pnumber)   [above right = of proj]{number} edge (proj);
-
-  \draw[link] (proj) -| (locations);
-
-  \node[relationship] (dep) [below=of emp] {Dependents} edge (emp);
-  \node[entity] (dependent) [below=of dep] {Dependent} edge (dep);
-  \node[attribute] (dsex)   [above left = of dependent]{sex} edge (dependent);
-  \node[attribute] (dage)   [below left = of dependent]{age} edge (dependent);
-  \node[attribute] (relationship)   [left = of dependent]{relationship} edge (dependent);
-  \node[attribute] (dfname) [right=of dependent]{fname} edge (dependent);
-  \node[attribute] (dlname) [below right=of dependent]{lname} edge (dependent);
-
-  \node[relationship] (manager) [right=of emp] {Manager} edge (emp);
-
-  \draw[link] (manager) to [bend left=90] (emp);
-
+\begin{tikzpicture}
+\umlclass{Employee}{fname \\ lname \\ age \\ sex}{}
+\umlclass[x=-5,y=0]{Department}{name \\ number}{}
+\umlclass[x=-10,y=0]{Location}{add1 \\ add2 \\ state \\zip }{}
+\umlclass[x=-5,y=5]{Project}{name \\ number}{}
+\umlclass[x=0,y=-5]{Dependent}{sex \\ relationship \\ age \\ fname \\ lname}{}
+\umluniassoc[arg2= worksfor, mult2=1, pos = 0.7]{Employee}{Department}
+\umluniaggreg[arg2=dependents, mult2=0..*]{Employee}{Dependent}
+\umluniassoc[arg2= manager, mult2=1, pos=0.7, angle1=90, angle2=140, loopsize=4cm]{Employee}{Employee}
+\umluniaggreg[arg2=locations, mult2=0..*, geometry=-|, pos=1.8]{Project}{Location}
+\umluniaggreg[arg2=locations, mult2=0..*, pos = 0.7]{Department}{Location}
+\umluniassoc[arg2= controls, mult2=0..*]{Department}{Project}
 
 \end{tikzpicture}
-}
 
 \end{document}
-
