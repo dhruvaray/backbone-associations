@@ -516,7 +516,7 @@ then inside a previously defined `change` event handler
 
 emp.on('change:works_for', function () {
     //emp.get('works_for').hasChanged() === false; as we are querying a previously created `dept1` instance
-    //emp.hasChanged('works_for') === true; as we are querying the emp instance whose 'works_for' property has changed
+    //emp.hasChanged('works_for') === true; as we query the emp instance whose 'works_for' property has changed
 });
 
 ````
