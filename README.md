@@ -15,6 +15,7 @@ It was originally born out of a need to provide a simpler and speedier implement
 * [Tutorial : Defining a graph of `AssociatedModel` relationships](#tutorial-associationsdef)
 * [Eventing with Associations](#eventing)
 * [Tutorial : Eventing with a graph of `AssociatedModel` objects](#tutorial-eventing)
+* [Perform set and retrieve operations with fully qualified paths](#paths)
 * [Pitfalls](#pitfalls)
 * [Performance Comparison](#performance)
 * [Change Log](#changelog)
@@ -22,8 +23,8 @@ It was originally born out of a need to provide a simpler and speedier implement
 
 ## <a name="download"/>Download
 
-* [Production version - 0.3.1](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.7KB packed and gzipped)
-* [Development version - 0.3.1](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
+* [Production version - 0.4.0](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.86KB packed and gzipped)
+* [Development version - 0.4.0](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
 
 
 ## <a name="installation"/>Installation
@@ -114,8 +115,8 @@ A string (which can be resolved to an object type on the global scope), or a ref
 ## <a name="tutorial-associationsdef"/> Tutorial : Defining a graph of `AssociatedModel` relationships
 
 This tutorial demonstrates how to convert the following relationship graph into an `AssociatedModels` representation
-![cd-example](http://dhruvaray.github.com/backbone-associations/docs/img/cd-example.png)
-> The source code for this image is [here](http://dhruvaray.github.com/backbone-associations/docs/cd-example.tex).
+![cd_example](http://dhruvaray.github.com/backbone-associations/docs/img/cd_example.png)
+This image was generated via [code](https://github.com/dhruvaray/backbone-associations/blob/master/docs/cd_example.tex).
 
 ````javascript
    var Location = Backbone.AssociatedModel.extend({
@@ -490,10 +491,20 @@ This tutorial demonstrates the usage of eventing and change-related methods with
     //Fired emp > add:dependents...
     //Fired emp > remove:dependents...
     //Fired emp > reset:dependents...
-
 ````
-The preceding examples corresponds to this [test case](http://dhruvaray.github.com/backbone-associations/test/test-suite.html?module=Examples&testNumber=32).
+The preceding examples corresponds to this [test case](http://dhruvaray.github.com/backbone-associations/test/test-suite.html?module=Examples).
 Other examples can be found in the [test suite](http://dhruvaray.github.com/backbone-associations/test/test-suite.html).
+
+## <a name="paths"/>Retrieve and set data with fully qualified paths
+For convenience, it is also possible to retrieve or set data by specifying a path to the destination (of the retrieve or set operation).
+
+
+````javascript
+    emp.get('works_for.controls[0].locations[0].zip') //94404
+    //Equivalent to emp.get('works_for').get('controls').at(0).get('locations').at(0).get('zip');
+    emp.set('works_for.locations[0].zip', 94403);
+    //Equivalent to emp.get('works_for').get('locations').at(0).set('zip',94403);
+````
 
 ## <a name="performance"/>Pitfalls
 
@@ -515,8 +526,8 @@ then inside a previously defined `change` event handler
 ````javascript
 
 emp.on('change:works_for', function () {
-    //emp.get('works_for').hasChanged() === false; as we are querying a previously created `dept1` instance
-    //emp.hasChanged('works_for') === true; as we query the emp instance whose 'works_for' property has changed
+    //emp.get('works_for').hasChanged() === false; as we query a previously created `dept1` instance
+    //emp.hasChanged('works_for') === true; as we query emp whose 'works_for' attribute has changed
 });
 
 ````
@@ -529,13 +540,16 @@ emp.on('change:works_for', function () {
 
 ![Performance](http://dhruvaray.github.com/backbone-associations/docs/img/speed.png)
 
-Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations. (backbone-associations v0.3.1 v/s backbone-relational v0.7.0)
+Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations. (backbone-associations v0.4.0 v/s backbone-relational v0.7.0)
 
 Run tests on your machine configuration instantly [here](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html)
 
 Write your own test case [here](http://jsperf.com/backbone-associations-speed-suit/3)
 
 ## <a name="changelog"/>Change Log
+
+#### Version 0.4.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.0...v0.3.1)
+*Ability to perform set and retrieve operations with fully qualified paths
 
 #### Version 0.3.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.3.0...v0.3.1)
 * Bug fix for event paths involving collections at multiple levels in the object graph

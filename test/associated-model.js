@@ -1,11 +1,12 @@
 $(document).ready(function () {
 
-    if ( !window.console ) {
+    if (!window.console) {
         window.console = {};
         var names = [ 'log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml',
-                    'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd' ];
-        for ( var i = 0; i < names.length; ++i ) {
-            window.console[ names[i] ] = function() {};
+            'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd' ];
+        for (var i = 0; i < names.length; ++i) {
+            window.console[ names[i] ] = function () {
+            };
         }
     }
 
@@ -227,6 +228,63 @@ $(document).ready(function () {
         ok(dept1.get('locations').at(0) == loc1, "dept1's first location should be same as loc1");
     });
 
+    test("nested get", 11, function () {
+        equal(emp.get('works_for.name'), emp.get('works_for').get('name'), 'result should be same as `get` chain');
+        equal(emp.get('dependents[0].fname'), emp.get('dependents').at(0).get('fname'), 'index can be defined to get model from collection, like `get("dependent[0].fname")`');
+        equal(emp.get('dependents[1].fname'), emp.get('dependents').at(1).get('fname'));
+        equal(emp.get('works_for.controls[0].locations[0].zip'), 94404);
+        equal(emp.get('works_for.controls[0].locations[0].zip'), emp.get('works_for').get('controls').at(0).get('locations').at(0).get('zip'));
+        deepEqual(emp.get('works_for.locations[1]').toJSON(), emp.get('works_for').get('locations').at(1).toJSON());
+
+        equal(emp.get('dependents[1000].fname'), undefined, "result should be `undefined` if indexed model in not present in collection");
+
+        equal(emp.get('works_for.unknown'), undefined, "result should be `undefined` if attribute is not available");
+        equal(emp.get("1"), undefined);
+        equal(emp.get('dependents[1]."1"'), undefined);
+        equal(emp.get('works_for.""'), undefined);
+    });
+
+
+    test("nested set", 10, function () {
+        equal(emp.get('works_for.name'), 'R&D');
+        emp.set('works_for.name', 'Marketing');
+        equal(emp.get('works_for.name'), 'Marketing');
+
+
+        emp.set('works_for.locations[0].zip', 94403);
+        equal(emp.get('works_for.locations[0].zip'), 94403, "nested `set` for model in collection should be same as normal `set`");
+
+        emp.set('dependents[0].sex', 'X');//validate test
+        notEqual(emp.get('dependents[0].sex'), 'X', "validate test should be passed in nested `set`");
+
+        emp.set({
+            'designation':'Senior Manager',
+            'works_for.controls[0].locations[0].zip':90909,
+            'dependents[1000].fname':'outofindex',
+            'dependents[1].fname':'John'
+        });
+        equal(emp.get('dependents[1].fname'), 'John');
+
+        emp.on('change:works_for.name', function () {
+            ok(false);
+        });
+        emp.on('all', function (eventName) {
+            ok(true, "emp, `" + eventName + "` fired !!!");
+        });
+        emp.set({
+            'works_for.name':'Research',
+            'dependents[0].lname':'Doe'
+        }, {silent:true});
+        emp.off('change:works_for.name');
+        emp.get('works_for').change();
+        emp.get('dependents[0]').change();
+
+        emp.set({
+            'wrongpath.path2.works_for.name':'mip'
+        });
+        ok(true);
+    });
+
     test("function can also be passed as value of attribute on set", 2, function () {
         var dept2 = function () {
             return {
@@ -239,11 +297,14 @@ $(document).ready(function () {
         equal(emp.get("works_for").get("name"), "Marketing", "department name should be set to Marketing");
     });
 
-    test("unset", 2, function () {
+    test("unset", 3, function () {
         emp.get('works_for').unset('locations');
         equal(emp.get('works_for').get('locations'), void 0, "locations should be void");
-        emp.unset('works_for');
-        equal(emp.get('works_for'), void 0, "should have no departments");
+
+        emp.unset('works_for.locations');
+        equal(emp.get('works_for.locations'), void 0, "locations should be void");
+        emp.unset('dependents');
+        equal(emp.get('dependents'), void 0, "`dependents` should be unset");
     });
 
     test("setDefaults", 2, function () {
@@ -258,11 +319,13 @@ $(document).ready(function () {
         equal(_.escape(emp.get('works_for').get("locations").at(0).get("add1")), '&lt;a&gt;New Address&lt;&#x2F;a&gt;', "City should be in HTML-escaped version");
     });
 
-    test("has", 3, function () {
+    test("has", 5, function () {
         ok(emp.get("works_for").get("locations").at(0).has('add2') == false, "Add2 is undefined in department address");
+        strictEqual(emp.has("works_for.locations[0].add2"), false);
         emp.get("works_for").get("locations").at(0).set({'add2':'Add2 value'});
-        ok(emp.get("works_for").get("locations").at(0).has('add2') == true, "Add2 is defined in department address");
-        ok(emp.has('add2') == false, "Add2 is undefined in patient");
+        strictEqual(emp.has("works_for.locations[0].add2"), true);
+        strictEqual(emp.get("works_for.locations").at(0).has('add2'), true, "Add2 is defined in department address");
+        strictEqual(emp.has('add2'), false, "Add2 is undefined in patient");
     });
 
     test("validate", 2, function () {
@@ -316,14 +379,6 @@ $(document).ready(function () {
 
     test("child `change`", 17, function () {
 
-        /*emp.on('all',function(event){
-         ok(true,"Fired emp " + event);
-         });
-
-         emp.get('works_for').on('all',function(event){
-         ok(true,"Fired emp.works_for " + event);
-         });*/
-
         emp.on('change', function () {
             ok(true, "Fired emp change...");
         });
@@ -347,7 +402,6 @@ $(document).ready(function () {
             ok(true, "Fired emp change:works_for.name...");
         });
 
-
         emp.get('works_for').on('change', function () {
             ok(true, "Fired works_for change...");
         });
@@ -363,29 +417,29 @@ $(document).ready(function () {
             ok(true, "Fired works_for locations0 change...");
         });
 
-
-        emp.get('works_for').set({name:"Marketing"});//4+7
+        emp.set({'works_for.name':'Marketing'});//4+7
         emp.set('works_for', {name:"Marketing", number:29});//2
         emp.set('works_for', undefined);//2
         emp.set('works_for', dept1);//2
         emp.set('works_for', dept1);//0
-
-
     });
 
     test("child `change in collection`", 14, function () {
-
-
         emp.get('works_for').get('locations').at(0).on('change:zip', function () {
             ok(true, "Fired works_for locations0:zip change...");
         });
-
         emp.get('works_for').get('locations').at(0).on('change', function () {
             equal(true, emp.get('works_for').hasChanged());
             equal(true, emp.hasChanged());
             var changed = emp.get('works_for').changedAttributes();
-            deepEqual(changed['locations'], [{"zip":94403}]);
-            deepEqual(changed['controls'], [{"locations":[{"zip":94403}]}]);
+            deepEqual(changed['locations'], [
+                {"zip":94403}
+            ]);
+            deepEqual(changed['controls'], [
+                {"locations":[
+                    {"zip":94403}
+                ]}
+            ]);
             ok(true, "Fired works_for locations0 change...");
         });
 
@@ -422,9 +476,7 @@ $(document).ready(function () {
             ok(true, "Fired emp.works_for change:controls[0].locations[0]...");
         });
 
-
         emp.get('works_for').get("locations").at(0).set('zip', 94403);//10 + 4
-
     });
 
 
@@ -433,29 +485,29 @@ $(document).ready(function () {
         project2.get("locations").add(loc1);
         project2.get("locations").add(loc1); //add it twice deliberately
 
-        emp.on('change:works_for.controls[0].locations[0].zip',function(event){
-             ok(true,"Fired emp > change:works_for.controls[0].locations[0].zip");
+        emp.on('change:works_for.controls[0].locations[0].zip', function (event) {
+            ok(true, "Fired emp > change:works_for.controls[0].locations[0].zip");
         });
 
-        emp.on('change:works_for.controls[0].locations[0]',function(event){
-            ok(true,"Fired emp > change:works_for.controls[0].locations[0]");
+        emp.on('change:works_for.controls[0].locations[0]', function (event) {
+            ok(true, "Fired emp > change:works_for.controls[0].locations[0]");
         });
 
-        emp.on('change:works_for.controls[1].locations[1].zip',function(event){
-            ok(true,"Fired emp > change:works_for.controls[1].locations[1].zip");
+        emp.on('change:works_for.controls[1].locations[1].zip', function (event) {
+            ok(true, "Fired emp > change:works_for.controls[1].locations[1].zip");
         });
 
-        emp.on('change:works_for.controls[1].locations[1]',function(event){
-            ok(true,"Fired emp > change:works_for.controls[1].locations[1]");
+        emp.on('change:works_for.controls[1].locations[1]', function (event) {
+            ok(true, "Fired emp > change:works_for.controls[1].locations[1]");
         });
 
 
-        emp.on('change:works_for.locations[0].zip',function(event){
-            ok(true,"Fired emp > change:works_for.locations[0].zip");
+        emp.on('change:works_for.locations[0].zip', function (event) {
+            ok(true, "Fired emp > change:works_for.locations[0].zip");
         });
 
-        emp.on('change:works_for.locations[0]',function(event){
-            ok(true,"Fired emp > change:works_for.locations[0]");
+        emp.on('change:works_for.locations[0]', function (event) {
+            ok(true, "Fired emp > change:works_for.locations[0]");
         });
 
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
@@ -1093,7 +1145,7 @@ $(document).ready(function () {
         }
     });
 
-    test("example-1", 42, function () {
+    test("example-1", 43, function () {
         emp.once('change', function () {
             console.log("Fired emp > change...");
             ok("Fired emp > change...");
@@ -1132,7 +1184,7 @@ $(document).ready(function () {
             ok("Fired emp > change:works_for.name...");
             equal(true, emp.get("works_for").hasChanged());
             equal(true, emp.hasChanged());
-            equal(true, emp.hasChanged("works_for"))
+            equal(true, emp.hasChanged("works_for"));
             deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
             equal(emp.get("works_for").previousAttributes()["name"], "R&D");
             equal(emp.get("works_for").previous("name"), "R&D");
@@ -1234,6 +1286,9 @@ $(document).ready(function () {
         emp.get("dependents").add(child2);
         emp.get("dependents").remove([child1]);
         emp.get("dependents").reset();
+
+        equal(emp.get('works_for.controls[0].locations[0].zip'), emp.get('works_for').get('controls').at(0).get('locations').at(0).get('zip'));
+
     });
 
     test("example-2", 42, function () {
@@ -1280,7 +1335,7 @@ $(document).ready(function () {
             ok("Fired emp > change:works_for.name...");
             equal(true, emp.get("works_for").hasChanged());
             equal(true, emp.hasChanged());
-            equal(true, emp.hasChanged("works_for"))
+            equal(true, emp.hasChanged("works_for"));
             deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
             equal(emp.get("works_for").previousAttributes()["name"], "R&D");
             equal(emp.get("works_for").previous("name"), "R&D");
