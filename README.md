@@ -548,7 +548,7 @@ Write your own test case [here](http://jsperf.com/backbone-associations-speed-su
 
 ## <a name="changelog"/>Change Log
 
-#### Version 0.4.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.0...v0.3.1)
+#### Version 0.4.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.3.1...v0.4.0)
 * Ability to perform set and retrieve operations with fully qualified paths.
 
 #### Version 0.3.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.3.0...v0.3.1)
