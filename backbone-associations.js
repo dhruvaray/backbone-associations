@@ -390,13 +390,16 @@
         }
     });
 
+    var _index = /^\d+$/;
+    var _pathTokenizer = /[^\.\[\]]+/g;
+
     // Get Path `attrs` as Array
     var getPathArray = function (path, iterator, context) {
         if (_.isString(path)) {
             iterator || (iterator = function (value) {
-                return value.match(/^\d+$/) ? parseInt(value, 10) : value;
+                return value.match(_index) ? parseInt(value, 10) : value;
             });
-            return _.map(path.match(/[^\.\[\]]+/g) || [''], iterator, context);
+            return _.map(path.match(_pathTokenizer) || [''], iterator, context);
         }
         return path || [''];
     }
