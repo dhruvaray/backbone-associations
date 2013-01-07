@@ -1,5 +1,5 @@
 //
-//      Backbone-associations.js 0.3.1
+//      Backbone-associations.js 0.4.0
 //
 //      (c) 2013 Dhruva Ray, Jaynti Kanani
 //      Backbone-associations may be freely distributed under the MIT license;
@@ -11,6 +11,7 @@
 // --------------
 (function () {
     "use strict";
+
 
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
@@ -42,18 +43,18 @@
     // Define `AssociatedModel` (Extends Backbone.Model).
     AssociatedModel = Backbone.AssociatedModel = BackboneModel.extend({
         // Define relations with Associated Model.
-        relations: undefined,
+        relations:undefined,
         // Define `Model` property which can keep track of already fired `events`,
         // and prevent redundant event to be triggered in case of circular model graph.
-        _proxyCalls: undefined,
+        _proxyCalls:undefined,
 
         // Get the value of an attribute.
-        get: function (attr){
+        get:function (attr) {
             return this.getAttr.apply(this, arguments);
         },
 
         // Set a hash of model attributes on the Backbone Model.
-        set: function (key, value, options) {
+        set:function (key, value, options) {
             var attributes, attr, modelMap, modelId, obj, result = this;
             // Duplicate backbone's behavior to allow separate key/value parameters,
             // instead of a single 'attributes' object.
@@ -72,7 +73,7 @@
                 modelMap || (modelMap = {});
                 if ((!parentModel && _.size(initials) > 0) || parentModel instanceof BackboneCollection) continue;
                 parentModel instanceof AssociatedModel && (root = parentModel);
-                obj = modelMap[root.cid] || (modelMap[root.cid] = {'model': root, 'data': {}});
+                obj = modelMap[root.cid] || (modelMap[root.cid] = {'model':root, 'data':{}});
                 obj.data[last] = attributes[attr];
             }
             if (modelMap) {
@@ -90,7 +91,7 @@
         // fire Backbone `event` with options.
         // It maintains relations between models during the set operation.
         // It also bubbles up child events to the parent.
-        setAttr: function (attributes, options) {
+        setAttr:function (attributes, options) {
             var processedRelations, tbp, attr;
             // Extract attributes and options.
             options || (options = {});
@@ -175,7 +176,7 @@
             return ModelProto.set.call(this, tbp, options);
         },
         // Bubble-up event to `parent` Model
-        _bubbleEvent: function (relationKey, eventArguments) {
+        _bubbleEvent:function (relationKey, eventArguments) {
             var args = eventArguments,
                 opt = args[0].split(":"),
                 eventType = opt[0],
@@ -233,7 +234,7 @@
             return this;
         },
         // Returns New `collection` of type `relation.relatedModel`.
-        _createCollection: function (type) {
+        _createCollection:function (type) {
             var collection, relatedModel = type;
             _.isString(relatedModel) && (relatedModel = eval(relatedModel));
             // Creates new `Backbone.Collection` and defines model class.
@@ -246,7 +247,7 @@
             return collection;
         },
         // Has the model changed. Traverse the object hierarchy to compute dirtyness.
-        hasChanged: function (attr) {
+        hasChanged:function (attr) {
             var isDirty, relation, attrValue, i, dirtyObjects;
             // To prevent cycles, check if this node is visited.
             if (!this.visitedHC) {
@@ -277,7 +278,7 @@
             return !!isDirty;
         },
         // Returns a hash of the changed attributes.
-        changedAttributes: function (diff) {
+        changedAttributes:function (diff) {
             var delta, relation, attrValue, changedCollection, i;
             // To prevent cycles, check if this node is visited.
             if (!this.visited) {
@@ -308,7 +309,7 @@
             return !delta ? false : delta;
         },
         // Returns the hash of the previous attributes of the graph.
-        previousAttributes: function () {
+        previousAttributes:function () {
             var pa, attrValue, pattrValue, pattrJSON;
             // To prevent cycles, check if this node is visited.
             if (!this.visited) {
@@ -338,12 +339,12 @@
             return pa;
         },
         // Return the previous value of the passed in attribute.
-        previous: function (attr) {
+        previous:function (attr) {
             return this.previousAttributes()[attr];
         },
 
         // The JSON representation of the model.
-        toJSON: function (options) {
+        toJSON:function (options) {
             var json, aJson;
             if (!this.visited) {
                 this.visited = true;
@@ -366,12 +367,12 @@
         },
 
         // Create a new model with identical attributes to this one.
-        clone: function () {
+        clone:function () {
             return new this.constructor(this.toJSON());
         },
 
         // Get `reduced` result using passed `path` array or string.
-        getAttr: function (path, iterator) {
+        getAttr:function (path, iterator) {
             var result = this,
                 attrs = getPathArray(path),
                 key,
