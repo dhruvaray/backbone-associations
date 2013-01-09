@@ -15,7 +15,7 @@ It was originally born out of a need to provide a simpler and speedier implement
 * [Tutorial : Defining a graph of `AssociatedModel` relationships](#tutorial-associationsdef)
 * [Eventing with Associations](#eventing)
 * [Tutorial : Eventing with a graph of `AssociatedModel` objects](#tutorial-eventing)
-* [Perform set and retrieve operations with fully qualified paths](#paths)
+* [Perform set and get operations with fully qualified paths](#paths)
 * [Pitfalls](#pitfalls)
 * [Performance Comparison](#performance)
 * [Change Log](#changelog)
