@@ -15,7 +15,7 @@ It was originally born out of a need to provide a simpler and speedier implement
 * [Tutorial : Defining a graph of `AssociatedModel` relationships](#tutorial-associationsdef)
 * [Eventing with Associations](#eventing)
 * [Tutorial : Eventing with a graph of `AssociatedModel` objects](#tutorial-eventing)
-* [Perform set and retrieve operations with fully qualified paths](#paths)
+* [Perform set and get operations with fully qualified paths](#paths)
 * [Pitfalls](#pitfalls)
 * [Performance Comparison](#performance)
 * [Change Log](#changelog)
@@ -548,19 +548,19 @@ Write your own test case [here](http://jsperf.com/backbone-associations-speed-su
 
 ## <a name="changelog"/>Change Log
 
-#### Version 0.4.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.0...v0.3.1)
-*Ability to perform set and retrieve operations with fully qualified paths
+#### Version 0.4.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.3.1...v0.4.0)
+* Ability to perform set and retrieve operations with fully qualified paths.
 
 #### Version 0.3.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.3.0...v0.3.1)
-* Bug fix for event paths involving collections at multiple levels in the object graph
-* Updated README with class diagram and example for paths involving collections
+* Bug fix for event paths involving collections at multiple levels in the object graph.
+* Updated README with class diagram and example for paths involving collections.
 
 
 #### Version 0.3.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.2.0...v0.3.0)
 * Added support for fully qualified event "path" names.
 * Event arguments and event paths are semantically consistent.
 * Now supports both backbone 0.9.9 and 0.9.2.
-* New tutorials on usage (part of README.md)
+* New tutorials on usage. (part of README.md)
 
 
 

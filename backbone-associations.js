@@ -1,34 +1,39 @@
 //
 //      Backbone-associations.js 0.4.0
 //
-//      (c) 2013 Dhruva Ray, Jaynti Kanani
-//      Backbone-associations may be freely distributed under the MIT license;
-//      see the accompanying LICENSE.txt.
-//      Depends on [Backbone](https://github.com/documentcloud/backbone) and [Underscore](https://github.com/documentcloud/underscore/) as well.
-//      A complete [Test & Benchmark Suite](../test/test-suite.html) is included for your perusal.
+//      (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
+//      Backbone-associations may be freely distributed under the MIT license.
+//      For all details and documentation:
+//      https://github.com/dhruvaray/backbone-associations/
+//
 
 // Initial Setup
 // --------------
 (function () {
     "use strict";
 
+    // Save a reference to the global object (`window` in the browser, `exports`
+    // on the server).
+    var root = this;
 
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
     var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
-        defaultEvents, AssociatedModel;
+        defaultEvents, AssociatedModel, pathChecker;
+
     if (typeof require !== 'undefined') {
         _ = require('underscore');
         Backbone = require('backbone');
         exports = module.exports = Backbone;
     } else {
-        _ = window._;
-        Backbone = window.Backbone;
+        _ = root._;
+        Backbone = root.Backbone;
     }
     // Create local reference `Model` prototype.
     BackboneModel = Backbone.Model;
     BackboneCollection = Backbone.Collection;
     ModelProto = BackboneModel.prototype;
+    pathChecker = /[\.\[\]]+/g;
 
     // Built-in Backbone `events`.
     defaultEvents = ["change", "add", "remove", "reset", "destroy",
@@ -50,7 +55,8 @@
 
         // Get the value of an attribute.
         get:function (attr) {
-            return this.getAttr.apply(this, arguments);
+            var obj = ModelProto.get.call(this, attr);
+            return obj ? obj : this.getAttr.apply(this, arguments);
         },
 
         // Set a hash of model attributes on the Backbone Model.
@@ -66,23 +72,24 @@
                 attributes[key] = value;
             }
             if (!attributes) return this;
+            //Create a map for each unique object whose attributes we want to set
+            modelMap || (modelMap = {});
             for (attr in attributes) {
-                var pathTokens = getPathArray(attr), initials = _.initial(pathTokens), last = _.last(pathTokens),
-                    root = this, parentModel = this.get(initials);
-
-                modelMap || (modelMap = {});
-                if ((!parentModel && _.size(initials) > 0) || parentModel instanceof BackboneCollection) continue;
-                parentModel instanceof AssociatedModel && (root = parentModel);
-                obj = modelMap[root.cid] || (modelMap[root.cid] = {'model':root, 'data':{}});
-                obj.data[last] = attributes[attr];
-            }
-            if (modelMap) {
-                for (modelId in modelMap) {
-                    obj = modelMap[modelId];
-                    this.setAttr.call(obj.model, obj.data, options) || (result = false);
+                if (attr.match(pathChecker)) {
+                    var pathTokens = getPathArray(attr), initials = _.initial(pathTokens), last = pathTokens[pathTokens.length - 1],
+                        parentModel = this.get(initials);
+                    if (parentModel instanceof AssociatedModel) {
+                        obj = modelMap[parentModel.cid] || (modelMap[parentModel.cid] = {'model':parentModel, 'data':{}});
+                        obj.data[last] = attributes[attr];
+                    }
+                } else {
+                    obj = modelMap[this.cid] || (modelMap[this.cid] = {'model':this, 'data':{}});
+                    obj.data[attr] = attributes[attr];
                 }
-            } else {
-                result = this.setAttr.call(this, attributes, options);
+            }
+            for (modelId in modelMap) {
+                obj = modelMap[modelId];
+                this.setAttr.call(obj.model, obj.data, options) || (result = false);
             }
             return result;
         },
@@ -191,7 +198,6 @@
                 _.size(opt) > 1 && (eventPath = opt[1]);
                 // Find the specific object in the collection which has changed.
                 if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject) {
-                    //indexEventObject = _.indexOf(relationValue.models, eventObject);
                     var pathTokens = getPathArray(eventPath),
                         initialTokens = _.initial(pathTokens), colModel;
 
@@ -252,6 +258,7 @@
             // To prevent cycles, check if this node is visited.
             if (!this.visitedHC) {
                 this.visitedHC = true;
+                //Get the 'first-level' hasChanged() value by calling the backbone implementation
                 isDirty = ModelProto.hasChanged.apply(this, arguments);
                 if (!isDirty && this.relations) {
                     // Go down the hierarchy to see if anything has `changed`.
@@ -260,13 +267,17 @@
                         attrValue = this.attributes[relation.key];
                         if (attrValue) {
                             if (attrValue instanceof BackboneCollection) {
+                                //filter out the dirty objects in the collection
                                 dirtyObjects = attrValue.filter(function (m) {
                                     return m.hasChanged() === true;
                                 });
+                                //If there is even one changed object, set the dirty flag
                                 _.size(dirtyObjects) > 0 && (isDirty = true);
                             } else {
+                                //Go down the object graph
                                 isDirty = attrValue.hasChanged && attrValue.hasChanged();
                             }
+                            //Break the computation if any of the sub graphs are dirty
                             if (isDirty) {
                                 break;
                             }
@@ -275,7 +286,7 @@
                 }
                 delete this.visitedHC;
             }
-            return !!isDirty;
+            return isDirty;
         },
         // Returns a hash of the changed attributes.
         changedAttributes:function (diff) {
@@ -283,22 +294,28 @@
             // To prevent cycles, check if this node is visited.
             if (!this.visited) {
                 this.visited = true;
+                //Get the 'first-level' changed attributes by calling the backbone implementation
                 delta = ModelProto.changedAttributes.apply(this, arguments);
                 if (this.relations) {
+                    //Traverse down the object graph
                     for (i = 0; i < this.relations.length; ++i) {
                         relation = this.relations[i];
                         attrValue = this.attributes[relation.key];
                         if (attrValue) {
                             if (attrValue instanceof BackboneCollection) {
+                                //For each model in the collection, get the changed hash. Filter out those models where nothing has changed
                                 changedCollection = _.filter(attrValue.map(function (m) {
                                     return m.changedAttributes();
                                 }), function (m) {
                                     return !!m;
                                 });
+                                //If any of the models in the collection has changed
                                 if (_.size(changedCollection) > 0) {
+                                    //Assign the changed models in the collection to that key
                                     delta[relation.key] = changedCollection;
                                 }
                             } else if (attrValue instanceof AssociatedModel && attrValue.hasChanged()) {
+                                //store the changed JSON value of the sub graph
                                 delta[relation.key] = attrValue.toJSON();
                             }
                         }
@@ -306,6 +323,7 @@
                 }
                 delete this.visited;
             }
+            //return false if nothing has changed. Else return the changed hash
             return !delta ? false : delta;
         },
         // Returns the hash of the previous attributes of the graph.
@@ -314,21 +332,27 @@
             // To prevent cycles, check if this node is visited.
             if (!this.visited) {
                 this.visited = true;
+                //Get the 'first-level' previous attributes by calling the backbone implementation
                 pa = ModelProto.previousAttributes.apply(this, arguments);
                 if (this.relations) {
+                    //Traverse down the object graph
                     _.each(this.relations, function (relation) {
                         attrValue = this.attributes[relation.key];
                         pattrValue = pa[relation.key];
                         pattrJSON = pattrValue ? pattrValue.toJSON() : undefined;
+                        //Navigate down the object tree only if the entire object object rooted at attributes[relation.key] has not changed.
                         if (pattrValue && pattrValue == attrValue) {
                             if (attrValue instanceof AssociatedModel) {
+                                //Go down the graph recursively
                                 pa[relation.key] = attrValue.previousAttributes();
                             } else if (attrValue instanceof BackboneCollection) {
+                                //Previous values of all models in the collection
                                 pa[relation.key] = attrValue.map(function (m) {
                                     return m.previousAttributes();
                                 });
                             }
                         } else {
+                            //An externally defined object graph is assigned to this attribute. So previous attribute is the old graph itself
                             if (pattrValue)
                                 pa[relation.key] = pattrJSON;
                         }
@@ -371,36 +395,30 @@
             return new this.constructor(this.toJSON());
         },
 
-        // Get `reduced` result using passed `path` array or string.
-        getAttr:function (path, iterator) {
+        //Navigate the path to the leaf object in the path to query for the attribute value
+        getAttr:function (path) {
+
             var result = this,
+            //Tokenize the path
                 attrs = getPathArray(path),
                 key,
                 i;
             if (_.size(attrs) < 1) return;
-            iterator || (iterator = function (memo, key) {
-                return memo instanceof BackboneCollection && _.isNumber(key) ? memo.at(key) : memo.attributes[key];
-            });
             for (i = 0; i < attrs.length; i++) {
                 key = attrs[i];
+                if (!key) break;
                 if (!result) break;
-                result = iterator.call(this, result, key, attrs);
+                //Navigate the path to get to the result
+                result = result instanceof BackboneCollection && (!isNaN(key)) ? result.at(key) : result.attributes[key];
             }
             return result;
         }
     });
 
-    var _index = /^\d+$/;
-    var _pathTokenizer = /[^\.\[\]]+/g;
+    var delimiters = /\.|\[|\]\.*/;
 
-    // Get Path `attrs` as Array
-    var getPathArray = function (path, iterator, context) {
-        if (_.isString(path)) {
-            iterator || (iterator = function (value) {
-                return value.match(_index) ? parseInt(value, 10) : value;
-            });
-            return _.map(path.match(_pathTokenizer) || [''], iterator, context);
-        }
-        return path || [''];
+    // Tokenize the fully qualified event path
+    var getPathArray = function (path) {
+        return _.isString(path) ? (path.split(delimiters)) : path || [''];
     }
-})();
+}).call(this);
