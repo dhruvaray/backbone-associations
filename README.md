@@ -25,6 +25,7 @@ It was originally born out of a need to provide a simpler and speedier implement
 
 * [Production version - 0.4.0](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.86KB packed and gzipped)
 * [Development version - 0.4.0](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
+* [Edge version : ] (https://raw.github.com/dhruvaray/backbone-associations/master/backbone-associations.js)[![Build Status](https://travis-ci.org/dhruvaray/backbone-associations.png?branch=master)](https://travis-ci.org/dhruvaray/backbone-associations)
 
 
 ## <a name="installation"/>Installation
