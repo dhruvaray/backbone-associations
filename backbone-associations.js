@@ -406,7 +406,6 @@
             if (_.size(attrs) < 1) return;
             for (i = 0; i < attrs.length; i++) {
                 key = attrs[i];
-                if (!key) break;
                 if (!result) break;
                 //Navigate the path to get to the result
                 result = result instanceof BackboneCollection && (!isNaN(key)) ? result.at(key) : result.attributes[key];
@@ -415,10 +414,11 @@
         }
     });
 
-    var delimiters = /\.|\[|\]\.*/;
+    var delimiters = /[^\.\[\]]+/g;
 
     // Tokenize the fully qualified event path
     var getPathArray = function (path) {
-        return _.isString(path) ? (path.split(delimiters)) : path || [''];
+        if (path === '') return [''];
+        return _.isString(path) ? (path.match(delimiters)) : path || [];
     }
 }).call(this);
