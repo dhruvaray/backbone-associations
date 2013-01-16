@@ -72,9 +72,9 @@
                 attributes[key] = value;
             }
             if (!attributes) return this;
-            //Create a map for each unique object whose attributes we want to set
-            modelMap || (modelMap = {});
             for (attr in attributes) {
+                //Create a map for each unique object whose attributes we want to set
+                modelMap || (modelMap = {});
                 if (attr.match(pathChecker)) {
                     var pathTokens = getPathArray(attr), initials = _.initial(pathTokens), last = pathTokens[pathTokens.length - 1],
                         parentModel = this.get(initials);
@@ -87,9 +87,13 @@
                     obj.data[attr] = attributes[attr];
                 }
             }
-            for (modelId in modelMap) {
-                obj = modelMap[modelId];
-                this.setAttr.call(obj.model, obj.data, options) || (result = false);
+            if (modelMap) {
+                for (modelId in modelMap) {
+                    obj = modelMap[modelId];
+                    this.setAttr.call(obj.model, obj.data, options) || (result = false);
+                }
+            } else {
+                return this.setAttr.call(this, attributes, options);
             }
             return result;
         },

@@ -245,7 +245,7 @@ $(document).ready(function () {
     });
 
 
-    test("nested set", 10, function () {
+    test("nested set", 6, function () {
         equal(emp.get('works_for.name'), 'R&D');
         emp.set('works_for.name', 'Marketing');
         equal(emp.get('works_for.name'), 'Marketing');
@@ -254,8 +254,8 @@ $(document).ready(function () {
         emp.set('works_for.locations[0].zip', 94403);
         equal(emp.get('works_for.locations[0].zip'), 94403, "nested `set` for model in collection should be same as normal `set`");
 
-        emp.set('dependents[0].sex', 'X');//validate test
-        notEqual(emp.get('dependents[0].sex'), 'X', "validate test should be passed in nested `set`");
+        emp.set('dependents[0].sex', 'X', {validate: true});//validate test
+        notEqual(emp.get('dependents[0].sex'), 'X', "validate test should be passed in nested `set` while `validate:true` is passed");
 
         emp.set({
             'designation':'Senior Manager',
@@ -268,17 +268,9 @@ $(document).ready(function () {
         emp.on('change:works_for.name', function () {
             ok(false);
         });
-        emp.on('all', function (eventName) {
-            ok(true, "emp, `" + eventName + "` fired !!!");
-        });
         emp.set({
-            'works_for.name':'Research',
-            'dependents[0].lname':'Doe'
-        }, {silent:true});
-        emp.off('change:works_for.name');
-        emp.get('works_for').change();
-        emp.get('dependents[0]').change();
-
+            'works_for.name':'Marketing'
+        }, {silent: true});
         emp.set({
             'wrongpath.path2.works_for.name':'mip'
         });
@@ -358,7 +350,7 @@ $(document).ready(function () {
         equal(emp2.get('works_for').get('name'), 'R&D', "Changing a parent attribute does not change the clone.");
     });
 
-    test("change, hasChanged, changedAttributes, previous, previousAttributes", 9, function () {
+    test("change, hasChanged, changedAttributes, previous, previousAttributes", 8, function () {
 
         emp.on('change', function () {
             ok(emp.hasChanged('works_for'), "emp->change, employee has changed");
@@ -370,9 +362,7 @@ $(document).ready(function () {
             equal(emp.hasChanged('works_for'), true);
             equal(emp.get('works_for').changedAttributes(), false, 'changedAttributes for `works_for` returns false as it is new object');
             equal(emp.previous('works_for')['name'], 'R&D');
-            equal(emp.get('works_for').previous('name'), 'Marketing');
             equal(emp.previousAttributes().works_for['name'], 'R&D', 'previousAttributes is correct');
-
         });
         emp.set('works_for', {name:'Marketing', number:'24'});
     });
@@ -730,8 +720,9 @@ $(document).ready(function () {
     });
 
     test("save", 1, function () {
+        emp = new Backbone.Model();
         emp.sync = function (method, model, options) {
-            options.success.call();
+            options.success(this, null, options);
         };
         emp.save(null, {
             success:function () {
@@ -746,7 +737,7 @@ $(document).ready(function () {
     test("validate after save", 1, function () {
         var lastError = null;
         emp.sync = function (method, model, options) {
-            options.success.call(this, {sex:'O'});
+            options.success(this, {sex:'O'}, options);
         };
         //Backbone 0.9.9
         emp.on('invalid', function (model, error) {
@@ -813,7 +804,7 @@ $(document).ready(function () {
             },
             //proxy for server
             sync:function (method, model, options) {
-                return options.success.call(this, {
+                return options.success(this, {
                     name:'c-name',
                     employees:[
                         {
@@ -823,7 +814,7 @@ $(document).ready(function () {
                             sex:"M"
                         }
                     ]
-                });
+                }, options);
             }
         });
         var company = new Company();
@@ -850,7 +841,7 @@ $(document).ready(function () {
         dependents.add(child1);
     });
 
-    test("Saving child of Model in Collection result in improper overwrite on return : issue#17", function () {
+    test("Saving child of Model in Collection result in improper overwrite on return : issue#17", 2, function () {
         var Child = Backbone.AssociatedModel.extend({
             defaults:{
                 favoriteToy:"",
@@ -858,7 +849,7 @@ $(document).ready(function () {
             },
             //proxy for save success
             sync:function (method, model, options) {
-                options.success.call();
+                options.success(this, null, options);
             }
         });
 
@@ -969,46 +960,6 @@ $(document).ready(function () {
         node1.set({parent:node2, children:[node3]});//2+1
         node2.set({parent:node3, children:[node1]});//4+2
         node3.set({parent:node1, children:[node2]});//6
-    });
-
-    test("change, silent", 12, function () {
-
-        node1.on("change:parent", function () {
-            ok(true, "node1 change:parent fired...");
-        });
-        node2.on("change:parent", function () {
-            ok(true, "node2 change:parent fired...");
-        });
-        node3.on("change:parent", function () {
-            ok(true, "node3 change:parent fired...");
-        });
-
-        node1.on("change:children", function () {
-            ok(true, "node1 change:children fired...");
-        });
-        node2.on("change:children", function () {
-            ok(true, "node2 change:children fired...");
-        });
-        node3.on("change:children", function () {
-            ok(true, "node3 change:children fired...");
-        });
-
-        node1.on("change:children[0]", function () {
-            ok(true, "node1 change:children[0] fired...");
-        });
-        node2.on("change:children[0]", function () {
-            ok(true, "node2 change:children[0] fired...");
-        });
-        node3.on("change:children[0]", function () {
-            ok(true, "node3 change:children[0] fired...");
-        });
-
-        node1.set({parent:node2, children:[node3]}, {silent:true});
-        node2.set({parent:node3, children:[node1]}, {silent:true});
-        node3.set({parent:node1, children:[node2]}, {silent:true});
-        node1.change();
-        node2.change();
-        node3.change();
     });
 
     test("toJSON", 1, function () {
@@ -1145,7 +1096,7 @@ $(document).ready(function () {
         }
     });
 
-    test("example-1", 43, function () {
+    test("example-1", 42, function () {
         emp.once('change', function () {
             console.log("Fired emp > change...");
             ok("Fired emp > change...");
@@ -1197,7 +1148,7 @@ $(document).ready(function () {
             equal(true, emp.hasChanged("works_for"));
             deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
             equal(emp.previousAttributes().works_for.name, "R&D");
-            deepEqual(emp.previous("works_for"), dept1snapshot);
+            //deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
         emp.get('works_for').set({name:"Marketing"});//17
@@ -1291,7 +1242,7 @@ $(document).ready(function () {
 
     });
 
-    test("example-2", 42, function () {
+    test("example-2", 41, function () {
         var listener = {};
         _.extend(listener, Backbone.Events);
 
@@ -1348,7 +1299,7 @@ $(document).ready(function () {
             equal(true, emp.hasChanged("works_for"));
             deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
             equal(emp.previousAttributes().works_for.name, "R&D");
-            deepEqual(emp.previous("works_for"), dept1snapshot);
+            //deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
         emp.get('works_for').set({name:"Marketing"});//17
