@@ -1,0 +1,9 @@
+{
+    "name":"backbone-associations",
+    "version":"0.4.0",
+    "main":"./backbone-associations.js",
+    "dependencies":{
+        "backbone":"0.9.9",
+        "underscore":"1.4.3"
+    }
+}
