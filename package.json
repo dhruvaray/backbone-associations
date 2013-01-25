@@ -1,6 +1,6 @@
 {
     "name":"backbone-associations",
-    "description":"Model associations between backbone models",
+    "description":"Create lightweight object graphs with Backbone models",
     "url":"https://github.com/dhruvaray/backbone-associations/",
     "keywords":["Backbone", "association", "associated", "nested", "model", "cyclic graph", "qualified event paths"],
     "author":["Dhruva Ray", "Jaynti Kannani"],
