@@ -254,7 +254,7 @@ $(document).ready(function () {
         emp.set('works_for.locations[0].zip', 94403);
         equal(emp.get('works_for.locations[0].zip'), 94403, "nested `set` for model in collection should be same as normal `set`");
 
-        emp.set('dependents[0].sex', 'X', {validate: true});//validate test
+        emp.set('dependents[0].sex', 'X', {validate:true});//validate test
         notEqual(emp.get('dependents[0].sex'), 'X', "validate test should be passed in nested `set` while `validate:true` is passed");
 
         emp.set({
@@ -270,7 +270,7 @@ $(document).ready(function () {
         });
         emp.set({
             'works_for.name':'Marketing'
-        }, {silent: true});
+        }, {silent:true});
         emp.set({
             'wrongpath.path2.works_for.name':'mip'
         });
@@ -365,6 +365,48 @@ $(document).ready(function () {
             equal(emp.previousAttributes().works_for['name'], 'R&D', 'previousAttributes is correct');
         });
         emp.set('works_for', {name:'Marketing', number:'24'});
+    });
+
+    test("change : all attributes get updated in an atomic operation", 8, function () {
+        emp.on('change', function () {
+            equal(emp.get('works_for').get('name'), 'Marketing');
+            equal(emp.get('works_for').get('number'), '24');
+            equal(emp.previous('works_for')['name'], 'R&D');
+            equal(emp.previous('works_for')['number'], '23');
+
+        });
+        emp.on('change:works_for', function () {
+            equal(emp.get('works_for').get('name'), 'Marketing');
+            equal(emp.get('works_for').get('number'), '24');
+            equal(emp.previous('works_for')['name'], 'R&D');
+            equal(emp.previous('works_for')['number'], '23');
+        });
+        emp.set('works_for', {name:'Marketing', number:'24'});
+    });
+
+    test("change : all attributes get updated in an atomic operation for AssociatedModel properties ", 14, function () {
+        emp.on('change', function () {
+            equal(emp.get('lname'), 'Bond');
+            equal(emp.get('fname'), 'James');
+            equal(emp.previous('fname'), 'John');
+            equal(emp.previous('lname'), 'Smith');
+            equal(emp.get('works_for').get('number'), '24');
+            equal(emp.previous('works_for')['name'], 'R&D');
+            equal(emp.previous('works_for')['number'], 23);
+
+        });
+        emp.on('change:works_for', function () {
+            equal(emp.get('lname'), 'Bond');
+            equal(emp.get('fname'), 'James');
+            equal(emp.previous('fname'), 'John');
+            equal(emp.previous('lname'), 'Smith');
+            equal(emp.get('works_for').get('number'), '24');
+            equal(emp.previous('works_for')['name'], 'R&D');
+            equal(emp.previous('works_for')['number'], 23);
+
+        });
+        emp.set({works_for:{name:'Marketing', number:'24'}, fname:"James", lname:"Bond"});
+
     });
 
     test("child `change`", 17, function () {
@@ -518,8 +560,8 @@ $(document).ready(function () {
         emp.on('change:works_for.number', function () {
             ok(true, "Fired emp change:works_for.number...");
         });
-        emp.on('nestedevent', function () {
-            ok(true, "Fired emp nestedevent...");
+        emp.on('nestedevent:works_for', function () {
+            ok(true, "Fired emp nestedevent:works_for...");
         });
 
 
@@ -902,7 +944,7 @@ $(document).ready(function () {
         }
     });
 
-    test("set,trigger", 15, function () {
+    test("set,trigger", 13, function () {
         node1.on("change:parent", function () {
             node1.trigger("nestedevent", arguments);
             ok(true, "node1 change:parent fired...");
@@ -925,10 +967,13 @@ $(document).ready(function () {
         });
 
         node1.on("nestedevent", function () {
-            ok(true, "node1 nested fired...");
+            ok(true, "node1 nestedevent fired...");
         });
-        node2.on("nestedevent", function () {
-            ok(true, "node2 nested fired...");
+        node1.on("nestedevent:parent.children", function () {
+            ok(true, "node1 nestedevent:parent.children fired...");
+        });
+        node2.on("nestedevent:children", function () {
+            ok(true, "node2 nestedevent:children fired...");
         });
         node3.on("nestedevent", function () {
             ok(true, "node3 nested fired...");
@@ -959,7 +1004,7 @@ $(document).ready(function () {
 
         node1.set({parent:node2, children:[node3]});//2+1
         node2.set({parent:node3, children:[node1]});//4+2
-        node3.set({parent:node1, children:[node2]});//6
+        node3.set({parent:node1, children:[node2]});//4
     });
 
     test("toJSON", 1, function () {
@@ -1096,7 +1141,7 @@ $(document).ready(function () {
         }
     });
 
-    test("example-1", 42, function () {
+    test("example-1", 41, function () {
         emp.once('change', function () {
             console.log("Fired emp > change...");
             ok("Fired emp > change...");
@@ -1147,7 +1192,7 @@ $(document).ready(function () {
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
             deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
-            equal(emp.previousAttributes().works_for.name, "R&D");
+            //equal(emp.previousAttributes().works_for.name, "R&D");
             //deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
@@ -1242,7 +1287,7 @@ $(document).ready(function () {
 
     });
 
-    test("example-2", 41, function () {
+    test("example-2", 40, function () {
         var listener = {};
         _.extend(listener, Backbone.Events);
 
@@ -1298,7 +1343,7 @@ $(document).ready(function () {
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
             deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
-            equal(emp.previousAttributes().works_for.name, "R&D");
+            //equal(emp.previousAttributes().works_for.name, "R&D");
             //deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
