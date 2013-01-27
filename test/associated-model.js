@@ -1141,7 +1141,7 @@ $(document).ready(function () {
         }
     });
 
-    test("example-1", 41, function () {
+    test("example-1", 43, function () {
         emp.once('change', function () {
             console.log("Fired emp > change...");
             ok("Fired emp > change...");
@@ -1192,8 +1192,8 @@ $(document).ready(function () {
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
             deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
-            //equal(emp.previousAttributes().works_for.name, "R&D");
-            //deepEqual(emp.previous("works_for"), dept1snapshot);
+            equal(emp.previousAttributes().works_for.name, "R&D");
+            deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
         emp.get('works_for').set({name:"Marketing"});//17
@@ -1287,7 +1287,7 @@ $(document).ready(function () {
 
     });
 
-    test("example-2", 40, function () {
+    test("example-2", 42, function () {
         var listener = {};
         _.extend(listener, Backbone.Events);
 
@@ -1343,8 +1343,8 @@ $(document).ready(function () {
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
             deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
-            //equal(emp.previousAttributes().works_for.name, "R&D");
-            //deepEqual(emp.previous("works_for"), dept1snapshot);
+            equal(emp.previousAttributes().works_for.name, "R&D");
+            deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
         emp.get('works_for').set({name:"Marketing"});//17
