@@ -23,8 +23,9 @@ It was originally born out of a need to provide a simpler and speedier implement
 
 ## <a name="download"/>Download
 
-* [Production version - 0.4.0](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.86KB packed and gzipped)
-* [Development version - 0.4.0](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
+* [Production version - 0.4.1](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.86KB packed and gzipped)
+* [Development version - 0.4.1](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
+* [Edge version : ] (https://raw.github.com/dhruvaray/backbone-associations/master/backbone-associations.js)[![Build Status](https://travis-ci.org/dhruvaray/backbone-associations.png?branch=master)](https://travis-ci.org/dhruvaray/backbone-associations)
 
 
 ## <a name="installation"/>Installation
@@ -37,7 +38,7 @@ Backbone-associations depends on [backbone](https://github.com/documentcloud/bac
 <script type="text/javascript" src="./js/backbone-associations.js"></script>
 ```
 
-Backbone-associations works with both Backbone **v0.9.9 and v0.9.2**. Underscore v1.3.3 upwards is supported.
+Backbone-associations works with Backbone *v0.9.10*. Underscore v1.4.3 upwards is supported.
 
 
 ## <a name="associations"/>Specifying Associations
@@ -354,7 +355,7 @@ This tutorial demonstrates the usage of eventing and change-related methods with
 
     var dept1snapshot = dept1.toJSON();
 
-    //Remove event handlers. Can also use backbone 0.9.9 once API (on the previous emp event handlers)
+    //Remove event handlers. Can also use backbone 0.9.9+ once API (on the previous emp event handlers)
     emp.off()
 
     emp.get('works_for').on('change', function () {
@@ -547,6 +548,9 @@ Run tests on your machine configuration instantly [here](http://dhruvaray.github
 Write your own test case [here](http://jsperf.com/backbone-associations-speed-suit/3)
 
 ## <a name="changelog"/>Change Log
+
+#### Version 0.4.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.0...v0.4.1)
+* Support for backbone 0.9.10.
 
 #### Version 0.4.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.3.1...v0.4.0)
 * Ability to perform set and retrieve operations with fully qualified paths.

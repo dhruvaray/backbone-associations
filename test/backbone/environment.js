@@ -1,39 +1,38 @@
-//adopted from Backbone 0.9.9 test suite
-(function () {
+//adopted from Backbone 0.9.10 test suite
+(function() {
 
-    var Environment = this.Environment = function () {
-    };
+    var Environment = this.Environment = function(){};
 
     _.extend(Environment.prototype, {
 
-        ajax:Backbone.ajax,
+        ajax: Backbone.ajax,
 
-        sync:Backbone.sync,
+        sync: Backbone.sync,
 
-        emulateHTTP:Backbone.emulateHTTP,
+        emulateHTTP: Backbone.emulateHTTP,
 
-        emulateJSON:Backbone.emulateJSON,
+        emulateJSON: Backbone.emulateJSON,
 
-        setup:function () {
+        setup: function() {
             var env = this;
 
             // Capture ajax settings for comparison.
-            Backbone.ajax = function (settings) {
+            Backbone.ajax = function(settings) {
                 env.ajaxSettings = settings;
             };
 
             // Capture the arguments to Backbone.sync for comparison.
-            Backbone.sync = function (method, model, options) {
+            Backbone.sync = function(method, model, options) {
                 env.syncArgs = {
-                    method:method,
-                    model:model,
-                    options:options
+                    method: method,
+                    model: model,
+                    options: options
                 };
                 env.sync.apply(this, arguments);
             };
         },
 
-        teardown:function () {
+        teardown: function() {
             this.syncArgs = null;
             this.ajaxSettings = null;
             Backbone.sync = this.sync;

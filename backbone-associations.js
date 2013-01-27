@@ -1,10 +1,10 @@
 //
-//      Backbone-associations.js 0.4.0
+//  Backbone-associations.js 0.4.1
 //
-//      (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
-//      Backbone-associations may be freely distributed under the MIT license.
-//      For all details and documentation:
-//      https://github.com/dhruvaray/backbone-associations/
+//  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
+//  Backbone-associations may be freely distributed under the MIT license.
+//  For all details and documentation:
+//  https://github.com/dhruvaray/backbone-associations/
 //
 
 // Initial Setup
@@ -50,7 +50,7 @@
         // Define relations with Associated Model.
         relations:undefined,
         // Define `Model` property which can keep track of already fired `events`,
-        // and prevent redundant event to be triggered in case of circular model graph.
+        // and prevent redundant event to be triggered in case of cyclic model graphs.
         _proxyCalls:undefined,
 
         // Get the value of an attribute.
@@ -72,9 +72,9 @@
                 attributes[key] = value;
             }
             if (!attributes) return this;
-            //Create a map for each unique object whose attributes we want to set
-            modelMap || (modelMap = {});
             for (attr in attributes) {
+                //Create a map for each unique object whose attributes we want to set
+                modelMap || (modelMap = {});
                 if (attr.match(pathChecker)) {
                     var pathTokens = getPathArray(attr), initials = _.initial(pathTokens), last = pathTokens[pathTokens.length - 1],
                         parentModel = this.get(initials);
@@ -87,9 +87,13 @@
                     obj.data[attr] = attributes[attr];
                 }
             }
-            for (modelId in modelMap) {
-                obj = modelMap[modelId];
-                this.setAttr.call(obj.model, obj.data, options) || (result = false);
+            if (modelMap) {
+                for (modelId in modelMap) {
+                    obj = modelMap[modelId];
+                    this.setAttr.call(obj.model, obj.data, options) || (result = false);
+                }
+            } else {
+                return this.setAttr.call(this, attributes, options);
             }
             return result;
         },
@@ -99,7 +103,7 @@
         // It maintains relations between models during the set operation.
         // It also bubbles up child events to the parent.
         setAttr:function (attributes, options) {
-            var processedRelations, tbp, attr;
+            var attr;
             // Extract attributes and options.
             options || (options = {});
             if (options.unset) for (attr in attributes) attributes[attr] = void 0;
@@ -127,105 +131,96 @@
                                 throw new Error('collectionType must inherit from Backbone.Collection');
                             }
 
-                            // If `attributes` has no property present,
-                            // create `Collection` having `relation.collectionType` as type and
-                            // `relation.Model` as model reference and perform Backbone `set`.
                             if (val instanceof BackboneCollection) {
-                                ModelProto.set.call(this, relationKey, val, relationOptions);
-                            } else if (!this.attributes[relationKey]) {
-                                data = collectionType ? new collectionType() : this._createCollection(relatedModel);
-                                data.add(val, relationOptions);
-                                ModelProto.set.call(this, relationKey, data, relationOptions);
+                                data = val;
+                                attributes[relationKey] = data;
                             } else {
-                                this.attributes[relationKey].reset(val, relationOptions);
+                                if (!this.attributes[relationKey]) {
+                                    data = collectionType ? new collectionType() : this._createCollection(relatedModel);
+                                    data.add(val, relationOptions);
+                                    attributes[relationKey] = data;
+                                } else {
+                                    this.attributes[relationKey].reset(val, relationOptions);
+                                    delete attributes[relationKey];
+                                }
                             }
+
                         } else if (relation.type === Backbone.One && relatedModel) {
-                            // If passed data is not instance of `Backbone.AssociatedModel`,
-                            // create `AssociatedModel` and perform backbone `set`.
                             data = val instanceof AssociatedModel ? val : new relatedModel(val);
-                            ModelProto.set.call(this, relationKey, data, relationOptions)
+                            attributes[relationKey] = data;
                         }
 
-                        relationValue = this.attributes[relationKey];
+                        relationValue = data;
 
                         // Add proxy events to respective parents.
                         // Only add callback if not defined.
                         if (relationValue && !relationValue._proxyCallback) {
                             relationValue._proxyCallback = function () {
-                                return this._bubbleEvent.call(this, relationKey, arguments);
+                                return this._bubbleEvent.call(this, relatedModel, collectionType, relationKey, relationValue, arguments);
                             };
                             relationValue.on("all", relationValue._proxyCallback, this);
                         }
 
-                        // Create a local `processedRelations` array to store the relation key which has been processed.
-                        // We cannot use `this.relations` because if there is no value defined for `relationKey`,
-                        // it will not get processed by either `BackboneModel` `set` or the `AssociatedModel` `set`.
-                        !processedRelations && (processedRelations = []);
-                        if (_.indexOf(processedRelations, relationKey) === -1) {
-                            processedRelations.push(relationKey);
-                        }
                     }
                 }, this);
             }
-            if (processedRelations) {
-                // Find attributes yet to be processed - `tbp`.
-                tbp = {};
-                for (attr in attributes) {
-                    if (_.indexOf(processedRelations, attr) === -1) {
-                        tbp[attr] = attributes[attr];
-                    }
-                }
-            } else {
-                // Set all `attributes` to `tbp`.
-                tbp = attributes;
-            }
             // Return results for `BackboneModel.set`.
-            return ModelProto.set.call(this, tbp, options);
+            return ModelProto.set.call(this, attributes, options);
         },
         // Bubble-up event to `parent` Model
-        _bubbleEvent:function (relationKey, eventArguments) {
+        _bubbleEvent:function (relatedModel, collectionType, relationKey, relationValue, eventArguments) {
             var args = eventArguments,
                 opt = args[0].split(":"),
                 eventType = opt[0],
                 eventObject = args[1],
                 indexEventObject = -1,
-                relationValue = this.attributes[relationKey],
                 _proxyCalls = relationValue._proxyCalls,
                 eventPath,
+                prev,
                 eventAvailable;
             // Change the event name to a fully qualified path.
-            if (_.contains(defaultEvents, eventType)) {
-                _.size(opt) > 1 && (eventPath = opt[1]);
-                // Find the specific object in the collection which has changed.
-                if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject) {
-                    var pathTokens = getPathArray(eventPath),
-                        initialTokens = _.initial(pathTokens), colModel;
+            _.size(opt) > 1 && (eventPath = opt[1]);
+            // Find the specific object in the collection which has changed.
+            if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject) {
+                var pathTokens = getPathArray(eventPath),
+                    initialTokens = _.initial(pathTokens), colModel;
 
-                    colModel = relationValue.find(function (model) {
-                        var changedModel = model.get(pathTokens);
-                        return eventObject === (changedModel instanceof AssociatedModel
-                            || changedModel instanceof BackboneCollection)
-                            ? changedModel : (model.get(initialTokens) || model);
-                    });
-                    colModel && (indexEventObject = relationValue.indexOf(colModel));
-                }
-                // Manipulate `eventPath`.
-                eventPath = relationKey + (indexEventObject !== -1 ?
-                    "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
-                args[0] = eventType + ":" + eventPath;
+                colModel = relationValue.find(function (model) {
+                    var changedModel = model.get(pathTokens);
+                    return eventObject === (changedModel instanceof AssociatedModel
+                        || changedModel instanceof BackboneCollection)
+                        ? changedModel : (model.get(initialTokens) || model);
+                });
+                colModel && (indexEventObject = relationValue.indexOf(colModel));
+            }
+            // Manipulate `eventPath`.
+            eventPath = relationKey + (indexEventObject !== -1 ?
+                "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
+            args[0] = eventType + ":" + eventPath;
 
-                // If event has been already triggered as result of same source `eventPath`,
-                // no need to re-trigger event to prevent cycle.
-                if (_proxyCalls) {
-                    eventAvailable = _.find(_proxyCalls, function (value, eventKey) {
-                        return eventPath.indexOf(eventKey, eventPath.length - eventKey.length) !== -1;
-                    });
-                    if (eventAvailable) return this;
+            // If event has been already triggered as result of same source `eventPath`,
+            // no need to re-trigger event to prevent cycle.
+            if (_proxyCalls) {
+                eventAvailable = _.find(_proxyCalls, function (value, eventKey) {
+                    return eventPath.indexOf(eventKey, eventPath.length - eventKey.length) !== -1;
+                });
+                if (eventAvailable) return this;
+            } else {
+                _proxyCalls = relationValue._proxyCalls = {};
+            }
+            // Add `eventPath` in `_proxyCalls` to keep track of already triggered `event`.
+            _proxyCalls[eventPath] = true;
+
+
+            //Set up previous attributes correctly. Backbone v0.9.10 upwards...
+            if (args[0] === "change:" + relationKey) {
+                if (relationValue instanceof AssociatedModel) {
+                    prev = new relatedModel(relationValue._previousAttributes);
                 } else {
-                    _proxyCalls = relationValue._proxyCalls = {};
+                    prev = collectionType ? new collectionType() : this._createCollection(relatedModel);
+                    prev.add(relationValue._previousAttributes, relationOptions);
                 }
-                // Add `eventPath` in `_proxyCalls` to keep track of already triggered `event`.
-                _proxyCalls[eventPath] = true;
+                this._previousAttributes[relationKey] = prev;
             }
 
             // Bubble up event to parent `model` with new changed arguments.
@@ -261,13 +256,13 @@
                 //Get the 'first-level' hasChanged() value by calling the backbone implementation
                 isDirty = ModelProto.hasChanged.apply(this, arguments);
                 if (!isDirty && this.relations) {
-                    // Go down the hierarchy to see if anything has `changed`.
+                    //Go down the hierarchy to see if anything has `changed`.
                     for (i = 0; i < this.relations.length; ++i) {
                         relation = this.relations[i];
                         attrValue = this.attributes[relation.key];
                         if (attrValue) {
                             if (attrValue instanceof BackboneCollection) {
-                                //filter out the dirty objects in the collection
+                                //Filter out the dirty objects in the collection
                                 dirtyObjects = attrValue.filter(function (m) {
                                     return m.hasChanged() === true;
                                 });
@@ -291,7 +286,7 @@
         // Returns a hash of the changed attributes.
         changedAttributes:function (diff) {
             var delta, relation, attrValue, changedCollection, i;
-            // To prevent cycles, check if this node is visited.
+            //To prevent cycles, check if this node is visited.
             if (!this.visited) {
                 this.visited = true;
                 //Get the 'first-level' changed attributes by calling the backbone implementation
@@ -315,7 +310,7 @@
                                     delta[relation.key] = changedCollection;
                                 }
                             } else if (attrValue instanceof AssociatedModel && attrValue.hasChanged()) {
-                                //store the changed JSON value of the sub graph
+                                //Store the changed JSON value of the sub graph
                                 delta[relation.key] = attrValue.toJSON();
                             }
                         }
@@ -323,42 +318,20 @@
                 }
                 delete this.visited;
             }
-            //return false if nothing has changed. Else return the changed hash
+            //Return false if nothing has changed. Else return the changed hash
             return !delta ? false : delta;
         },
         // Returns the hash of the previous attributes of the graph.
         previousAttributes:function () {
-            var pa, attrValue, pattrValue, pattrJSON;
-            // To prevent cycles, check if this node is visited.
-            if (!this.visited) {
-                this.visited = true;
-                //Get the 'first-level' previous attributes by calling the backbone implementation
-                pa = ModelProto.previousAttributes.apply(this, arguments);
-                if (this.relations) {
-                    //Traverse down the object graph
-                    _.each(this.relations, function (relation) {
-                        attrValue = this.attributes[relation.key];
-                        pattrValue = pa[relation.key];
-                        pattrJSON = pattrValue ? pattrValue.toJSON() : undefined;
-                        //Navigate down the object tree only if the entire object object rooted at attributes[relation.key] has not changed.
-                        if (pattrValue && pattrValue == attrValue) {
-                            if (attrValue instanceof AssociatedModel) {
-                                //Go down the graph recursively
-                                pa[relation.key] = attrValue.previousAttributes();
-                            } else if (attrValue instanceof BackboneCollection) {
-                                //Previous values of all models in the collection
-                                pa[relation.key] = attrValue.map(function (m) {
-                                    return m.previousAttributes();
-                                });
-                            }
-                        } else {
-                            //An externally defined object graph is assigned to this attribute. So previous attribute is the old graph itself
-                            if (pattrValue)
-                                pa[relation.key] = pattrJSON;
-                        }
-                    }, this);
-                }
-                delete this.visited;
+            var pa, pattrValue;
+            //Get the 'first-level' previous attributes by calling the backbone implementation
+            pa = ModelProto.previousAttributes.apply(this, arguments);
+            if (this.relations) {
+                _.each(this.relations, function (relation) {
+                    pattrValue = pa[relation.key];
+                    pa[relation.key] = pattrValue ? pattrValue.toJSON() : undefined;
+                    ;
+                }, this);
             }
             return pa;
         },
@@ -406,7 +379,6 @@
             if (_.size(attrs) < 1) return;
             for (i = 0; i < attrs.length; i++) {
                 key = attrs[i];
-                if (!key) break;
                 if (!result) break;
                 //Navigate the path to get to the result
                 result = result instanceof BackboneCollection && (!isNaN(key)) ? result.at(key) : result.attributes[key];
@@ -415,10 +387,11 @@
         }
     });
 
-    var delimiters = /\.|\[|\]\.*/;
+    var delimiters = /[^\.\[\]]+/g;
 
     // Tokenize the fully qualified event path
     var getPathArray = function (path) {
-        return _.isString(path) ? (path.split(delimiters)) : path || [''];
+        if (path === '') return [''];
+        return _.isString(path) ? (path.match(delimiters)) : path || [];
     }
 }).call(this);
