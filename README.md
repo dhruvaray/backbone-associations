@@ -38,7 +38,7 @@ Backbone-associations depends on [backbone](https://github.com/documentcloud/bac
 <script type="text/javascript" src="./js/backbone-associations.js"></script>
 ```
 
-Backbone-associations works with both Backbone **v0.9.9 and v0.9.2**. Underscore v1.3.3 upwards is supported.
+Backbone-associations works with Backbone *v0.9.10*. Underscore v1.4.3 upwards is supported.
 
 
 ## <a name="associations"/>Specifying Associations
@@ -355,7 +355,7 @@ This tutorial demonstrates the usage of eventing and change-related methods with
 
     var dept1snapshot = dept1.toJSON();
 
-    //Remove event handlers. Can also use backbone 0.9.9 once API (on the previous emp event handlers)
+    //Remove event handlers. Can also use backbone 0.9.9+ once API (on the previous emp event handlers)
     emp.off()
 
     emp.get('works_for').on('change', function () {
