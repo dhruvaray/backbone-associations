@@ -156,7 +156,7 @@
                         // Only add callback if not defined.
                         if (relationValue && !relationValue._proxyCallback) {
                             relationValue._proxyCallback = function () {
-                                return this._bubbleEvent.call(this, relatedModel, collectionType, relationKey, relationValue, arguments);
+                                return this._bubbleEvent.call(this, relationKey, relationValue, arguments);
                             };
                             relationValue.on("all", relationValue._proxyCallback, this);
                         }
@@ -168,7 +168,7 @@
             return ModelProto.set.call(this, attributes, options);
         },
         // Bubble-up event to `parent` Model
-        _bubbleEvent:function (relatedModel, collectionType, relationKey, relationValue, eventArguments) {
+        _bubbleEvent:function (relationKey, relationValue, eventArguments) {
             var args = eventArguments,
                 opt = args[0].split(":"),
                 eventType = opt[0],
@@ -176,7 +176,6 @@
                 indexEventObject = -1,
                 _proxyCalls = relationValue._proxyCalls,
                 eventPath,
-                prev,
                 eventAvailable;
             // Change the event name to a fully qualified path.
             _.size(opt) > 1 && (eventPath = opt[1]);
@@ -213,14 +212,9 @@
 
 
             //Set up previous attributes correctly. Backbone v0.9.10 upwards...
-            if (args[0] === "change:" + relationKey) {
-                if (relationValue instanceof AssociatedModel) {
-                    prev = new relatedModel(relationValue._previousAttributes);
-                } else {
-                    prev = collectionType ? new collectionType() : this._createCollection(relatedModel);
-                    prev.add(relationValue._previousAttributes, relationOptions);
-                }
-                this._previousAttributes[relationKey] = prev;
+            if ("change" === eventType) {
+                this._previousAttributes[relationKey] = relationValue._previousAttributes;
+                this.changed[relationKey] = relationValue;
             }
 
             // Bubble up event to parent `model` with new changed arguments.
@@ -247,99 +241,6 @@
             }
             return collection;
         },
-        // Has the model changed. Traverse the object hierarchy to compute dirtyness.
-        hasChanged:function (attr) {
-            var isDirty, relation, attrValue, i, dirtyObjects;
-            // To prevent cycles, check if this node is visited.
-            if (!this.visitedHC) {
-                this.visitedHC = true;
-                //Get the 'first-level' hasChanged() value by calling the backbone implementation
-                isDirty = ModelProto.hasChanged.apply(this, arguments);
-                if (!isDirty && this.relations) {
-                    //Go down the hierarchy to see if anything has `changed`.
-                    for (i = 0; i < this.relations.length; ++i) {
-                        relation = this.relations[i];
-                        attrValue = this.attributes[relation.key];
-                        if (attrValue) {
-                            if (attrValue instanceof BackboneCollection) {
-                                //Filter out the dirty objects in the collection
-                                dirtyObjects = attrValue.filter(function (m) {
-                                    return m.hasChanged() === true;
-                                });
-                                //If there is even one changed object, set the dirty flag
-                                _.size(dirtyObjects) > 0 && (isDirty = true);
-                            } else {
-                                //Go down the object graph
-                                isDirty = attrValue.hasChanged && attrValue.hasChanged();
-                            }
-                            //Break the computation if any of the sub graphs are dirty
-                            if (isDirty) {
-                                break;
-                            }
-                        }
-                    }
-                }
-                delete this.visitedHC;
-            }
-            return isDirty;
-        },
-        // Returns a hash of the changed attributes.
-        changedAttributes:function (diff) {
-            var delta, relation, attrValue, changedCollection, i;
-            //To prevent cycles, check if this node is visited.
-            if (!this.visited) {
-                this.visited = true;
-                //Get the 'first-level' changed attributes by calling the backbone implementation
-                delta = ModelProto.changedAttributes.apply(this, arguments);
-                if (this.relations) {
-                    //Traverse down the object graph
-                    for (i = 0; i < this.relations.length; ++i) {
-                        relation = this.relations[i];
-                        attrValue = this.attributes[relation.key];
-                        if (attrValue) {
-                            if (attrValue instanceof BackboneCollection) {
-                                //For each model in the collection, get the changed hash. Filter out those models where nothing has changed
-                                changedCollection = _.filter(attrValue.map(function (m) {
-                                    return m.changedAttributes();
-                                }), function (m) {
-                                    return !!m;
-                                });
-                                //If any of the models in the collection has changed
-                                if (_.size(changedCollection) > 0) {
-                                    //Assign the changed models in the collection to that key
-                                    delta[relation.key] = changedCollection;
-                                }
-                            } else if (attrValue instanceof AssociatedModel && attrValue.hasChanged()) {
-                                //Store the changed JSON value of the sub graph
-                                delta[relation.key] = attrValue.toJSON();
-                            }
-                        }
-                    }
-                }
-                delete this.visited;
-            }
-            //Return false if nothing has changed. Else return the changed hash
-            return !delta ? false : delta;
-        },
-        // Returns the hash of the previous attributes of the graph.
-        previousAttributes:function () {
-            var pa, pattrValue;
-            //Get the 'first-level' previous attributes by calling the backbone implementation
-            pa = ModelProto.previousAttributes.apply(this, arguments);
-            if (this.relations) {
-                _.each(this.relations, function (relation) {
-                    pattrValue = pa[relation.key];
-                    pa[relation.key] = pattrValue ? pattrValue.toJSON() : undefined;
-                    ;
-                }, this);
-            }
-            return pa;
-        },
-        // Return the previous value of the passed in attribute.
-        previous:function (attr) {
-            return this.previousAttributes()[attr];
-        },
-
         // The JSON representation of the model.
         toJSON:function (options) {
             var json, aJson;
