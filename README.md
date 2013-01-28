@@ -335,11 +335,11 @@ This tutorial demonstrates the usage of eventing and change-related methods with
     emp.on('change:works_for', function () {
         console.log("Fired emp > change:works_for...");
         var changed = emp.changedAttributes();
-        //JSON.stringify(changed['works_for']) === JSON.stringify(emp.get("works_for")));
-        //emp.previousAttributes()['works_for'].name === "");
-        //emp.previousAttributes()['works_for'].number === -1;
-        //emp.previousAttributes()['works_for'].locations.length === 0;
-        //emp.previousAttributes()['works_for'].controls.length === 0;
+        //changed['works_for'].toJSON() equals emp.get("works_for").toJSON()
+        //emp.previousAttributes()['works_for'].get('name') === "");
+        //emp.previousAttributes()['works_for'].get('number') === -1;
+        //emp.previousAttributes()['works_for'].get('locations').length === 0;
+        //emp.previousAttributes()['works_for'].get('controls').length === 0;
     });
 
     emp.set({works_for:dept1});
@@ -352,8 +352,6 @@ This tutorial demonstrates the usage of eventing and change-related methods with
 #### Update attributes of `AssociatedModel` instances
 
 ````javascript
-
-    var dept1snapshot = dept1.toJSON();
 
     //Remove event handlers. Can also use backbone 0.9.9+ once API (on the previous emp event handlers)
     emp.off()
@@ -373,7 +371,7 @@ This tutorial demonstrates the usage of eventing and change-related methods with
         //emp.get("works_for").hasChanged() === true;
         //emp.hasChanged() === true;
         //emp.hasChanged("works_for") === true;
-        //JSON.stringify(emp.changedAttributes()['works_for']) === JSON.stringify(emp.get("works_for")));
+        //emp.changedAttributes()['works_for'].toJSON() equals emp.get("works_for").toJSON();
         //emp.get("works_for").previousAttributes()["name"] === "R&D";
         //emp.get("works_for").previous("name") === "R&D";
     });
@@ -382,10 +380,8 @@ This tutorial demonstrates the usage of eventing and change-related methods with
         console.log("Fired emp > change:works_for...");
         //emp.hasChanged());
         //emp.hasChanged("works_for"));
-        //JSON.stringify(emp.changedAttributes()['works_for']) === JSON.stringify(emp.get("works_for"));
+        //emp.changedAttributes()['works_for'].toJSON() equals emp.get("works_for").toJSON();
         //emp.previousAttributes().works_for.name === "R&D";
-        //_.isEqual(emp.previous("works_for"), dept1snapshot) === true;
-
     });
 
     emp.get('works_for').set({name:"Marketing"});
