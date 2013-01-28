@@ -641,6 +641,17 @@ $(document).ready(function () {
 
     });
 
+    test("Check clone while assigning prev attributes in event bubble-up",1,function(){
+        emp.set({"works_for":dept1});
+        emp.get('works_for').set({name:"Marketing"});
+
+        emp.on('change:works_for', function () {
+            equal(emp.previous("works_for").get("name"), "Marketing");
+        });
+
+        emp.set('works_for', undefined);
+
+    });
 
     test("toJSON", 2, function () {
         var json1 = emp.get('dependents').toJSON();
@@ -801,6 +812,7 @@ $(document).ready(function () {
             works_for:undefined
         });
     });
+
 
     test("relation's options : parse", 3, function () {
         //relation options with `set`

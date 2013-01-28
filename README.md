@@ -38,7 +38,7 @@ Backbone-associations depends on [backbone](https://github.com/documentcloud/bac
 <script type="text/javascript" src="./js/backbone-associations.js"></script>
 ```
 
-Backbone-associations works with Backbone *v0.9.10*. Underscore v1.4.3 upwards is supported.
+Backbone-associations works with Backbone v0.9.10. Underscore v1.4.3 upwards is supported.
 
 
 ## <a name="associations"/>Specifying Associations
@@ -529,15 +529,11 @@ emp.on('change:works_for', function () {
 
 ````
 
-
-
-
-
 ## <a name="performance"/>Performance Comparison
 
-![Performance](http://dhruvaray.github.com/backbone-associations/docs/img/speed.png)
+![Performance](http://dhruvaray.github.com/backbone-associations/docs/img/speed0.4.1.png)
 
-Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations. (backbone-associations v0.4.0 v/s backbone-relational v0.7.0)
+Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations. (backbone-associations v0.4.1 v/s backbone-relational v0.7.1)
 
 Run tests on your machine configuration instantly [here](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html)
 
@@ -547,6 +543,7 @@ Write your own test case [here](http://jsperf.com/backbone-associations-speed-su
 
 #### Version 0.4.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.0...v0.4.1)
 * Support for backbone 0.9.10.
+* Faster (Non-recursive) implementation of AssociatedModel change-related methods.
 
 #### Version 0.4.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.3.1...v0.4.0)
 * Ability to perform set and retrieve operations with fully qualified paths.
