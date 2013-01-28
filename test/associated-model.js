@@ -361,8 +361,8 @@ $(document).ready(function () {
             equal(emp.get('works_for').hasChanged(), false, '`hasChanged` for `works_for` returns false as it is new object');
             equal(emp.hasChanged('works_for'), true);
             equal(emp.get('works_for').changedAttributes(), false, 'changedAttributes for `works_for` returns false as it is new object');
-            equal(emp.previous('works_for')['name'], 'R&D');
-            equal(emp.previousAttributes().works_for['name'], 'R&D', 'previousAttributes is correct');
+            equal(emp.previous('works_for').get('name'), 'R&D');
+            equal(emp.previousAttributes().works_for.get('name'), 'R&D', 'previousAttributes is correct');
         });
         emp.set('works_for', {name:'Marketing', number:'24'});
     });
@@ -371,15 +371,15 @@ $(document).ready(function () {
         emp.on('change', function () {
             equal(emp.get('works_for').get('name'), 'Marketing');
             equal(emp.get('works_for').get('number'), '24');
-            equal(emp.previous('works_for')['name'], 'R&D');
-            equal(emp.previous('works_for')['number'], '23');
+            equal(emp.previous('works_for').get('name'), 'R&D');
+            equal(emp.previous('works_for').get('number'), '23');
 
         });
         emp.on('change:works_for', function () {
             equal(emp.get('works_for').get('name'), 'Marketing');
             equal(emp.get('works_for').get('number'), '24');
-            equal(emp.previous('works_for')['name'], 'R&D');
-            equal(emp.previous('works_for')['number'], '23');
+            equal(emp.previous('works_for').get('name'), 'R&D');
+            equal(emp.previous('works_for').get('number'), '23');
         });
         emp.set('works_for', {name:'Marketing', number:'24'});
     });
@@ -391,8 +391,8 @@ $(document).ready(function () {
             equal(emp.previous('fname'), 'John');
             equal(emp.previous('lname'), 'Smith');
             equal(emp.get('works_for').get('number'), '24');
-            equal(emp.previous('works_for')['name'], 'R&D');
-            equal(emp.previous('works_for')['number'], 23);
+            equal(emp.previous('works_for').get('name'), 'R&D');
+            equal(emp.previous('works_for').get('number'), 23);
 
         });
         emp.on('change:works_for', function () {
@@ -401,8 +401,8 @@ $(document).ready(function () {
             equal(emp.previous('fname'), 'John');
             equal(emp.previous('lname'), 'Smith');
             equal(emp.get('works_for').get('number'), '24');
-            equal(emp.previous('works_for')['name'], 'R&D');
-            equal(emp.previous('works_for')['number'], 23);
+            equal(emp.previous('works_for').get('name'), 'R&D');
+            equal(emp.previous('works_for').get('number'), 23);
 
         });
         emp.set({works_for:{name:'Marketing', number:'24'}, fname:"James", lname:"Bond"});
@@ -422,7 +422,7 @@ $(document).ready(function () {
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
             var changed = emp.changedAttributes();
-            deepEqual(changed['works_for'], emp.get("works_for").toJSON());
+            deepEqual(changed['works_for'].toJSON(), emp.get("works_for").toJSON());
             equal(emp.get("works_for").previousAttributes()["name"], "R&D");
             equal(emp.get("works_for").previous("name"), "R&D");
 
@@ -464,14 +464,8 @@ $(document).ready(function () {
             equal(true, emp.get('works_for').hasChanged());
             equal(true, emp.hasChanged());
             var changed = emp.get('works_for').changedAttributes();
-            deepEqual(changed['locations'], [
-                {"zip":94403}
-            ]);
-            deepEqual(changed['controls'], [
-                {"locations":[
-                    {"zip":94403}
-                ]}
-            ]);
+            equal(changed['locations'].at(0).changed['zip'], 94403);
+            equal(changed['controls'].at(0).changed['locations'].at(0).changed['zip'], 94403);
             ok(true, "Fired works_for locations0 change...");
         });
 
@@ -1141,7 +1135,7 @@ $(document).ready(function () {
         }
     });
 
-    test("example-1", 43, function () {
+    test("example-1", 42, function () {
         emp.once('change', function () {
             console.log("Fired emp > change...");
             ok("Fired emp > change...");
@@ -1153,15 +1147,13 @@ $(document).ready(function () {
             console.log("Fired emp > change:works_for...");
             var changed = emp.changedAttributes();
             deepEqual(changed['works_for'].toJSON(), emp.get("works_for").toJSON());
-            equal(emp.previousAttributes()['works_for'].name, "");
-            equal(emp.previousAttributes()['works_for'].number, -1);
-            equal(emp.previousAttributes()['works_for'].locations.length, 0);
-            equal(emp.previousAttributes()['works_for'].controls.length, 0);
+            equal(emp.previousAttributes()['works_for'].get('name'), "");
+            equal(emp.previousAttributes()['works_for'].get('number'), -1);
+            equal(emp.previousAttributes()['works_for'].get('locations').length, 0);
+            equal(emp.previousAttributes()['works_for'].get('controls').length, 0);
         });
 
         emp.set({"works_for":dept1});//9
-
-        var dept1snapshot = dept1.toJSON();
 
         emp.get('works_for').on('change', function () {
             console.log("Fired emp.works_for > change...");
@@ -1181,7 +1173,7 @@ $(document).ready(function () {
             equal(true, emp.get("works_for").hasChanged());
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
-            deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
+            deepEqual(emp.changedAttributes()['works_for'].toJSON(), emp.get("works_for").toJSON());
             equal(emp.get("works_for").previousAttributes()["name"], "R&D");
             equal(emp.get("works_for").previous("name"), "R&D");
         });
@@ -1191,9 +1183,8 @@ $(document).ready(function () {
             ok("Fired emp > change:works_for...");
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
-            deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
+            deepEqual(emp.changedAttributes()['works_for'].toJSON(), emp.get("works_for").toJSON());
             equal(emp.previousAttributes().works_for.name, "R&D");
-            deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
         emp.get('works_for').set({name:"Marketing"});//17
@@ -1287,7 +1278,7 @@ $(document).ready(function () {
 
     });
 
-    test("example-2", 42, function () {
+    test("example-2", 41, function () {
         var listener = {};
         _.extend(listener, Backbone.Events);
 
@@ -1302,17 +1293,15 @@ $(document).ready(function () {
             console.log("Fired emp > change:works_for...");
             var changed = emp.changedAttributes();
             deepEqual(changed['works_for'].toJSON(), emp.get("works_for").toJSON());
-            equal(emp.previousAttributes()['works_for'].name, "");
-            equal(emp.previousAttributes()['works_for'].number, -1);
-            equal(emp.previousAttributes()['works_for'].locations.length, 0);
-            equal(emp.previousAttributes()['works_for'].controls.length, 0);
+            equal(emp.previousAttributes()['works_for'].get('name'), "");
+            equal(emp.previousAttributes()['works_for'].get('number'), -1);
+            equal(emp.previousAttributes()['works_for'].get('locations').length, 0);
+            equal(emp.previousAttributes()['works_for'].get('controls').length, 0);
         });
 
         emp.set({"works_for":dept1});//9
 
         listener.stopListening();
-
-        var dept1snapshot = dept1.toJSON();
 
         listener.listenTo(emp.get('works_for'), 'change', function () {
             console.log("Fired emp.works_for > change...");
@@ -1332,7 +1321,7 @@ $(document).ready(function () {
             equal(true, emp.get("works_for").hasChanged());
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
-            deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
+            deepEqual(emp.changedAttributes()['works_for'].toJSON(), emp.get("works_for").toJSON());
             equal(emp.get("works_for").previousAttributes()["name"], "R&D");
             equal(emp.get("works_for").previous("name"), "R&D");
         });
@@ -1342,9 +1331,8 @@ $(document).ready(function () {
             ok("Fired emp > change:works_for...");
             equal(true, emp.hasChanged());
             equal(true, emp.hasChanged("works_for"));
-            deepEqual(emp.changedAttributes()['works_for'], emp.get("works_for").toJSON());
+            deepEqual(emp.changedAttributes()['works_for'].toJSON(), emp.get("works_for").toJSON());
             equal(emp.previousAttributes().works_for.name, "R&D");
-            deepEqual(emp.previous("works_for"), dept1snapshot);
         });
 
         emp.get('works_for').set({name:"Marketing"});//17
