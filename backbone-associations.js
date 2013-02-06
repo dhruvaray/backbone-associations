@@ -185,10 +185,14 @@
                     initialTokens = _.initial(pathTokens), colModel;
 
                 colModel = relationValue.find(function (model) {
-                    var changedModel = model.get(pathTokens);
-                    return eventObject === (changedModel instanceof AssociatedModel
-                        || changedModel instanceof BackboneCollection)
-                        ? changedModel : (model.get(initialTokens) || model);
+                    if (eventObject === model) return true;
+                    if (model) {
+                        var changedModel = model.get(initialTokens);
+                        if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) && eventObject === changedModel) return true;
+                        changedModel = model.get(pathTokens);
+                        return ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) && eventObject === changedModel);
+                    }
+                    return false;
                 });
                 colModel && (indexEventObject = relationValue.indexOf(colModel));
             }

@@ -367,6 +367,17 @@ $(document).ready(function () {
         emp.set('works_for', {name:'Marketing', number:'24'});
     });
 
+    test("change : second model of nested collection", 1, function () {
+
+        dept1.on('change:locations[0]', function() {
+            ok(false, 'First model in nested collection should not change');
+        });
+        dept1.on('change:locations[1]', function() {
+            ok(true, 'Second model in nested collection should change');
+        });
+        loc2.set('zip', '97008');
+    });
+
     test("change : all attributes get updated in an atomic operation", 8, function () {
         emp.on('change', function () {
             equal(emp.get('works_for').get('name'), 'Marketing');
