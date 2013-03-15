@@ -135,14 +135,9 @@
                                 data = val;
                                 attributes[relationKey] = data;
                             } else {
-                                if (!this.attributes[relationKey]) {
-                                    data = collectionType ? new collectionType() : this._createCollection(relatedModel);
-                                    data.add(val, relationOptions);
-                                    attributes[relationKey] = data;
-                                } else {
-                                    this.attributes[relationKey].reset(val, relationOptions);
-                                    delete attributes[relationKey];
-                                }
+                                data = collectionType ? new collectionType() : this._createCollection(relatedModel);
+                                data.add(val, relationOptions);
+                                attributes[relationKey] = data;
                             }
 
                         } else if (relation.type === Backbone.One && relatedModel) {
