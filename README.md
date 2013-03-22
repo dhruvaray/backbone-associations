@@ -23,8 +23,8 @@ It was originally born out of a need to provide a simpler and speedier implement
 
 ## <a name="download"/>Download
 
-* [Production version - 0.4.1](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.44K packed and gzipped)
-* [Development version - 0.4.1](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
+* [Production version - 0.4.2](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.44K packed and gzipped)
+* [Development version - 0.4.2](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
 * [Edge version : ] (https://raw.github.com/dhruvaray/backbone-associations/master/backbone-associations.js)[![Build Status](https://travis-ci.org/dhruvaray/backbone-associations.png?branch=master)](https://travis-ci.org/dhruvaray/backbone-associations)
 
 
@@ -575,6 +575,9 @@ Run tests on your machine configuration instantly [here](http://dhruvaray.github
 Write your own test case [here](http://jsperf.com/backbone-associations-speed-suit/3)
 
 ## <a name="changelog"/>Change Log
+
+#### Version 0.4.2 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.1...v0.4.2)
+* Support for backbone 1.0.0.
 
 #### Version 0.4.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.0...v0.4.1)
 * Support for backbone 0.9.10.

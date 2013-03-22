@@ -15,5 +15,5 @@
         "test":"phantomjs test/lib/runner.js test/test-suite.html?noglobals=true"
     },
     "main":"backbone-associations.js",
-    "version":"0.4.1"
+    "version":"0.4.2"
 }
