@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.4.1
+//  Backbone-associations.js 0.4.2
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -135,14 +135,9 @@
                                 data = val;
                                 attributes[relationKey] = data;
                             } else {
-                                if (!this.attributes[relationKey]) {
-                                    data = collectionType ? new collectionType() : this._createCollection(relatedModel);
-                                    data.add(val, relationOptions);
-                                    attributes[relationKey] = data;
-                                } else {
-                                    this.attributes[relationKey].reset(val, relationOptions);
-                                    delete attributes[relationKey];
-                                }
+                                data = collectionType ? new collectionType() : this._createCollection(relatedModel);
+                                data.add(val, relationOptions);
+                                attributes[relationKey] = data;
                             }
 
                         } else if (relation.type === Backbone.One && relatedModel) {
@@ -185,10 +180,14 @@
                     initialTokens = _.initial(pathTokens), colModel;
 
                 colModel = relationValue.find(function (model) {
-                    var changedModel = model.get(pathTokens);
-                    return eventObject === (changedModel instanceof AssociatedModel
-                        || changedModel instanceof BackboneCollection)
-                        ? changedModel : (model.get(initialTokens) || model);
+                    if (eventObject === model) return true;
+                    if (model) {
+                        var changedModel = model.get(initialTokens);
+                        if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) && eventObject === changedModel) return true;
+                        changedModel = model.get(pathTokens);
+                        return ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) && eventObject === changedModel);
+                    }
+                    return false;
                 });
                 colModel && (indexEventObject = relationValue.indexOf(colModel));
             }

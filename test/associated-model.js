@@ -367,6 +367,17 @@ $(document).ready(function () {
         emp.set('works_for', {name:'Marketing', number:'24'});
     });
 
+    test("change : second model of nested collection", 1, function () {
+
+        dept1.on('change:locations[0]', function() {
+            ok(false, 'First model in nested collection should not change');
+        });
+        dept1.on('change:locations[1]', function() {
+            ok(true, 'Second model in nested collection should change');
+        });
+        loc2.set('zip', '97008');
+    });
+
     test("change : all attributes get updated in an atomic operation", 8, function () {
         emp.on('change', function () {
             equal(emp.get('works_for').get('name'), 'Marketing');
@@ -769,7 +780,7 @@ $(document).ready(function () {
     test("save", 1, function () {
         emp = new Backbone.Model();
         emp.sync = function (method, model, options) {
-            options.success(this, null, options);
+            options.success.call(this, null, options);
         };
         emp.save(null, {
             success:function () {
@@ -784,7 +795,7 @@ $(document).ready(function () {
     test("validate after save", 1, function () {
         var lastError = null;
         emp.sync = function (method, model, options) {
-            options.success(this, {sex:'O'}, options);
+            options.success.call(this, {sex:'O'}, options);
         };
         //Backbone 0.9.9
         emp.on('invalid', function (model, error) {
@@ -852,7 +863,7 @@ $(document).ready(function () {
             },
             //proxy for server
             sync:function (method, model, options) {
-                return options.success(this, {
+                return options.success.call(this, {
                     name:'c-name',
                     employees:[
                         {
@@ -897,7 +908,7 @@ $(document).ready(function () {
             },
             //proxy for save success
             sync:function (method, model, options) {
-                options.success(this, null, options);
+                options.success.call(this, null, options);
             }
         });
 

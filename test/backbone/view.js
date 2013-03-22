@@ -1,5 +1,5 @@
-//adopted from Backbone 0.9.10 test suite
-$(document).ready(function () {
+//adopted from Backbone 1.0.0 test suite
+$(document).ready(function() {
     // test Backbone.Associated instead of Backbone.Model - reset at end of function
     var OriginalModel = Backbone.Model;
     Backbone.Model = Backbone.AssociatedModel;
@@ -87,6 +87,13 @@ $(document).ready(function () {
         view.delegateEvents(events);
         view.$el.trigger('click');
         equal(view.counter, 3);
+    });
+
+
+    test("delegateEvents ignore undefined methods", 0, function() {
+        var view = new Backbone.View({el: '<p></p>'});
+        view.delegateEvents({'click': 'undefinedMethod'});
+        view.$el.trigger('click');
     });
 
     test("undelegateEvents", 6, function() {

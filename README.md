@@ -23,8 +23,8 @@ It was originally born out of a need to provide a simpler and speedier implement
 
 ## <a name="download"/>Download
 
-* [Production version - 0.4.1](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.44K packed and gzipped)
-* [Development version - 0.4.1](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
+* [Production version - 0.4.2](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.44K packed and gzipped)
+* [Development version - 0.4.2](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
 * [Edge version : ] (https://raw.github.com/dhruvaray/backbone-associations/master/backbone-associations.js)[![Build Status](https://travis-ci.org/dhruvaray/backbone-associations.png?branch=master)](https://travis-ci.org/dhruvaray/backbone-associations)
 
 
@@ -505,6 +505,8 @@ For convenience, it is also possible to retrieve or set data by specifying a pat
 
 ## <a name="performance"/>Pitfalls
 
+##### Query the appropriate object to determine change
+
 When assigning a previously created object graph to a property in an associated model, care must be taken to query the appropriate object for the changed properties.
 
 ````javascript
@@ -518,7 +520,7 @@ dept1 = new Department({
 emp.set('works_for', dept1);
 ````
 
-then inside a previously defined `change` event handler
+Then inside a previously defined `change` event handler
 
 ````javascript
 
@@ -528,6 +530,39 @@ emp.on('change:works_for', function () {
 });
 
 ````
+
+##### Use unqualified `change` event name with care
+
+This extension makes use of _fully-qualified-event-path names_ to identify the location of the change in the object graph. (And the event arguments would have the changed object or object property).
+
+The unqualified `change` event would work if an entire object graph is being replaced with another. For example
+
+```javascript
+
+    emp.on('change', function () {
+        console.log("emp has changed");//This WILL fire
+    });
+    emp.on('change:works_for', function () {
+        console.log('emp attribute works_for has changed');//This WILL fire
+    });
+    emp.set('works_for', {name:'Marketing', number:'24'});
+
+```
+
+However, if attributes of a nested object are changed, the unqualified `change` event will not fire for objects (and their parents) who have that nested object as their child.
+
+```javascript
+
+    emp.on('change', function () {
+            console.log("emp has changed"); //This will NOT fire
+    });
+    emp.on('change:works_for', function () {
+            console.log('emp attribute works_for has changed');//This WILL fire
+    });
+    emp.get('works_for').set('name','Marketing');
+
+```
+Refer to issue [#28](https://github.com/dhruvaray/backbone-associations/issues/28) for a more detailed reasoning.
 
 ## <a name="performance"/>Performance Comparison
 
@@ -540,6 +575,9 @@ Run tests on your machine configuration instantly [here](http://dhruvaray.github
 Write your own test case [here](http://jsperf.com/backbone-associations-speed-suit/3)
 
 ## <a name="changelog"/>Change Log
+
+#### Version 0.4.2 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.1...v0.4.2)
+* Support for backbone 1.0.0.
 
 #### Version 0.4.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.0...v0.4.1)
 * Support for backbone 0.9.10.
