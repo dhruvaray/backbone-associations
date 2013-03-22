@@ -1,5 +1,5 @@
-//adopted from Backbone 0.9.10 test suite
-$(document).ready(function () {
+//adopted from Backbone 1.0.0 test suite
+$(document).ready(function() {
     // test Backbone.Associated instead of Backbone.Model - reset at end of function
     var OriginalModel = Backbone.Model;
     Backbone.Model = Backbone.AssociatedModel;
@@ -50,9 +50,9 @@ $(document).ready(function () {
 
     test("initialize with parsed attributes", 1, function() {
         var Model = Backbone.Model.extend({
-            parse: function(obj) {
-                obj.value += 1;
-                return obj;
+            parse: function(attrs) {
+                attrs.value += 1;
+                return attrs;
             }
         });
         var model = new Model({value: 1}, {parse: true});
@@ -73,8 +73,8 @@ $(document).ready(function () {
 
     test("parse can return null", 1, function() {
         var Model = Backbone.Model.extend({
-            parse: function(obj) {
-                obj.value += 1;
+            parse: function(attrs) {
+                attrs.value += 1;
                 return null;
             }
         });
@@ -113,6 +113,23 @@ $(document).ready(function () {
         equal(model.url(), '/nested/1/collection');
         model.set({id: 2});
         equal(model.url(), '/nested/1/collection/2');
+    });
+
+    test('url and urlRoot are directly attached if passed in the options', 2, function () {
+        var model = new Backbone.Model({a: 1}, {url: '/test'});
+        var model2 = new Backbone.Model({a: 2}, {urlRoot: '/test2'});
+        equal(model.url, '/test');
+        equal(model2.urlRoot, '/test2');
+    });
+
+    test("underscore methods", 5, function() {
+        var model = new Backbone.Model({ 'foo': 'a', 'bar': 'b', 'baz': 'c' });
+        var model2 = model.clone();
+        deepEqual(model.keys(), ['foo', 'bar', 'baz']);
+        deepEqual(model.values(), ['a', 'b', 'c']);
+        deepEqual(model.invert(), { 'a': 'foo', 'b': 'bar', 'c': 'baz' });
+        deepEqual(model.pick('foo', 'baz'), {'foo': 'a', 'baz': 'c'});
+        deepEqual(model.omit('foo', 'bar'), {'baz': 'c'});
     });
 
     test("clone", 10, function() {
@@ -328,7 +345,7 @@ $(document).ready(function () {
                 "two": 2
             }
         });
-        var model = new Defaulted({two: null});
+        var model = new Defaulted({two: undefined});
         equal(model.get('one'), 1);
         equal(model.get('two'), 2);
         Defaulted = Backbone.Model.extend({
@@ -339,7 +356,7 @@ $(document).ready(function () {
                 };
             }
         });
-        model = new Defaulted({two: null});
+        model = new Defaulted({two: undefined});
         equal(model.get('one'), 3);
         equal(model.get('two'), 4);
     });
@@ -405,7 +422,7 @@ $(document).ready(function () {
             if (attrs.admin) return "Can't change admin status.";
         };
         model.sync = function(method, model, options) {
-            options.success.call(this, this, {admin: true}, options);
+            options.success.call(this, {admin: true});
         };
         model.on('invalid', function(model, error) {
             lastError = error;
@@ -420,6 +437,19 @@ $(document).ready(function () {
         doc.save({title : "Henry V"});
         equal(this.syncArgs.method, 'update');
         ok(_.isEqual(this.syncArgs.model, doc));
+    });
+
+    test("save, fetch, destroy triggers error event when an error occurs", 3, function () {
+        var model = new Backbone.Model();
+        model.on('error', function () {
+            ok(true);
+        });
+        model.sync = function (method, model, options) {
+            options.error();
+        };
+        model.save({data: 2, id: 1});
+        model.fetch();
+        model.destroy();
     });
 
     test("save with PATCH", function() {
@@ -439,7 +469,7 @@ $(document).ready(function () {
     test("save in positional style", 1, function() {
         var model = new Backbone.Model();
         model.sync = function(method, model, options) {
-            options.success(model, {}, options);
+            options.success();
         };
         model.save('title', 'Twelfth Night');
         equal(model.get('title'), 'Twelfth Night');
@@ -448,8 +478,8 @@ $(document).ready(function () {
     test("save with non-object success response", 2, function () {
         var model = new Backbone.Model();
         model.sync = function(method, model, options) {
-            options.success(model, '', options);
-            options.success(model, null, options);
+            options.success('', options);
+            options.success(null, options);
         };
         model.save({testing:'empty'}, {
             success: function (model) {
@@ -724,7 +754,7 @@ $(document).ready(function () {
     test("#1030 - `save` with `wait` results in correct attributes if success is called during sync", 2, function() {
         var model = new Backbone.Model({x: 1, y: 2});
         model.sync = function(method, model, options) {
-            options.success(model, {}, options);
+            options.success();
         };
         model.on("change:x", function() { ok(true); });
         model.save({x: 3}, {wait: true});
@@ -897,7 +927,7 @@ $(document).ready(function () {
             }
         };
         model.sync = function(method, model, options) {
-            options.success(model, {}, options);
+            options.success();
         };
         model.save({id: 1}, opts);
         model.fetch(opts);
@@ -906,9 +936,8 @@ $(document).ready(function () {
 
     test("#1412 - Trigger 'sync' event.", 3, function() {
         var model = new Backbone.Model({id: 1});
-        model.url = '/test';
+        model.sync = function (method, model, options) { options.success(); };
         model.on('sync', function(){ ok(true); });
-        Backbone.ajax = function(settings){ settings.success(); };
         model.fetch();
         model.save();
         model.destroy();
@@ -954,7 +983,7 @@ $(document).ready(function () {
         var Model = Backbone.Model.extend({
             sync: function(method, model, options) {
                 setTimeout(function(){
-                    options.success(model, {}, options);
+                    options.success();
                     start();
                 }, 0);
             }

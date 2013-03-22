@@ -505,6 +505,8 @@ For convenience, it is also possible to retrieve or set data by specifying a pat
 
 ## <a name="performance"/>Pitfalls
 
+##### Query the appropriate object to determine change
+
 When assigning a previously created object graph to a property in an associated model, care must be taken to query the appropriate object for the changed properties.
 
 ````javascript
@@ -518,7 +520,7 @@ dept1 = new Department({
 emp.set('works_for', dept1);
 ````
 
-then inside a previously defined `change` event handler
+Then inside a previously defined `change` event handler
 
 ````javascript
 
@@ -528,6 +530,39 @@ emp.on('change:works_for', function () {
 });
 
 ````
+
+##### Use unqualified `change` event name with care
+
+This extension makes use of _fully-qualified-event-path names_ to identify the location of the change in the object graph. (And the event arguments would have the changed object or object property).
+
+The unqualified `change` event would work if an entire object graph is being replaced with another. For example
+
+```javascript
+
+    emp.on('change', function () {
+        console.log("emp has changed");//This WILL fire
+    });
+    emp.on('change:works_for', function () {
+        console.log('emp attribute works_for has changed');//This WILL fire
+    });
+    emp.set('works_for', {name:'Marketing', number:'24'});
+
+```
+
+However, if attributes of a nested object are changed, the unqualified `change` event will not fire for objects (and their parents) who have that nested object as their child.
+
+```javascript
+
+    emp.on('change', function () {
+            console.log("emp has changed"); //This will NOT fire
+    });
+    emp.on('change:works_for', function () {
+            console.log('emp attribute works_for has changed');//This WILL fire
+    });
+    emp.get('works_for').set('name','Marketing');
+
+```
+Refer to issue [#28](https://github.com/dhruvaray/backbone-associations/issues/28) for a more detailed reasoning.
 
 ## <a name="performance"/>Performance Comparison
 

@@ -1,4 +1,4 @@
-//adopted from Backbone 0.9.10 test suite
+//adopted from Backbone 1.0.0 test suite
 (function() {
 
     var Environment = this.Environment = function(){};
