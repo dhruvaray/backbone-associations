@@ -116,7 +116,7 @@
                 _.each(this.relations, function (relation) {
                     var relationKey = relation.key, relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
-                        val, relationOptions, data, relationValue;
+                        val, relationOptions, data, relationValue, currentCollection = this.get(relationKey);
                     if (attributes[relationKey]) {
                         //Get value of attribute with relation key in `val`.
                         val = _.result(attributes, relationKey);
@@ -135,6 +135,10 @@
 
                             if (val instanceof BackboneCollection) {
                                 data = val;
+                                attributes[relationKey] = data;
+                            } else if (currentCollection) {
+                                data = currentCollection;
+                                currentCollection.set(attributes[relationKey], relationOptions);
                                 attributes[relationKey] = data;
                             } else {
                                 data = collectionType ? new collectionType() : this._createCollection(relatedModel);

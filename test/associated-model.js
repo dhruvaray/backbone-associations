@@ -277,6 +277,18 @@ $(document).ready(function () {
         ok(true);
     });
 
+    test("set nested collections when there is existing collections", 3, function () {
+      var originalCollection  = emp.get('dependents')
+
+      child1.on('remove', function () { ok(true) })
+      child2.on('add', function () { ok(true); })
+      parent1.on('add', function () { ok(false); }) // parent shouldn't be added or remove
+      parent1.on('remove', function () { ok(false); })
+
+      emp.set({"dependents":[child2, parent1]});
+      equal(originalCollection, emp.get('dependents'), "original collection has been changed, but it shouldn't")
+    })
+
     test("function can also be passed as value of attribute on set", 2, function () {
         var dept2 = function () {
             return {
