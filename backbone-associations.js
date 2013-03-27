@@ -21,7 +21,7 @@
     var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
         defaultEvents, AssociatedModel, pathChecker;
 
-    if (typeof require !== 'undefined') {
+    if (typeof window === 'undefined') {
         _ = require('underscore');
         Backbone = require('backbone');
         if(typeof exports !== 'undefined') {
