@@ -135,10 +135,16 @@
 
                             if (val instanceof BackboneCollection) {
                                 data = val;
+
+                                if (currentCollection) {
+                                  data = currentCollection
+                                  currentCollection.set(val.toJSON(), relationOptions);
+                                }
+
                                 attributes[relationKey] = data;
                             } else if (currentCollection) {
                                 data = currentCollection;
-                                currentCollection.set(attributes[relationKey], relationOptions);
+                                currentCollection.set(val, relationOptions);
                                 attributes[relationKey] = data;
                             } else {
                                 data = collectionType ? new collectionType() : this._createCollection(relatedModel);
