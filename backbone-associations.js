@@ -24,7 +24,9 @@
     if (typeof require !== 'undefined') {
         _ = require('underscore');
         Backbone = require('backbone');
-        exports = module.exports = Backbone;
+        if(typeof exports !== 'undefined') {
+            exports = module.exports = Backbone;   
+        }
     } else {
         _ = root._;
         Backbone = root.Backbone;
