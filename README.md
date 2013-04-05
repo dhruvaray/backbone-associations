@@ -503,7 +503,7 @@ For convenience, it is also possible to retrieve or set data by specifying a pat
     //Equivalent to emp.get('works_for').get('locations').at(0).set('zip',94403);
 ````
 
-## <a name="performance"/>Pitfalls
+## <a name="pitfalls"/>Pitfalls
 
 ##### Query the appropriate object to determine change
 
