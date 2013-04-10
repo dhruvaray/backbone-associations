@@ -175,7 +175,7 @@ This image was generated via [code](https://github.com/dhruvaray/backbone-associ
             lname:'',
             sex:'F', //{F,M}
             age:0,
-            relationship:'S' //Values {C=Child, P=Parents}
+            relationship:'S' //Values {C=Child, P=Parents, S=Spouse}
         }
     });
 
