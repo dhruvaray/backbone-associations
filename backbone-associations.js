@@ -143,7 +143,7 @@
                             }
 
                         } else if (relation.type === Backbone.One && relatedModel) {
-                            data = val instanceof AssociatedModel ? val : new relatedModel(val);
+                            data = val instanceof AssociatedModel ? val : new relatedModel(val, relationOptions);
                             attributes[relationKey] = data;
                         }
 
