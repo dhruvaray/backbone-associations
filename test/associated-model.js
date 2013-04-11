@@ -825,7 +825,7 @@ $(document).ready(function () {
     });
 
 
-    test("relation's options : parse", 3, function () {
+    test("Many relation's options : parse", 3, function () {
         //relation options with `set`
         var NewEmployee = Employee.extend({
             parse:function (obj) {
@@ -881,6 +881,47 @@ $(document).ready(function () {
             success:function (model, response) {
                 equal(model.get("name"), "c-name", "Company name should be c-name");
                 equal(model.get("employees").at(0).get('prefix'), "Mr.", "Prefix of male employees of company should be Mr.");
+            }
+        });
+    });
+
+    test("One relation's options passed from parent", 2, function () {
+        var NewEmployee = Employee.extend({
+            parse:function (obj) {
+                obj.prefix = "Mr.";
+                return obj;
+            }
+        });
+
+        var Room = Backbone.AssociatedModel.extend({
+            url:"/unit",
+            relations:[
+                {
+                    type:Backbone.One,
+                    relatedModel:NewEmployee,
+                    key:'employee'
+                }
+            ],
+            defaults:{
+                name:'',
+                employee:null
+            },
+            //proxy for server
+            sync:function (method, model, options) {
+                return options.success.call(this, {
+                    name:'room-name',
+                    employee:{
+                        fname:"John",
+                        lname:"Smith"
+                    }
+                }, options);
+            }
+        });
+        var room = new Room(null, {parse:true});
+        room.fetch({
+            success:function (model, response) {
+                equal(model.get("name"), "room-name", "Unit name should be room-name");
+                equal(model.get("employee").get('prefix'), "Mr.", "Prefix of employee should be Mr.");
             }
         });
     });
