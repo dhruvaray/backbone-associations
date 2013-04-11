@@ -175,7 +175,7 @@ This image was generated via [code](https://github.com/dhruvaray/backbone-associ
             lname:'',
             sex:'F', //{F,M}
             age:0,
-            relationship:'S' //Values {C=Child, P=Parents}
+            relationship:'S' //Values {C=Child, P=Parents, S=Spouse}
         }
     });
 
@@ -503,7 +503,7 @@ For convenience, it is also possible to retrieve or set data by specifying a pat
     //Equivalent to emp.get('works_for').get('locations').at(0).set('zip',94403);
 ````
 
-## <a name="performance"/>Pitfalls
+## <a name="pitfalls"/>Pitfalls
 
 ##### Query the appropriate object to determine change
 
@@ -566,9 +566,9 @@ Refer to issue [#28](https://github.com/dhruvaray/backbone-associations/issues/2
 
 ## <a name="performance"/>Performance Comparison
 
-![Performance](http://dhruvaray.github.com/backbone-associations/docs/img/speed0.4.2.png)
+![Performance](http://dhruvaray.github.com/backbone-associations/docs/img/speed0.4.2-0.8.5.png)
 
-Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations. (backbone-associations v0.4.2 v/s backbone-relational v0.8.0+ [2fff8e](https://github.com/PaulUithol/Backbone-relational/tree/4da5586bc92f5e6a63d725f26fe7f1b66c2fff8e))
+Each operation comprises of n (10, 15, 20, 25, 30) inserts. The chart above compares the performance (time and operations/sec) of the two implementations. (backbone-associations v0.4.2 v/s backbone-relational v0.8.5)
 
 Run tests on your machine configuration instantly [here](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html)
 
