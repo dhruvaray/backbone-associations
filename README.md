@@ -6,7 +6,7 @@ It comes with
 * An online [test suite](http://dhruvaray.github.com/backbone-associations/test/test-suite.html) which includes backbone test cases run with `AssociatedModel`s.
 * Performance [tests](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html).
 
-It was originally born out of a need to provide a simpler and speedier implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/)
+It was originally born out of a need to provide a simpler and speedier implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/). For specific differences in functionalities and philosophies, refer to this [discussion](https://github.com/dhruvaray/backbone-associations/issues/32). 
 
 ## Contents
 * [Download](#download)
