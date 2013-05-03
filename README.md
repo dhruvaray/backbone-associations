@@ -17,6 +17,7 @@ It was originally born out of a need to provide a simpler and speedier implement
 * [Tutorial : Eventing with a graph of `AssociatedModel` objects](#tutorial-eventing)
 * [Perform set and get operations with fully qualified paths](#paths)
 * [Pitfalls](#pitfalls)
+* [AMD](#amd)
 * [Performance Comparison](#performance)
 * [Change Log](#changelog)
 
@@ -563,6 +564,10 @@ However, if attributes of a nested object are changed, the unqualified `change` 
 
 ```
 Refer to issue [#28](https://github.com/dhruvaray/backbone-associations/issues/28) for a more detailed reasoning.
+
+## <a name="amd"/>AMD
+To use backbone-associations as an AMD module you can refer to this [example](https://gist.github.com/jdkanani/5256463)
+
 
 ## <a name="performance"/>Performance Comparison
 
