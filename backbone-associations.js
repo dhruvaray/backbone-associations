@@ -109,6 +109,7 @@
             // Extract attributes and options.
             options || (options = {});
             if (options.unset) for (attr in attributes) attributes[attr] = void 0;
+            this._parents = this._parents || [];
 
             if (this.relations) {
                 // Iterate over `this.relations` and `set` model and collection values
@@ -158,6 +159,15 @@
                             relationValue.on("all", relationValue._proxyCallback, this);
                         }
 
+                    }
+                    //Maintain reverse pointers - a.k.a parents
+                    var updated = attributes[relationKey];
+                    var original = this.attributes[relationKey];
+                    if (updated){
+                        updated._parents = updated._parents || [];
+                        updated._parents.push(this);
+                    }else if (original && original._parents.length > 0){
+                         original._parents = _.difference(original._parents, [this]);
                     }
                 }, this);
             }
@@ -212,7 +222,7 @@
             _proxyCalls[eventPath] = true;
 
 
-            //Set up previous attributes correctly. Backbone v0.9.10 upwards...
+            //Set up previous attributes correctly.
             if ("change" === eventType) {
                 this._previousAttributes[relationKey] = relationValue._previousAttributes;
                 this.changed[relationKey] = relationValue;

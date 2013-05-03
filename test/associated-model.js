@@ -824,6 +824,31 @@ $(document).ready(function () {
         });
     });
 
+    test("parents", 6, function () {
+        emp.set('works_for', {name:"Marketing", number:29});
+        var emp2 = new Employee({
+            fname:"Tom",
+            lname:"Hanks",
+            age:41,
+            sex:"M"
+        });
+        var works_for = emp.get('works_for');
+        equal(works_for._parents.length,1);
+
+        emp2.set('works_for',works_for);
+        equal(works_for._parents.length,2);
+
+        emp2.set('works_for',undefined);
+        equal(works_for._parents.length,1);
+
+        emp.set('works_for',undefined);
+        equal(works_for._parents.length,0);
+
+        equal(emp._parents.length,0);
+        equal(emp2._parents.length,0);
+
+    });
+
 
     test("Many relation's options : parse", 3, function () {
         //relation options with `set`
