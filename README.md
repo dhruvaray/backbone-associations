@@ -20,6 +20,7 @@ It was originally born out of a need to provide a simpler and speedier implement
 * [AMD](#amd)
 * [Performance Comparison](#performance)
 * [Change Log](#changelog)
+* [Authors & Contributors](#create)
 
 
 ## <a name="download"/>Download
@@ -27,6 +28,8 @@ It was originally born out of a need to provide a simpler and speedier implement
 * [Production version - 0.4.2](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.44K packed and gzipped)
 * [Development version - 0.4.2](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
 * [Edge version : ] (https://raw.github.com/dhruvaray/backbone-associations/master/backbone-associations.js)[![Build Status](https://travis-ci.org/dhruvaray/backbone-associations.png?branch=master)](https://travis-ci.org/dhruvaray/backbone-associations)
+
+If you like/use the library, do show your appreciation by starring this repository or/and giving a [gittip](https://www.gittip.com/dhruvaray/).
 
 
 ## <a name="installation"/>Installation
@@ -41,6 +44,7 @@ Backbone-associations depends on [backbone](https://github.com/documentcloud/bac
 
 Backbone-associations works with Backbone v0.9.10 upwards. Underscore v1.4.3 upwards is supported.
 
+If you like/use the library, do show your appreciation by starring this repository or/and giving a [gittip](https://www.gittip.com/dhruvaray/).
 
 ## <a name="associations"/>Specifying Associations
 
@@ -609,4 +613,8 @@ Added support for cyclic object graphs.
 
 #### Version 0.1.0
 Initial Backbone-associations release.
+
+## <a name="create"/> Authors & Contributors
+* Core Team : Dhruva Ray, Jaynti Kanani
+* Other contributors : [here](https://github.com/dhruvaray/backbone-associations/contributors)
 
