@@ -24,8 +24,8 @@
     if (typeof window === 'undefined') {
         _ = require('underscore');
         Backbone = require('backbone');
-        if(typeof exports !== 'undefined') {
-            exports = module.exports = Backbone;   
+        if (typeof exports !== 'undefined') {
+            exports = module.exports = Backbone;
         }
     } else {
         _ = root._;
@@ -109,7 +109,7 @@
             // Extract attributes and options.
             options || (options = {});
             if (options.unset) for (attr in attributes) attributes[attr] = void 0;
-            this._parents = this._parents || [];
+            this.parents = this.parents || [];
 
             if (this.relations) {
                 // Iterate over `this.relations` and `set` model and collection values
@@ -163,11 +163,11 @@
                     //Maintain reverse pointers - a.k.a parents
                     var updated = attributes[relationKey];
                     var original = this.attributes[relationKey];
-                    if (updated){
-                        updated._parents = updated._parents || [];
-                        updated._parents.push(this);
-                    }else if (original && original._parents.length > 0){
-                         original._parents = _.difference(original._parents, [this]);
+                    if (updated) {
+                        updated.parents = updated.parents || [];
+                        (updated.parents.indexOf(this) == -1) && updated.parents.push(this);
+                    } else if (original && original.parents.length > 0) {
+                        original.parents = _.difference(original.parents, [this]);
                     }
                 }, this);
             }

@@ -369,10 +369,10 @@ $(document).ready(function () {
 
     test("change : second model of nested collection", 1, function () {
 
-        dept1.on('change:locations[0]', function() {
+        dept1.on('change:locations[0]', function () {
             ok(false, 'First model in nested collection should not change');
         });
-        dept1.on('change:locations[1]', function() {
+        dept1.on('change:locations[1]', function () {
             ok(true, 'Second model in nested collection should change');
         });
         loc2.set('zip', '97008');
@@ -652,7 +652,7 @@ $(document).ready(function () {
 
     });
 
-    test("Check clone while assigning prev attributes in event bubble-up",1,function(){
+    test("Check clone while assigning prev attributes in event bubble-up", 1, function () {
         emp.set({"works_for":dept1});
         emp.get('works_for').set({name:"Marketing"});
 
@@ -826,26 +826,48 @@ $(document).ready(function () {
 
     test("parents", 6, function () {
         emp.set('works_for', {name:"Marketing", number:29});
+
         var emp2 = new Employee({
             fname:"Tom",
             lname:"Hanks",
             age:41,
             sex:"M"
         });
+
+        var emp3 = new Employee({
+            fname:"Michelle",
+            lname:"Pfiefer",
+            age:42,
+            sex:"F"
+        });
+
         var works_for = emp.get('works_for');
-        equal(works_for._parents.length,1);
 
-        emp2.set('works_for',works_for);
-        equal(works_for._parents.length,2);
+        equal(works_for.parents.length, 1);
 
-        emp2.set('works_for',undefined);
-        equal(works_for._parents.length,1);
+        emp3.set('works_for', works_for);
+        emp2.set('works_for', works_for);
+        //add multiple times. Should be idempotent
+        emp3.set('works_for', works_for);
 
-        emp.set('works_for',undefined);
-        equal(works_for._parents.length,0);
+        equal(works_for.parents.length, 3);
 
-        equal(emp._parents.length,0);
-        equal(emp2._parents.length,0);
+        emp2.set('works_for', undefined);
+        equal(works_for.parents.length, 2);
+
+        emp.set('works_for', undefined);
+        equal(works_for.parents.length, 1);
+
+        equal(emp.parents.length, 0);
+        equal(emp2.parents.length, 0);
+
+        console.log(works_for.parents);
+
+        //Could cause mem leaks
+        //emp3 = undefined;
+        //equal(works_for.parents.length,1);
+        //console.log(works_for.parents);
+
 
     });
 
