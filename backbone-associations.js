@@ -160,14 +160,17 @@
                         }
 
                     }
-                    //Maintain reverse pointers - a.k.a parents
-                    var updated = attributes[relationKey];
-                    var original = this.attributes[relationKey];
-                    if (updated) {
-                        updated.parents = updated.parents || [];
-                        (updated.parents.indexOf(this) == -1) && updated.parents.push(this);
-                    } else if (original && original.parents.length > 0) {
-                        original.parents = _.difference(original.parents, [this]);
+                    //Distinguish between the value of undefined versus a set no-op
+                    if (attributes.hasOwnProperty(relationKey)) {
+                        //Maintain reverse pointers - a.k.a parents
+                        var updated = attributes[relationKey];
+                        var original = this.attributes[relationKey];
+                        if (updated) {
+                            updated.parents = updated.parents || [];
+                            (updated.parents.indexOf(this) == -1) && updated.parents.push(this);
+                        } else if (original && original.parents.length > 0) {
+                            original.parents = _.difference(original.parents, [this]);
+                        }
                     }
                 }, this);
             }

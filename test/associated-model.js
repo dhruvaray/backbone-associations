@@ -871,6 +871,53 @@ $(document).ready(function () {
 
     });
 
+    test("parents - Issue #39", 3, function () {
+        var Nested = Backbone.AssociatedModel.extend();
+
+        var Child = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'nested',
+                    relatedModel:Nested
+                }
+            ]
+        });
+
+        var Root = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'child',
+                    relatedModel:Child
+                },
+                {
+                    type:Backbone.One,
+                    key:'nested',
+                    relatedModel:Nested
+                }
+            ]
+        });
+
+        var root = new Root;
+        var child = new Child;
+
+        // Add 'nested' to root model
+        root.set('nested', new Nested);
+        equal(root.get('nested').parents[0] === root, true);
+
+
+        // Add 'nested' to child model
+        child.set('nested', new Nested);
+        equal(child.get('nested').parents[0] === child, true);
+
+        // Add child to parent
+        root.set('child', child);
+        equal(root.get('nested').parents[0] === root, true);
+
+
+    });
+
 
     test("Many relation's options : parse", 3, function () {
         //relation options with `set`
