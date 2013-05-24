@@ -420,7 +420,7 @@ $(document).ready(function () {
 
     });
 
-    test("child `change`", 17, function () {
+    test("child `change`", 18, function () {
 
         emp.on('change', function () {
             ok(true, "Fired emp change...");
@@ -445,11 +445,18 @@ $(document).ready(function () {
             ok(true, "Fired emp change:works_for.name...");
         });
 
+        emp.on('nested-change', function () {
+            ok(true, "Fired emp nested-change...");
+        });
+
         emp.get('works_for').on('change', function () {
             ok(true, "Fired works_for change...");
         });
         emp.get('works_for').on('change:name', function () {
             ok(true, "Fired works_for dept:name change...");
+        });
+        emp.get('works_for').on('nested-change', function () {
+            ok(true, "Fired emp:works_for nested-change...");
         });
 
         emp.get('works_for').get('locations').at(0).on('change:zip', function () {
@@ -459,15 +466,17 @@ $(document).ready(function () {
         emp.get('works_for').get('locations').at(0).on('change', function () {
             ok(true, "Fired works_for locations0 change...");
         });
-
-        emp.set({'works_for.name':'Marketing'});//4+7
+        emp.get('works_for').get('locations').on('nested-change', function () {
+            ok(true, "Fired emp:works_for:locations nested-change...");
+        });
+        emp.set({'works_for.name':'Marketing'});//4+7+1(nc)
         emp.set('works_for', {name:"Marketing", number:29});//2
         emp.set('works_for', undefined);//2
         emp.set('works_for', dept1);//2
         emp.set('works_for', dept1);//0
     });
 
-    test("child `change in collection`", 14, function () {
+    test("child `change in collection`", 18, function () {
         emp.get('works_for').get('locations').at(0).on('change:zip', function () {
             ok(true, "Fired works_for locations0:zip change...");
         });
@@ -513,7 +522,20 @@ $(document).ready(function () {
             ok(true, "Fired emp.works_for change:controls[0].locations[0]...");
         });
 
-        emp.get('works_for').get("locations").at(0).set('zip', 94403);//10 + 4
+        emp.on('nested-change', function () {
+            ok(true, "Fired emp nested-change...");
+        });
+
+        emp.get('works_for').on('nested-change', function () {
+            ok(true, "Fired emp:works_for nested-change...");
+        });
+
+        emp.get('works_for').get('locations').on('nested-change', function () {
+            ok(true, "Fired emp:works_for:locations nested-change...");
+        });
+
+
+        emp.get('works_for').get("locations").at(0).set('zip', 94403);//10 + 4 + 4(nc)
     });
 
 
@@ -551,7 +573,7 @@ $(document).ready(function () {
 
     });
 
-    test("child `raise nested events: Issue #15`", 6, function () {
+    test("child `raise nested events: Issue #15`", 8, function () {
 
         emp.on('change', function () {
             ok(true, "Fired emp change...");
@@ -581,11 +603,20 @@ $(document).ready(function () {
             ok(true, "Fired works_for nestedevent...");
         });
 
-        emp.get('works_for').set({name:"Marketing"});//6
+        emp.on('nested-change', function () {
+            ok(true, "Fired emp nested-change...");
+        });
+
+        emp.get('works_for').on('nested-change', function () {
+            ok(true, "Fired emp:works_for nested-change...");
+        });
+
+
+        emp.get('works_for').set({name:"Marketing"});//6+2(nc)
 
     });
 
-    test("child `add`", 19, function () {
+    test("child `add`", 26, function () {
 
         /*emp.on('all',function(event){
          ok(true,"Fired emp " + event);
@@ -616,6 +647,9 @@ $(document).ready(function () {
         emp.on('change:dependents[0]', function () {
             ok(true, "Fired emp change:dependents[0]...");
         });
+        emp.on('nested-change', function () {
+            ok(true, "Fired emp nested-change...");
+        });
 
 
         emp.get('dependents').on('change', function () {
@@ -642,13 +676,16 @@ $(document).ready(function () {
         emp.get('dependents').on('reset', function () {
             ok(true, "Fired dependents reset...");
         });
+        emp.get('dependents').on('nested-change', function () {
+            ok(true, "Fired emp.dependents nested-change...");
+        });
 
-        emp.get("dependents").at(0).set({age:15});//6
+        emp.get("dependents").at(0).set({age:15});//6+1(nc)
 
-        emp.get("dependents").add(child2);//2
-        emp.get("dependents").add([child3, child4]);//4
-        emp.get("dependents").remove([child1, child4]);//5
-        emp.get("dependents").reset();//2
+        emp.get("dependents").add(child2);//2+1(nc)
+        emp.get("dependents").add([child3, child4]);//4 + 2 (nc)
+        emp.get("dependents").remove([child1, child4]);//5 + 2(nc)
+        emp.get("dependents").reset();//2 + 1(nc)
 
     });
 

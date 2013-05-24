@@ -189,6 +189,10 @@
                 eventAvailable;
             // Change the event name to a fully qualified path.
             _.size(opt) > 1 && (eventPath = opt[1]);
+
+            //Don't bubble nested-change events
+            if ("nested-change" === eventType) return;
+
             // Find the specific object in the collection which has changed.
             if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject) {
                 var pathTokens = getPathArray(eventPath),
@@ -231,8 +235,14 @@
                 this.changed[relationKey] = relationValue;
             }
 
+
             // Bubble up event to parent `model` with new changed arguments.
             this.trigger.apply(this, args);
+
+            //Create a nested-change event
+            if (("change" !== eventType) || (3 == args.length)) {
+                this.trigger.call(this, "nested-change", relationKey, args);
+            }
 
             // Remove `eventPath` from `_proxyCalls`,
             // if `eventPath` and `_proxCalls` are available,
