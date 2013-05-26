@@ -19,7 +19,7 @@
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
     var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
-        defaultEvents, AssociatedModel, pathChecker;
+        CollectionProto, defaultEvents, AssociatedModel, pathChecker;
 
     if (typeof window === 'undefined') {
         _ = require('underscore');
@@ -35,6 +35,7 @@
     BackboneModel = Backbone.Model;
     BackboneCollection = Backbone.Collection;
     ModelProto = BackboneModel.prototype;
+    CollectionProto = BackboneCollection.prototype;
     pathChecker = /[\.\[\]]+/g;
 
     // Built-in Backbone `events`.
@@ -334,10 +335,9 @@
         _.find(parents, function (parent) {
             //Iterate over relations
             relation = _.find(parent.relations, function (rel) {
-                if (parent.get(rel.key) == target)
-                    return rel;
+                return parent.get(rel.key) === target;
             }, this);
-            if (relation) return parent;//break;
+            if (relation) return true;//break;
         }, this);
 
         //If we found a relation and it has a mapping function
@@ -347,45 +347,19 @@
         return models;
     };
 
-    //Proxy Backbone's Collection `set` method
-    var set = Backbone.Collection.prototype.set;
-    Backbone.Collection.prototype.set = function (models, options) {
-        var parents = this.parents;
-        //Short-circuit if this Collection doesn't hold AssociatedModels
-        if (!( this.model.prototype instanceof Backbone.AssociatedModel ) || !parents) {
-            return set.apply(this, arguments);
+    var proxies = {};
+    // Proxy Backbone collection methods
+    _.each(['set', 'remove', 'reset'], function(method){
+        proxies[method] = BackboneCollection.prototype[method];
+
+        CollectionProto[method] = function (models, options) {
+            //Short-circuit if this collection doesn't hold `AssociatedModels`
+            if (this.model.prototype instanceof AssociatedModel && this.parents) {
+                //Find a map function if available and perform a transformation
+                arguments[0] = map2models(this.parents, this, models);
+            }
+            return proxies[method].apply(this, arguments);
         }
-        //Find a map function if available and perform a transformation
-        arguments[0] = map2models(parents, this, models);
-        return set.apply(this, arguments);
-    };
-
-
-    //Proxy Backbone's Collection `remove` method
-    var remove = Backbone.Collection.prototype.remove;
-    Backbone.Collection.prototype.remove = function (models, options) {
-        var parents = this.parents;
-        //Short-circuit if this collection doesn't hold `AssociatedModels`
-        if (!( this.model.prototype instanceof Backbone.AssociatedModel )) {
-            return remove.apply(this, arguments);
-        }
-        //Find a map function if available and perform a transformation
-        arguments[0] = map2models(parents, this, models);
-        return remove.apply(this, arguments);
-    };
-
-    //Proxy Backbone's Collection `reset` method
-    var reset = Backbone.Collection.prototype.reset;
-    Backbone.Collection.prototype.reset = function (models, options) {
-        var parents = this.parents;
-        //Short-circuit if this collection doesn't hold `AssociatedModels`
-        if (!( this.model.prototype instanceof Backbone.AssociatedModel )) {
-            return reset.apply(this, arguments);
-        }
-        //Find a map function if available and perform a transformation
-        arguments[0] = map2models(parents, this, models);
-        return reset.apply(this, arguments);
-    };
-
+    });
 
 }).call(this);
