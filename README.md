@@ -615,6 +615,6 @@ Added support for cyclic object graphs.
 Initial Backbone-associations release.
 
 ## <a name="create"/> Authors & Contributors
-* Core Team : Dhruva Ray, Jaynti Kanani
+* Core Team : [Dhruva Ray](https://github.com/dhruvaray), [Jaynti Kanani](https://github.com/jdkanani)
 * Other contributors : [here](https://github.com/dhruvaray/backbone-associations/contributors)
 
