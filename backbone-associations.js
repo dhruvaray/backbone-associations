@@ -117,15 +117,21 @@
                 _.each(this.relations, function (relation) {
                     var relationKey = relation.key, relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
+                        map = relation.map,
                         val, relationOptions, data, relationValue;
+
+                    // Get class if relation is stored as a string.
+                    relatedModel && _.isString(relatedModel) && (relatedModel = eval(relatedModel));
+                    collectionType && _.isString(collectionType) && (collectionType = eval(collectionType));
+                    // Merge in `options` specific to this relation.
+                    relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
+
                     if (attributes[relationKey]) {
                         //Get value of attribute with relation key in `val`.
                         val = _.result(attributes, relationKey);
-                        // Get class if relation is stored as a string.
-                        relatedModel && _.isString(relatedModel) && (relatedModel = eval(relatedModel));
-                        collectionType && _.isString(collectionType) && (collectionType = eval(collectionType));
-                        // Merge in `options` specific to this relation.
-                        relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
+                        //Map `val` if a transformation function is provided.
+                        val = map ? map(val) : val;
+
                         // If `relation.type` is `Backbone.Many`,
                         // create `Backbone.Collection` with passed data and perform Backbone `set`.
                         if (relation.type === Backbone.Many) {
@@ -190,7 +196,7 @@
             // Change the event name to a fully qualified path.
             _.size(opt) > 1 && (eventPath = opt[1]);
 
-            //Don't bubble nested-change events
+            //Don't bubble `nested-change` events
             if ("nested-change" === eventType) return;
 
             // Find the specific object in the collection which has changed.
@@ -318,5 +324,67 @@
     var getPathArray = function (path) {
         if (path === '') return [''];
         return _.isString(path) ? (path.match(delimiters)) : path || [];
-    }
+    };
+
+    //Infer the relation from the collection's parents and find the appropriate map for the passed in `models`
+    var map2models = function (parents, target, models) {
+        var relation;
+        //Iterate over collection's parents
+        _.find(parents, function (parent) {
+            //Iterate over relations
+            relation = _.find(parent.relations, function (rel) {
+                if (parent.get(rel.key) == target)
+                    return rel;
+            }, this);
+            if (relation) return parent;//break;
+        }, this);
+
+        //If we found a relation and it has a mapping function
+        if (relation && relation.map) {
+            return relation.map(models)
+        }
+        return models;
+    };
+
+    //Proxy Backbone's Collection `set` method
+    var set = Backbone.Collection.prototype.set;
+    Backbone.Collection.prototype.set = function (models, options) {
+        var parents = this.parents;
+        //Short-circuit if this Collection doesn't hold AssociatedModels
+        if (!( this.model.prototype instanceof Backbone.AssociatedModel ) || !parents) {
+            return set.apply(this, arguments);
+        }
+        //Find a map function if available and perform a transformation
+        arguments[0] = map2models(parents, this, models);
+        return set.apply(this, arguments);
+    };
+
+
+    //Proxy Backbone's Collection `remove` method
+    var remove = Backbone.Collection.prototype.remove;
+    Backbone.Collection.prototype.remove = function (models, options) {
+        var parents = this.parents;
+        //Short-circuit if this collection doesn't hold `AssociatedModels`
+        if (!( this.model.prototype instanceof Backbone.AssociatedModel )) {
+            return remove.apply(this, arguments);
+        }
+        //Find a map function if available and perform a transformation
+        arguments[0] = map2models(parents, this, models);
+        return remove.apply(this, arguments);
+    };
+
+    //Proxy Backbone's Collection `reset` method
+    var reset = Backbone.Collection.prototype.reset;
+    Backbone.Collection.prototype.reset = function (models, options) {
+        var parents = this.parents;
+        //Short-circuit if this collection doesn't hold `AssociatedModels`
+        if (!( this.model.prototype instanceof Backbone.AssociatedModel )) {
+            return reset.apply(this, arguments);
+        }
+        //Find a map function if available and perform a transformation
+        arguments[0] = map2models(parents, this, models);
+        return reset.apply(this, arguments);
+    };
+
+
 }).call(this);

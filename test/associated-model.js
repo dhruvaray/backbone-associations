@@ -22,6 +22,7 @@ $(document).ready(function () {
 
     var Location = Backbone.AssociatedModel.extend({
         defaults:{
+            id:-1,
             add1:"",
             add2:null,
             zip:"",
@@ -29,12 +30,44 @@ $(document).ready(function () {
         }
     });
 
+    //location store
+    var locations = new Backbone.Collection([
+        new Location({id:3, add1:"loc3"}),
+        new Location({id:4, add1:"loc4"}),
+        new Location({id:5, add1:"loc5"}),
+        new Location({id:6, add1:"loc6"}),
+        new Location({id:7, add1:"loc7"}),
+        new Location({id:8, add1:"loc8"})
+
+    ]);
+
+    var map2locs = function (ids) {
+
+        if (ids instanceof Backbone.Collection) return ids;
+        if (_.isArray(ids) && ids.length > 0) {
+            if (_.isObject(ids[0])) //dummy logic to check whether array has ids or objects
+                return ids;
+        } else {
+            if (_.isObject(ids))
+                return ids;
+        }
+
+        ids = _.isArray(ids) ? ids.slice() : [ids];
+        return _.map(ids, function (id) {
+            var mapped = _.find(locations.models, function (m) {
+                if (m.get('id') == id) return m;
+            });
+            return mapped ? mapped : id;
+        });
+    };
+
     var Project = Backbone.AssociatedModel.extend({
         relations:[
             {
                 type:Backbone.Many,
                 key:'locations',
-                relatedModel:Location
+                relatedModel:Location,
+                map:map2locs
             }
         ],
         defaults:{
@@ -55,7 +88,8 @@ $(document).ready(function () {
             {
                 type:Backbone.Many,
                 key:'locations',
-                relatedModel:Location
+                relatedModel:Location,
+                map:map2locs
             }
         ],
         defaults:{
@@ -79,12 +113,27 @@ $(document).ready(function () {
         }
     });
 
+    //dept store
+    var store = new Backbone.Collection([new Department({number:99, name:"sales"}), new Department({number:100, name:"admin"})]);
+
+    var map2dept = function (id) {
+
+        if (id instanceof Department) return id;
+        if (_.isObject(id)) return id;
+
+        var found = _.find(store.models, function (m) {
+            return m.get('number') == id
+        });
+        return found ? found : id;
+    };
+
     Employee = Backbone.AssociatedModel.extend({
         relations:[
             {
                 type:Backbone.One,
                 key:'works_for',
-                relatedModel:Department
+                relatedModel:Department,
+                map:map2dept
             },
             {
                 type:Backbone.Many,
@@ -180,14 +229,16 @@ $(document).ready(function () {
             loc1 = new Location({
                 add1:"P.O Box 3899",
                 zip:"94404",
-                state:"CA"
+                state:"CA",
+                id:"1"
 
             });
 
             loc2 = new Location({
                 add1:"P.O Box 4899",
                 zip:"95502",
-                state:"CA"
+                state:"CA",
+                id:"2"
             });
 
             project1 = new Project({
@@ -538,6 +589,37 @@ $(document).ready(function () {
         emp.get('works_for').get("locations").at(0).set('zip', 94403);//10 + 4 + 4(nc)
     });
 
+    test("transform from store", 16, function () {
+        emp.set('works_for', 99);
+        ok(emp.get('works_for').get('name') == "sales", "Mapped id to dept instance");
+
+        emp.get('works_for').set('locations', [3, 4]);
+        ok(emp.get('works_for').get('locations').length == 2, "Mapped ids to location instances");
+        ok(emp.get('works_for').get('locations').at(0).get("id") == 3);
+        ok(emp.get('works_for').get('locations').at(1).get("id") == 4);
+
+        emp.get('works_for').get('locations').add(5);
+
+        ok(emp.get('works_for').get('locations').length == 3, "Mapped ids to location instances");
+        ok(emp.get('works_for').get('locations').at(2).get("id") == 5);
+
+        emp.get('works_for').get('locations').remove(3);
+        ok(emp.get('works_for').get('locations').length == 2);
+        ok(emp.get('works_for').get('locations').at(0).get("id") == 4);
+        ok(emp.get('works_for').get('locations').at(1).get("id") == 5);
+
+        emp.get('works_for').get('locations').reset([6, 7, 8]);
+        ok(emp.get('works_for').get('locations').length == 3);
+        ok(emp.get('works_for').get('locations').at(0).get("id") == 6);
+        ok(emp.get('works_for').get('locations').at(1).get("id") == 7);
+        ok(emp.get('works_for').get('locations').at(2).get("id") == 8);
+
+        emp.get('works_for').get('locations').set([3, 7]);
+        ok(emp.get('works_for').get('locations').length == 2);
+        ok(emp.get('works_for').get('locations').at(0).get("id") == 7);
+        ok(emp.get('works_for').get('locations').at(1).get("id") == 3);
+
+    });
 
     test("add multiple refs to the same collection", 6, function () {
 
@@ -712,14 +794,14 @@ $(document).ready(function () {
         var json2 = emp.toJSON();
         var rawJson2 = {"works_for":{"controls":[
             {"locations":[
-                {"add1":"P.O Box 3899", "add2":null, "zip":"94404", "state":"CA"}
+                {"add1":"P.O Box 3899", "add2":null, "id":"1", "zip":"94404", "state":"CA"}
             ], "name":"Project X", "number":"2"},
             {"locations":[
-                {"add1":"P.O Box 4899", "add2":null, "zip":"95502", "state":"CA"}
+                {"add1":"P.O Box 4899", "add2":null, "id":"2", "zip":"95502", "state":"CA"}
             ], "name":"Project Y", "number":"2"}
         ], "locations":[
-            {"add1":"P.O Box 3899", "add2":null, "zip":"94404", "state":"CA"},
-            {"add1":"P.O Box 4899", "add2":null, "zip":"95502", "state":"CA"}
+            {"add1":"P.O Box 3899", "add2":null, "id":"1", "zip":"94404", "state":"CA"},
+            {"add1":"P.O Box 4899", "add2":null, "id":"2", "zip":"95502", "state":"CA"}
         ], "name":"R&D", "number":"23"}, "dependents":[
             {"fname":"Jane", "lname":"Smith", "sex":"F", "age":0, "relationship":"C"},
             {"fname":"Edgar", "lname":"Smith", "sex":"M", "age":0, "relationship":"P"}
