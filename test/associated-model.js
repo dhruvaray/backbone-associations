@@ -621,6 +621,75 @@ $(document).ready(function () {
 
     });
 
+    test("Issue  #35", 4, function () {
+
+        var FieldInputType = Backbone.Model.extend({
+            defaults:{
+                id:"-1",
+                type:"",
+                source:"<div/>"
+            }
+        });
+
+        store = new Backbone.Collection([
+            {id:1, type:"text", source:"<input type='text'/>"},
+            {id:2, type:'email', source:"<input type='email'/>"
+            }
+        ], {model:FieldInputType});
+
+        map2model = function (id) {
+            return store.findWhere({type:id});
+        };
+
+        var Field = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'type',
+                    relatedModel:FieldInputType,
+                    map:'map2model'
+                }
+            ],
+
+            defaults:{
+                type:undefined,
+                data:undefined,
+                name:""
+            },
+
+
+            //Custom over-ride for James-demo to simulate a network
+            sync:function (method, model, options) {
+                var name = "Field" + Math.floor((Math.random() * 10) + 1);
+                return options.success.call(this, {
+                    type:"text",
+                    data:"value to be shown on UI",
+                    name:name
+                }, options);
+            }
+
+        });
+
+        //Scenario 1 : Local set/get
+        var second = new Field({name:'First Name', type:'text' });
+        var job = new Field({name:'Job', type:'email'});
+
+        equal(second.get('type').get('source'), "<input type='text'/>");
+        equal(job.get('type').get('source'), "<input type='email'/>");
+
+        //Scenario 2 : Over the wire set/get
+        var first = new Field();
+        first.fetch();
+
+        equal(first.get('type').get('source'), "<input type='text'/>");
+
+        //Scenario 3: Set the id to a different value at a later stage
+        second.set('type', "email");
+        equal(second.get('type').get('source'), "<input type='email'/>");
+
+
+    });
+
     test("add multiple refs to the same collection", 6, function () {
 
         project2.get("locations").add(loc1);

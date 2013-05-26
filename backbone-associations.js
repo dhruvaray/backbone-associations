@@ -120,9 +120,10 @@
                         map = relation.map,
                         val, relationOptions, data, relationValue;
 
-                    // Get class if relation is stored as a string.
+                    //Get class if relation and map is stored as a string.
                     relatedModel && _.isString(relatedModel) && (relatedModel = eval(relatedModel));
                     collectionType && _.isString(collectionType) && (collectionType = eval(collectionType));
+                    map && _.isString(map) && (map = eval(map));
                     // Merge in `options` specific to this relation.
                     relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
 
