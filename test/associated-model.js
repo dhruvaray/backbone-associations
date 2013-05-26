@@ -637,17 +637,15 @@ $(document).ready(function () {
             }
         ], {model:FieldInputType});
 
-        map2model = function (id) {
-            return store.findWhere({type:id});
-        };
-
         var Field = Backbone.AssociatedModel.extend({
             relations:[
                 {
                     type:Backbone.One,
                     key:'type',
                     relatedModel:FieldInputType,
-                    map:'map2model'
+                    map: function (id) {
+                        return store.findWhere({type: id});
+                    }
                 }
             ],
 
