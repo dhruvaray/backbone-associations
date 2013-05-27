@@ -79,7 +79,8 @@
                 //Create a map for each unique object whose attributes we want to set
                 modelMap || (modelMap = {});
                 if (attr.match(pathChecker)) {
-                    var pathTokens = getPathArray(attr), initials = _.initial(pathTokens), last = pathTokens[pathTokens.length - 1],
+                    var pathTokens = getPathArray(attr), initials = _.initial(pathTokens),
+                        last = pathTokens[pathTokens.length - 1],
                         parentModel = this.get(initials);
                     if (parentModel instanceof AssociatedModel) {
                         obj = modelMap[parentModel.cid] || (modelMap[parentModel.cid] = {'model':parentModel, 'data':{}});
@@ -191,18 +192,22 @@
                 opt = args[0].split(":"),
                 eventType = opt[0],
                 eventObject = args[1],
+                options = args.length > 0 && args[args.length - 1],
+                simulated = options.simulated,
+                simulatedChange = "nested-change" == eventType,
                 indexEventObject = -1,
                 _proxyCalls = relationValue._proxyCalls,
                 eventPath,
-                eventAvailable;
+                basecolEventPath,
+                triggerCollectionEvent = false;
             // Change the event name to a fully qualified path.
             _.size(opt) > 1 && (eventPath = opt[1]);
 
             //Don't bubble `nested-change` events
-            if ("nested-change" === eventType) return;
+            if (simulatedChange) return;
 
             // Find the specific object in the collection which has changed.
-            if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject) {
+            if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject && !simulated) {
                 var pathTokens = getPathArray(eventPath),
                     initialTokens = _.initial(pathTokens), colModel;
 
@@ -210,14 +215,19 @@
                     if (eventObject === model) return true;
                     if (model) {
                         var changedModel = model.get(initialTokens);
-                        if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) && eventObject === changedModel) return true;
+                        if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) &&
+                            eventObject === changedModel) return true;
                         changedModel = model.get(pathTokens);
-                        return ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) && eventObject === changedModel);
+                        return ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
+                            && eventObject === changedModel);
                     }
                     return false;
                 });
                 colModel && (indexEventObject = relationValue.indexOf(colModel));
             }
+
+            triggerCollectionEvent = ("change" == eventType && !eventPath && indexEventObject !== -1);
+
             // Manipulate `eventPath`.
             eventPath = relationKey + (indexEventObject !== -1 ?
                 "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
@@ -226,16 +236,12 @@
             // If event has been already triggered as result of same source `eventPath`,
             // no need to re-trigger event to prevent cycle.
             if (_proxyCalls) {
-                eventAvailable = _.find(_proxyCalls, function (value, eventKey) {
-                    return eventPath.indexOf(eventKey, eventPath.length - eventKey.length) !== -1;
-                });
-                if (eventAvailable) return this;
+                if (this._isEventAvailable.call(this, _proxyCalls, eventPath)) return this;
             } else {
                 _proxyCalls = relationValue._proxyCalls = {};
             }
             // Add `eventPath` in `_proxyCalls` to keep track of already triggered `event`.
             _proxyCalls[eventPath] = true;
-
 
             //Set up previous attributes correctly.
             if ("change" === eventType) {
@@ -243,23 +249,58 @@
                 this.changed[relationKey] = relationValue;
             }
 
-
             // Bubble up event to parent `model` with new changed arguments.
             this.trigger.apply(this, args);
 
-            //Create a nested-change event
-            if (("change" !== eventType) || (3 == args.length)) {
-                this.trigger.call(this, "nested-change", relationKey, args);
+            // Remove `eventPath` from `_proxyCalls`,
+            // if `eventPath` and `_proxyCalls` are available,
+            // which allow event to be triggered on for next operation of `set`.
+            if (_proxyCalls && eventPath) delete _proxyCalls[eventPath];
+
+            //Simulate events to ease application programming with an object graph
+            //1. Create a nested-change event
+            if (!simulated && this._fireNestedChange(eventType, eventPath, args[2])) {
+                var ncargs = [];
+                ncargs.push("nested-change");
+                ncargs.push(relationKey);
+                ncargs.push.apply(ncargs, args);
+                ncargs.push({simulated:true});
+                this.trigger.apply(this, ncargs);
+            }
+            //2. Create a collection modified event without specifying the item in the collection which was modified
+            if (triggerCollectionEvent) {
+                basecolEventPath = relationKey;
+                if (!this._isEventAvailable.call(this, _proxyCalls, basecolEventPath)) {
+                    var ccargs = [];
+                    ccargs.push.apply(ccargs, args);
+                    ccargs.push({simulated:true});
+                    ccargs[0] = eventType + ":" + basecolEventPath;
+
+                    _proxyCalls[basecolEventPath] = true;
+                    this.trigger.apply(this, ccargs);
+                    if (_proxyCalls && basecolEventPath) delete _proxyCalls[basecolEventPath];
+
+                }
+
             }
 
-            // Remove `eventPath` from `_proxyCalls`,
-            // if `eventPath` and `_proxCalls` are available,
-            // which allow event to be triggered on for next operation of `set`.
-            if (eventPath && _proxyCalls) {
-                delete _proxyCalls[eventPath];
-            }
             return this;
         },
+
+        //Determine whether to fire a nested-change event for grand-parents and higher objects
+        _fireNestedChange:function (eventType, fqpn, value) {
+            return (
+                ("change" !== eventType) ||
+                    (this.getAttr.call(this, fqpn) != value) //Not a change:attribute event
+                );
+        },
+
+        _isEventAvailable:function (_proxyCalls, path) {
+            return _.find(_proxyCalls, function (value, eventKey) {
+                return path.indexOf(eventKey, path.length - eventKey.length) !== -1;
+            });
+        },
+
         // Returns New `collection` of type `relation.relatedModel`.
         _createCollection:function (type) {
             var collection, relatedModel = type;
@@ -349,7 +390,7 @@
 
     var proxies = {};
     // Proxy Backbone collection methods
-    _.each(['set', 'remove', 'reset'], function(method){
+    _.each(['set', 'remove', 'reset'], function (method) {
         proxies[method] = BackboneCollection.prototype[method];
 
         CollectionProto[method] = function (models, options) {

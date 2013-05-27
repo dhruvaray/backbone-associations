@@ -527,7 +527,7 @@ $(document).ready(function () {
         emp.set('works_for', dept1);//0
     });
 
-    test("child `change in collection`", 18, function () {
+    test("child `change in collection`", 22, function () {
         emp.get('works_for').get('locations').at(0).on('change:zip', function () {
             ok(true, "Fired works_for locations0:zip change...");
         });
@@ -540,29 +540,16 @@ $(document).ready(function () {
             ok(true, "Fired works_for locations0 change...");
         });
 
+        emp.get('works_for').on('change:locations', function () {
+            ok(true, "Fired emp.works_for change:locations...");
+        });
+
         emp.get('works_for').on('change:locations[0].zip', function () {
             ok(true, "Fired emp.works_for change:locations[0].zip...");
         });
 
         emp.get('works_for').on('change:locations[0]', function () {
             ok(true, "Fired emp.works_for change:locations[0]...");
-        });
-
-        emp.on('change:works_for.locations[0].zip', function () {
-            ok(true, "Fired emp change:works_for.locations[0].zip...");
-        });
-
-        emp.on('change:works_for.locations[0]', function () {
-            ok(true, "Fired emp change:works_for.locations[0]...");
-        });
-
-
-        emp.on('change:works_for.controls[0].locations[0].zip', function () {
-            ok(true, "Fired emp change:works_for.controls[0].locations[0].zip...");
-        });
-
-        emp.on('change:works_for.controls[0].locations[0]', function () {
-            ok(true, "Fired emp change:works_for.controls[0].locations[0]...");
         });
 
         emp.get('works_for').on('change:controls[0].locations[0].zip', function () {
@@ -573,6 +560,34 @@ $(document).ready(function () {
             ok(true, "Fired emp.works_for change:controls[0].locations[0]...");
         });
 
+        emp.get('works_for').on('change:controls.locations', function () {
+            ok(true, "Fired emp.works_for change:controls.locations...");
+        });
+
+        emp.on('change:works_for.locations[0].zip', function () {
+            ok(true, "Fired emp change:works_for.locations[0].zip...");
+        });
+
+        emp.on('change:works_for.locations[0]', function () {
+            ok(true, "Fired emp change:works_for.locations[0]...");
+        });
+
+        emp.on('change:works_for.locations', function () {
+            ok(true, "Fired emp change:works_for.locations...");
+        });
+
+        emp.on('change:works_for.controls[0].locations[0].zip', function () {
+            ok(true, "Fired emp change:works_for.controls[0].locations[0].zip...");
+        });
+
+        emp.on('change:works_for.controls[0].locations[0]', function () {
+            ok(true, "Fired emp change:works_for.controls[0].locations[0]...");
+        });
+
+        emp.on('change:works_for.controls.locations', function () {
+            ok(true, "Fired emp change:works_for.controls.locations...");
+        });
+
         emp.on('nested-change', function () {
             ok(true, "Fired emp nested-change...");
         });
@@ -581,12 +596,9 @@ $(document).ready(function () {
             ok(true, "Fired emp:works_for nested-change...");
         });
 
-        emp.get('works_for').get('locations').on('nested-change', function () {
-            ok(true, "Fired emp:works_for:locations nested-change...");
-        });
+        emp.get('works_for').get("locations").at(0).set('zip', 94403);
 
 
-        emp.get('works_for').get("locations").at(0).set('zip', 94403);//10 + 4 + 4(nc)
     });
 
     test("transform from store", 16, function () {
@@ -643,8 +655,8 @@ $(document).ready(function () {
                     type:Backbone.One,
                     key:'type',
                     relatedModel:FieldInputType,
-                    map: function (id) {
-                        return store.findWhere({type: id});
+                    map:function (id) {
+                        return store.findWhere({type:id});
                     }
                 }
             ],
@@ -685,6 +697,75 @@ $(document).ready(function () {
         second.set('type', "email");
         equal(second.get('type').get('source'), "<input type='email'/>");
 
+
+    });
+
+
+    test("Issue #40", 3, function () {
+
+        var CartItem = Backbone.AssociatedModel.extend({
+            defaults:{
+                qty:0
+            }
+        });
+
+        var Cart = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.Many,
+                    key:'items',
+                    relatedModel:CartItem
+                }
+            ],
+            getCartQty:function () {
+                return _.reduce(this.get('items').models, function (memo, item) {
+                    return memo + item.get('qty');
+                }, 0);
+            },
+
+            defaults:{
+                items:[]
+            }
+        });
+
+        var Account = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'cart',
+                    relatedModel:Cart
+                }
+            ],
+            defaults:{
+                cart:undefined
+            }
+        });
+
+        var a = new Account();
+        var c = new Cart();
+
+        a.set('cart', c);
+
+        a.once('change:cart.items', function () {
+            equal(a.get('cart').getCartQty(), 12);
+        });
+
+        var ci1 = new CartItem({qty:5});
+        var ci2 = new CartItem({qty:7});
+        c.set('items', [ci1, ci2]);
+
+        a.on('add:cart.items', function () {
+            equal(a.get('cart').getCartQty(), 19);
+        });
+
+        var ci3 = new CartItem({qty:7});
+        c.get('items').add(ci3);
+
+        a.once('change:cart.items', function () {
+            equal(a.get('cart').getCartQty(), 24);
+        });
+
+        c.get('items').at(0).set('qty', 10);
 
     });
 
@@ -765,7 +846,7 @@ $(document).ready(function () {
 
     });
 
-    test("child `add`", 26, function () {
+    test("child `add`", 27, function () {
 
         /*emp.on('all',function(event){
          ok(true,"Fired emp " + event);
@@ -796,10 +877,12 @@ $(document).ready(function () {
         emp.on('change:dependents[0]', function () {
             ok(true, "Fired emp change:dependents[0]...");
         });
+        emp.on('change:dependents', function () {
+            ok(true, "Fired emp change:dependents...");
+        });
         emp.on('nested-change', function () {
             ok(true, "Fired emp nested-change...");
         });
-
 
         emp.get('dependents').on('change', function () {
             ok(true, "Fired dependents change...");
@@ -825,16 +908,13 @@ $(document).ready(function () {
         emp.get('dependents').on('reset', function () {
             ok(true, "Fired dependents reset...");
         });
-        emp.get('dependents').on('nested-change', function () {
-            ok(true, "Fired emp.dependents nested-change...");
-        });
 
-        emp.get("dependents").at(0).set({age:15});//6+1(nc)
+        emp.get("dependents").at(0).set({age:15});//6+1(nc) + 1(collection changed)
 
         emp.get("dependents").add(child2);//2+1(nc)
         emp.get("dependents").add([child3, child4]);//4 + 2 (nc)
         emp.get("dependents").remove([child1, child4]);//5 + 2(nc)
-        emp.get("dependents").reset();//2 + 1(nc)
+        emp.get("dependents").reset();//2+1(nc)
 
     });
 
@@ -1282,7 +1362,7 @@ $(document).ready(function () {
         }
     });
 
-    test("set,trigger", 13, function () {
+    test("set,trigger", 14, function () {
         node1.on("change:parent", function () {
             node1.trigger("nestedevent", arguments);
             ok(true, "node1 change:parent fired...");
@@ -1342,7 +1422,7 @@ $(document).ready(function () {
 
         node1.set({parent:node2, children:[node3]});//2+1
         node2.set({parent:node3, children:[node1]});//4+2
-        node3.set({parent:node1, children:[node2]});//4
+        node3.set({parent:node1, children:[node2]});//4+1(collection changed)
     });
 
     test("toJSON", 1, function () {
