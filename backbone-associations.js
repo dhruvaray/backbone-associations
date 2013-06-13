@@ -42,6 +42,8 @@
     defaultEvents = ["change", "add", "remove", "reset", "destroy",
         "sync", "error", "sort", "request"];
 
+    Backbone.Associations = {};
+
     // Backbone.AssociatedModel
     // --------------
 
@@ -49,7 +51,7 @@
     Backbone.Many = "Many";
     Backbone.One = "One";
     // Define `AssociatedModel` (Extends Backbone.Model).
-    AssociatedModel = Backbone.AssociatedModel = BackboneModel.extend({
+    AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({
         // Define relations with Associated Model.
         relations:undefined,
         // Define `Model` property which can keep track of already fired `events`,
@@ -405,6 +407,6 @@
 
 
     // Version
-    AssociatedModel.VERSION = "0.4.2";
+    Backbone.Associations.VERSION = "0.4.2";
 
 }).call(this);
