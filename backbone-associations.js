@@ -176,7 +176,7 @@
                         var original = this.attributes[relationKey];
                         if (updated) {
                             updated.parents = updated.parents || [];
-                            (updated.parents.indexOf(this) == -1) && updated.parents.push(this);
+                            (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
                         } else if (original && original.parents.length > 0) {
                             original.parents = _.difference(original.parents, [this]);
                         }
