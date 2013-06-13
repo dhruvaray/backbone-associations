@@ -42,14 +42,16 @@
     defaultEvents = ["change", "add", "remove", "reset", "destroy",
         "sync", "error", "sort", "request"];
 
-    Backbone.Associations = {};
+    Backbone.Associations = {
+        VERSION: "0.4.2"
+    };
 
     // Backbone.AssociatedModel
     // --------------
 
     //Add `Many` and `One` relations to Backbone Object.
-    Backbone.Many = "Many";
-    Backbone.One = "One";
+    Backbone.Associations.Many = Backbone.Many = "Many";
+    Backbone.Associations.One = Backbone.One = "One";
     // Define `AssociatedModel` (Extends Backbone.Model).
     AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({
         // Define relations with Associated Model.
@@ -404,9 +406,4 @@
             return proxies[method].apply(this, arguments);
         }
     });
-
-
-    // Version
-    Backbone.Associations.VERSION = "0.4.2";
-
 }).call(this);
