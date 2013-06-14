@@ -1562,6 +1562,10 @@ $(document).ready(function () {
         }
     });
 
+    test("VERSION", 1, function() {
+        ok(Backbone.Associations.VERSION, "Backbone.Associations.VERSION exists");
+    });
+
     test("deepAttributes", 7, function() {
         var deepAttributes = Backbone.Associations.deepAttributes;
         var empAttributes = {
