@@ -43,7 +43,27 @@
         "sync", "error", "sort", "request"];
 
     Backbone.Associations = {
-        VERSION:"0.4.2"
+        VERSION:"0.4.2",
+        deepAttributes: function(obj) {
+            var recurse = Backbone.Associations.deepAttributes;
+            if (obj instanceof BackboneModel) {
+                return recurse(obj.attributes);
+            } else if (obj instanceof BackboneCollection) {
+                return obj.map(recurse);
+            } else if (_.isArray(obj)) {
+                return _.map(obj, recurse);
+            } else if (_.isObject(obj)) {
+                var attributes = {};
+                for (var prop in obj) {
+                    if(obj.hasOwnProperty(prop)) {
+                        attributes[prop] = recurse(obj[prop]);
+                    }
+                }
+                return attributes;
+            } else {
+                return obj;
+            }
+        }
     };
 
     // Backbone.AssociatedModel
