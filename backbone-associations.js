@@ -142,9 +142,9 @@
                         val, relationOptions, data, relationValue;
 
                     //Get class if relation and map is stored as a string.
-                    relatedModel && _.isString(relatedModel) && (relatedModel = eval(relatedModel));
-                    collectionType && _.isString(collectionType) && (collectionType = eval(collectionType));
-                    map && _.isString(map) && (map = eval(map));
+                    relatedModel && _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
+                    collectionType && _.isString(collectionType) && (collectionType = map2Scope(collectionType));
+                    map && _.isString(map) && (map = map2Scope(map));
                     // Merge in `options` specific to this relation.
                     relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
 
@@ -350,7 +350,7 @@
         // Returns New `collection` of type `relation.relatedModel`.
         _createCollection:function (type) {
             var collection, relatedModel = type;
-            _.isString(relatedModel) && (relatedModel = eval(relatedModel));
+            _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
             // Creates new `Backbone.Collection` and defines model class.
             if (relatedModel && relatedModel.prototype instanceof AssociatedModel) {
                 collection = new BackboneCollection();
@@ -450,6 +450,12 @@
     var getPathArray = function (path) {
         if (path === '') return [''];
         return _.isString(path) ? (path.match(delimiters)) : path || [];
+    };
+
+    var map2Scope = function (path) {
+        return _.reduce(path.split('.'), function (memo, elem) {
+            return memo[elem]
+        }, root);
     };
 
     //Infer the relation from the collection's parents and find the appropriate map for the passed in `models`
