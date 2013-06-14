@@ -724,7 +724,7 @@ $(document).ready(function () {
             },
 
             defaults:{
-                items:[]
+                items:undefined
             }
         });
 
@@ -766,6 +766,43 @@ $(document).ready(function () {
         });
 
         c.get('items').at(0).set('qty', 10);
+
+    });
+
+    test("Issue #31", 5, function () {
+
+        var Model1 = Backbone.AssociatedModel.extend({});
+        var Model2 = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:"model1",
+                    relatedModel:Model1
+                }
+            ]
+        });
+        var m2 = new Model2({id:1, model1:{id:2, name:"Name"}, version:"m2.0"});
+        var m1 = m2.get("model1");
+        m2.once("change:model1", function () {
+            //both the parent object and the child object have the updated values in the event handler
+            equal(m2.get('version'), "m2.1");
+            equal(m2.get('model1').get('name'), "Name2");
+        });
+
+        m2.get('model1').on("change", function () {
+            //both the parent object and the child object have the updated values in the event handler
+            equal(m2.get('version'), "m2.1");
+            equal(m2.get('model1').get('name'), "Name2");
+        })
+
+        // Fake server response : The response from server side can update m2 on success
+        m2.set({id:1, model1:{id:2, name:"Name2"}, version:"m2.1"});
+
+        equal(m1, m2.get("model1"));
+
+        //Should not trigger event in m2.get('model1').on("change", callback) as we have a diff model1 instance
+        m2.set({id:1, model1:{id:3, name:"Name3"}, version:"m2.1"});
+
 
     });
 
@@ -997,7 +1034,7 @@ $(document).ready(function () {
         });
 
         emp2.get('manager').set({'fname':'newEmp2'});
-        equal(emp2.get('fname'), 'newEmp2', "emp's fname should be canged");
+        equal(emp2.get('fname'), 'newEmp2', "emp's fname should be changed");
         equal(emp2.get('manager').get('fname'), 'newEmp2', "manager's fname should be canged");
     });
 
@@ -1040,6 +1077,33 @@ $(document).ready(function () {
         );
         equal(emp.get('works_for').get('number'), -1);
         equal(emp.get('works_for').get('type'), void 0);
+
+        emp.set('works_for', undefined);
+        emp.set(
+            {
+                works_for:{
+                    id:6,
+                    number:6
+                }
+            }
+        );
+        equal(emp.get('works_for').get('number'), 6);
+        emp.set(
+            {
+                works_for:{
+                    id:6,
+                    name:'PR'
+                }
+            }
+        );
+        equal(emp.get('works_for').get('number'), 6);
+        emp.set(
+            {
+                works_for:{
+                }
+            }
+        );
+        equal(emp.get('works_for').get('number'), -1);
 
     });
 
