@@ -471,8 +471,7 @@ $(document).ready(function () {
 
     });
 
-    test("child `change`", 18, function () {
-
+    test("child `change`", 17, function () {
         emp.on('change', function () {
             ok(true, "Fired emp change...");
         });
@@ -495,41 +494,22 @@ $(document).ready(function () {
 
             ok(true, "Fired emp change:works_for.name...");
         });
-
-        emp.on('nested-change', function () {
-            ok(true, "Fired emp nested-change...");
-        });
-
         emp.get('works_for').on('change', function () {
             ok(true, "Fired works_for change...");
         });
         emp.get('works_for').on('change:name', function () {
             ok(true, "Fired works_for dept:name change...");
-        });
-        emp.get('works_for').on('nested-change', function () {
-            ok(true, "Fired emp:works_for nested-change...");
-        });
-
-        emp.get('works_for').get('locations').at(0).on('change:zip', function () {
-            ok(true, "Fired works_for locations0:zip change...");
-        });
-
-        emp.get('works_for').get('locations').at(0).on('change', function () {
-            ok(true, "Fired works_for locations0 change...");
-        });
-        emp.get('works_for').get('locations').on('nested-change', function () {
-            ok(true, "Fired emp:works_for:locations nested-change...");
-        });
-        emp.set({'works_for.name':'Marketing'});//4+7+1(nc)
+        });        
+        emp.set({'works_for.name':'Marketing'});//4+7
         emp.set('works_for', {name:"Marketing", number:29});//2
         emp.set('works_for', undefined);//2
         emp.set('works_for', dept1);//2
         emp.set('works_for', dept1);//0
     });
 
-    test("child `change in collection`", 22, function () {
+    test("child `change in collection`", 21, function () {
         emp.get('works_for').get('locations').at(0).on('change:zip', function () {
-            ok(true, "Fired works_for locations0:zip change...");
+            ok(true, "Fired works_for locations[0]:zip change...");
         });
         emp.get('works_for').get('locations').at(0).on('change', function () {
             equal(true, emp.get('works_for').hasChanged());
@@ -542,7 +522,11 @@ $(document).ready(function () {
 
         emp.get('works_for').on('change:locations', function () {
             ok(true, "Fired emp.works_for change:locations...");
-        });
+        }); 
+        
+        emp.get('works_for').on('change:locations[*]', function () {
+            ok(true, "Fired emp.works_for change:locations[*]...");
+        });                
 
         emp.get('works_for').on('change:locations[0].zip', function () {
             ok(true, "Fired emp.works_for change:locations[0].zip...");
@@ -572,8 +556,8 @@ $(document).ready(function () {
             ok(true, "Fired emp change:works_for.locations[0]...");
         });
 
-        emp.on('change:works_for.locations', function () {
-            ok(true, "Fired emp change:works_for.locations...");
+        emp.on('change:works_for.locations[*]', function () {
+            ok(true, "Fired emp change:works_for.locations[*]...");
         });
 
         emp.on('change:works_for.controls[0].locations[0].zip', function () {
@@ -584,21 +568,18 @@ $(document).ready(function () {
             ok(true, "Fired emp change:works_for.controls[0].locations[0]...");
         });
 
-        emp.on('change:works_for.controls.locations', function () {
-            ok(true, "Fired emp change:works_for.controls.locations...");
+        emp.on('change:works_for.controls[*].locations[*]', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations[*]...");
         });
-
-        emp.on('nested-change', function () {
-            ok(true, "Fired emp nested-change...");
+        
+        emp.on('change:works_for.controls[*].locations[*].zip', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations[*].zip...");
         });
-
-        emp.get('works_for').on('nested-change', function () {
-            ok(true, "Fired emp:works_for nested-change...");
-        });
-
+        
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
-
-
+        ok(true);
+        emp.set('works_for.locations', undefined);
+        emp.set('works_for.locations', [loc1]);        
     });
 
     test("transform from store", 16, function () {
@@ -701,7 +682,7 @@ $(document).ready(function () {
     });
 
 
-    test("Issue #40", 3, function () {
+    test("Issue #40", 5, function () {
 
         var CartItem = Backbone.AssociatedModel.extend({
             defaults:{
@@ -718,13 +699,13 @@ $(document).ready(function () {
                 }
             ],
             getCartQty:function () {
-                return _.reduce(this.get('items').models, function (memo, item) {
+                return this.get('items').reduce(function (memo, item) {
                     return memo + item.get('qty');
                 }, 0);
             },
 
             defaults:{
-                items:undefined
+                items: undefined
             }
         });
 
@@ -737,36 +718,37 @@ $(document).ready(function () {
                 }
             ],
             defaults:{
-                cart:undefined
+                cart: undefined
             }
         });
 
         var a = new Account();
         var c = new Cart();
 
-        a.set('cart', c);
+        a.set('cart', c);        
 
-        a.once('change:cart.items', function () {
-            equal(a.get('cart').getCartQty(), 12);
-        });
+        a.on('change:cart.items', function () {
+            ok(true, "Fired change:cart.items");
+        });        
 
         var ci1 = new CartItem({qty:5});
         var ci2 = new CartItem({qty:7});
-        c.set('items', [ci1, ci2]);
-
-        a.on('add:cart.items', function () {
-            equal(a.get('cart').getCartQty(), 19);
+        c.set('items', [ci1, ci2]); // change:cart.items => 1
+        equal(a.get('cart').getCartQty(), 12); // => 1        
+        
+        a.once('add:cart.items', function () {
+            ok(true, "Fired add:cart.items");
         });
-
+        
         var ci3 = new CartItem({qty:7});
-        c.get('items').add(ci3);
+        c.get('items').add(ci3); // add:cart.items => 1
+        equal(a.get('cart').getCartQty(), 19); // => 1
 
-        a.once('change:cart.items', function () {
+        a.on('change:cart.items[*]', function () {
             equal(a.get('cart').getCartQty(), 24);
         });
 
-        c.get('items').at(0).set('qty', 10);
-
+        c.get('items').at(0).set('qty', 10); // change:cart.items[*] => 1
     });
 
     test("Issue #31", 5, function () {
@@ -838,67 +820,9 @@ $(document).ready(function () {
 
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
 
-    });
+    });    
 
-    test("child `raise nested events: Issue #15`", 8, function () {
-
-        emp.on('change', function () {
-            ok(true, "Fired emp change...");
-        });
-        emp.on('change:works_for', function () {
-            ok(true, "Fired emp change:works_for...");
-        });
-        emp.on('change:works_for.name', function () {
-            ok(true, "Fired emp change:works_for.name...");
-        });
-        emp.on('change:works_for.number', function () {
-            ok(true, "Fired emp change:works_for.number...");
-        });
-        emp.on('nestedevent:works_for', function () {
-            ok(true, "Fired emp nestedevent:works_for...");
-        });
-
-
-        emp.get('works_for').on('change', function () {
-            emp.get('works_for').trigger("nestedevent", arguments);
-            ok(true, "Fired works_for change...");
-        });
-        emp.get('works_for').on('change:name', function () {
-            ok(true, "Fired works_for dept:name change...");
-        });
-        emp.get('works_for').on('nestedevent', function () {
-            ok(true, "Fired works_for nestedevent...");
-        });
-
-        emp.on('nested-change', function () {
-            ok(true, "Fired emp nested-change...");
-        });
-
-        emp.get('works_for').on('nested-change', function () {
-            ok(true, "Fired emp:works_for nested-change...");
-        });
-
-
-        emp.get('works_for').set({name:"Marketing"});//6+2(nc)
-
-    });
-
-    test("child `add`", 27, function () {
-
-        /*emp.on('all',function(event){
-         ok(true,"Fired emp " + event);
-         });
-
-         emp.get('dependents').on('all',function(event){
-         ok(true,"Fired emp.dependents " + event);
-         });
-         emp.get('dependents').at(0).on('all',function(event){
-         ok(true,"Fired emp.dependents.at(0) " + event);
-         });*/
-
-        emp.on('add', function () {
-            ok(true, "Fired emp change...");
-        });
+    test("child `add`", 21, function () {        
         emp.on('add:dependents', function () {
             ok(true, "Fired emp add:dependents...");
         });
@@ -911,15 +835,19 @@ $(document).ready(function () {
         emp.on('change:dependents[0].age', function () {
             ok(true, "Fired emp change:dependents[0].age...");
         });
+        emp.on('change:dependents[*].age', function () {
+            ok(true, "Fired emp change:dependents[*].age...");
+        });
         emp.on('change:dependents[0]', function () {
             ok(true, "Fired emp change:dependents[0]...");
         });
+        emp.on('change:dependents[*]', function () {
+            ok(true, "Fired emp change:dependents[*]...");
+        });
         emp.on('change:dependents', function () {
             ok(true, "Fired emp change:dependents...");
-        });
-        emp.on('nested-change', function () {
-            ok(true, "Fired emp nested-change...");
-        });
+        });        
+
 
         emp.get('dependents').on('change', function () {
             ok(true, "Fired dependents change...");
@@ -946,13 +874,12 @@ $(document).ready(function () {
             ok(true, "Fired dependents reset...");
         });
 
-        emp.get("dependents").at(0).set({age:15});//6+1(nc) + 1(collection changed)
+        emp.get("dependents").at(0).set({age:15}); //8
 
-        emp.get("dependents").add(child2);//2+1(nc)
-        emp.get("dependents").add([child3, child4]);//4 + 2 (nc)
-        emp.get("dependents").remove([child1, child4]);//5 + 2(nc)
-        emp.get("dependents").reset();//2+1(nc)
-
+        emp.get("dependents").add(child2); //2
+        emp.get("dependents").add([child3, child4]); //4
+        emp.get("dependents").remove([child1, child4]); //5
+        emp.get("dependents").reset(); //2
     });
 
     test("Check clone while assigning prev attributes in event bubble-up", 1, function () {
@@ -1426,7 +1353,7 @@ $(document).ready(function () {
         }
     });
 
-    test("set,trigger", 14, function () {
+    test("set,trigger", 13, function () {
         node1.on("change:parent", function () {
             node1.trigger("nestedevent", arguments);
             ok(true, "node1 change:parent fired...");
@@ -1456,14 +1383,11 @@ $(document).ready(function () {
         });
         node2.on("nestedevent:children", function () {
             ok(true, "node2 nestedevent:children fired...");
-        });
-        node3.on("nestedevent", function () {
-            ok(true, "node3 nested fired...");
-        });
+        });        
 
         node1.on("change:children[0]", function () {
             ok(true, "node1 change:children[0] fired...");
-        });
+        });        
         node2.on("change:children[0]", function () {
             ok(true, "node2 change:children[0] fired...");
         });
@@ -1471,22 +1395,9 @@ $(document).ready(function () {
             ok(true, "node3 change:children[0] fired...");
         });
 
-
-        //For all the events which could possibly fire
-        /*node2.on('all',function(event){
-         ok(true,"node2 " + event);
-         });
-         node1.on('all',function(event){
-         ok(true,"node1 " + event);
-         });
-         node3.on('all',function(event){
-         ok(true,"node3 " + event);
-         });*/
-
-
         node1.set({parent:node2, children:[node3]});//2+1
         node2.set({parent:node3, children:[node1]});//4+2
-        node3.set({parent:node1, children:[node2]});//4+1(collection changed)
+        node3.set({parent:node1, children:[node2]});//4
     });
 
     test("toJSON", 1, function () {

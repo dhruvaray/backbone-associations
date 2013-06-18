@@ -239,54 +239,52 @@
                 opt = args[0].split(":"),
                 eventType = opt[0],
                 eventObject = args[1],
-                options = args.length > 0 && args[args.length - 1],
-                simulated = options.simulated,
-                simulatedChange = "nested-change" == eventType,
                 indexEventObject = -1,
                 _proxyCalls = relationValue._proxyCalls,
+                cargs,
                 eventPath,
-                basecolEventPath,
-                triggerCollectionEvent = false;
+                basecolEventPath;
+
             // Change the event name to a fully qualified path.
             _.size(opt) > 1 && (eventPath = opt[1]);
 
-            // Don't bubble `nested-change` events
-            if (simulatedChange) return;
-
             // Find the specific object in the collection which has changed.
-            if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject && !simulated) {
+            if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject) {
                 var pathTokens = getPathArray(eventPath),
                     initialTokens = _.initial(pathTokens), colModel;
 
                 colModel = relationValue.find(function (model) {
                     if (eventObject === model) return true;
-                    if (model) {
-                        var changedModel = model.get(initialTokens);
-                        if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) &&
-                            eventObject === changedModel) return true;
-                        changedModel = model.get(pathTokens);
-                        return ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
-                            && eventObject === changedModel);
-                    }
-                    return false;
+                    if (!model) return false;
+                    var changedModel = model.get(initialTokens);
+
+                    if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) &&
+                        eventObject === changedModel) return true;
+
+                    changedModel = model.get(pathTokens);
+
+                    return ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
+                        && eventObject === changedModel);
                 });
                 colModel && (indexEventObject = relationValue.indexOf(colModel));
+                if (indexEventObject === -1) return this;
             }
-
-            triggerCollectionEvent = ("change" == eventType && !eventPath && indexEventObject !== -1);
 
             // Manipulate `eventPath`.
             eventPath = relationKey + (indexEventObject !== -1 ?
                 "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
-            args[0] = eventType + ":" + eventPath;
+            if (/\[\*\]/g.test(eventPath)) return this;
+            basecolEventPath = eventPath.replace(/\[\d+\]/g, '[*]');
+
+            cargs = [];
+            cargs.push.apply(cargs, args);
+            cargs[0] = eventType + ":" + eventPath;
 
             // If event has been already triggered as result of same source `eventPath`,
             // no need to re-trigger event to prevent cycle.
-            if (_proxyCalls) {
-                if (this._isEventAvailable.call(this, _proxyCalls, eventPath)) return this;
-            } else {
-                _proxyCalls = relationValue._proxyCalls = {};
-            }
+            _proxyCalls = relationValue._proxyCalls = (_proxyCalls || {});
+            if (this._isEventAvailable.call(this, _proxyCalls, eventPath)) return this;
+
             // Add `eventPath` in `_proxyCalls` to keep track of already triggered `event`.
             _proxyCalls[eventPath] = true;
 
@@ -297,47 +295,20 @@
             }
 
             // Bubble up event to parent `model` with new changed arguments.
-            this.trigger.apply(this, args);
+            this.trigger.apply(this, cargs);
 
             // Remove `eventPath` from `_proxyCalls`,
             // if `eventPath` and `_proxyCalls` are available,
             // which allow event to be triggered on for next operation of `set`.
             if (_proxyCalls && eventPath) delete _proxyCalls[eventPath];
 
-            // Simulate events to ease application programming with an object graph
-            // #1 : Create a nested-change event
-            if (!simulated && this._fireNestedChange(eventType, eventPath, args[2])) {
-                var ncargs = [];
-                ncargs.push("nested-change");
-                ncargs.push(relationKey);
-                ncargs.push.apply(ncargs, args);
-                this.trigger.apply(this, ncargs);
-            }
-            // #2: Create a collection modified event without specifying the item in the collection which was modified
-            if (triggerCollectionEvent) {
-                basecolEventPath = relationKey;
-                if (!this._isEventAvailable.call(this, _proxyCalls, basecolEventPath)) {
-                    var ccargs = [];
-                    ccargs.push.apply(ccargs, args);
-                    ccargs.push({simulated:true});
-                    ccargs[0] = eventType + ":" + basecolEventPath;
-                    _proxyCalls[basecolEventPath] = true;
-                    this.trigger.apply(this, ccargs);
-                    if (_proxyCalls && basecolEventPath) delete _proxyCalls[basecolEventPath];
-
-                }
-
+            // Create a collection modified event with wild-card
+            if (eventPath !== basecolEventPath) {
+                cargs[0] = eventType + ":" + basecolEventPath;
+                this.trigger.apply(this, cargs);
             }
 
             return this;
-        },
-
-        // Determine whether to fire a nested-change event for grand-parents and higher objects
-        _fireNestedChange:function (eventType, fqpn, value) {
-            return (
-                ("change" !== eventType) ||
-                    (this._getAttr.call(this, fqpn) != value) //Not a change:attribute event
-                );
         },
 
         // Has event been fired from this source. Used to prevent event recursion in cyclic graphs
@@ -438,7 +409,9 @@
                 key = attrs[i];
                 if (!result) break;
                 //Navigate the path to get to the result
-                result = result instanceof BackboneCollection && (!isNaN(key)) ? result.at(key) : result.attributes[key];
+                result = result instanceof BackboneCollection
+                    ? (isNaN(key) ? undefined : result.at(key))
+                    : result.attributes[key];
             }
             return result;
         }
