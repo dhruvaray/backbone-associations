@@ -238,12 +238,16 @@
             var args = eventArguments,
                 opt = args[0].split(":"),
                 eventType = opt[0],
+                catch_all = args[0] == "nested-change",
                 eventObject = args[1],
                 indexEventObject = -1,
                 _proxyCalls = relationValue._proxyCalls,
                 cargs,
                 eventPath,
                 basecolEventPath;
+
+            //Short circuit the listen in to the nested-graph event
+            if (catch_all) return;
 
             // Change the event name to a fully qualified path.
             _.size(opt) > 1 && (eventPath = opt[1]);
@@ -273,6 +277,8 @@
             // Manipulate `eventPath`.
             eventPath = relationKey + (indexEventObject !== -1 ?
                 "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
+
+            // Short circuit collection * events
             if (/\[\*\]/g.test(eventPath)) return this;
             basecolEventPath = eventPath.replace(/\[\d+\]/g, '[*]');
 
@@ -296,6 +302,11 @@
 
             // Bubble up event to parent `model` with new changed arguments.
             this.trigger.apply(this, cargs);
+
+            //Only fire for change. Not change:attribute
+            if ("change" === eventType && this.get(eventPath) != args[2]) {
+                this.trigger.apply(this, ["nested-change", eventPath, args[1]]);
+            }
 
             // Remove `eventPath` from `_proxyCalls`,
             // if `eventPath` and `_proxyCalls` are available,

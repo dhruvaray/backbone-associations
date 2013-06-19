@@ -271,6 +271,10 @@ $(document).ready(function () {
         equal(emp.get('fname'), 'John', 'name should be John');
     });
 
+    test("VERSION", 1, function () {
+        ok(Backbone.Associations.VERSION, "Backbone.Associations.VERSION exists");
+    });
+
     test("primitive attribute set operation", 2, function () {
         emp.set({'age':22});
         equal(emp.get("age"), 22, "emp's should be 22 years");
@@ -499,7 +503,7 @@ $(document).ready(function () {
         });
         emp.get('works_for').on('change:name', function () {
             ok(true, "Fired works_for dept:name change...");
-        });        
+        });
         emp.set({'works_for.name':'Marketing'});//4+7
         emp.set('works_for', {name:"Marketing", number:29});//2
         emp.set('works_for', undefined);//2
@@ -522,11 +526,11 @@ $(document).ready(function () {
 
         emp.get('works_for').on('change:locations', function () {
             ok(true, "Fired emp.works_for change:locations...");
-        }); 
-        
+        });
+
         emp.get('works_for').on('change:locations[*]', function () {
             ok(true, "Fired emp.works_for change:locations[*]...");
-        });                
+        });
 
         emp.get('works_for').on('change:locations[0].zip', function () {
             ok(true, "Fired emp.works_for change:locations[0].zip...");
@@ -571,16 +575,41 @@ $(document).ready(function () {
         emp.on('change:works_for.controls[*].locations[*]', function () {
             ok(true, "Fired emp change:works_for.controls[*].locations[*]...");
         });
-        
+
         emp.on('change:works_for.controls[*].locations[*].zip', function () {
             ok(true, "Fired emp change:works_for.controls[*].locations[*].zip...");
         });
-        
+
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
         ok(true);
         emp.set('works_for.locations', undefined);
-        emp.set('works_for.locations', [loc1]);        
+        emp.set('works_for.locations', [loc1]);
     });
+
+
+    test("child `change:*`", 5, function () {
+        emp.get('works_for').get('locations').on('change', function () {
+            ok(true, "Regular backbone change event from collections...");
+        });
+
+        emp.get('works_for').on('nested-change', function () {
+
+            if (arguments[0] == "controls[0].locations[0]")
+                ok(true, "Fired emp.works_for change:controls[0].locations[0]...");
+            if (arguments[0] == "locations[0]")
+                ok(true, "Fired emp.works_for change:locations[0]...");
+        });
+
+        emp.on('nested-change', function () {
+            if (arguments[0] == "works_for.controls[0].locations[0]")
+                ok(true, "Fired emp change:works_for.controls[0].locations[0]...");
+            if (arguments[0] == "works_for.locations[0]")
+                ok(true, "Fired emp change:works_for.locations[0]...");
+        });
+
+        emp.get('works_for').get("locations").at(0).set('zip', 94403);
+    });
+
 
     test("transform from store", 16, function () {
         emp.set('works_for', 99);
@@ -705,7 +734,7 @@ $(document).ready(function () {
             },
 
             defaults:{
-                items: undefined
+                items:undefined
             }
         });
 
@@ -718,28 +747,28 @@ $(document).ready(function () {
                 }
             ],
             defaults:{
-                cart: undefined
+                cart:undefined
             }
         });
 
         var a = new Account();
         var c = new Cart();
 
-        a.set('cart', c);        
+        a.set('cart', c);
 
         a.on('change:cart.items', function () {
             ok(true, "Fired change:cart.items");
-        });        
+        });
 
         var ci1 = new CartItem({qty:5});
         var ci2 = new CartItem({qty:7});
         c.set('items', [ci1, ci2]); // change:cart.items => 1
         equal(a.get('cart').getCartQty(), 12); // => 1        
-        
+
         a.once('add:cart.items', function () {
             ok(true, "Fired add:cart.items");
         });
-        
+
         var ci3 = new CartItem({qty:7});
         c.get('items').add(ci3); // add:cart.items => 1
         equal(a.get('cart').getCartQty(), 19); // => 1
@@ -775,7 +804,7 @@ $(document).ready(function () {
             //both the parent object and the child object have the updated values in the event handler
             equal(m2.get('version'), "m2.1");
             equal(m2.get('model1').get('name'), "Name2");
-        })
+        });
 
         // Fake server response : The response from server side can update m2 on success
         m2.set({id:1, model1:{id:2, name:"Name2"}, version:"m2.1"});
@@ -820,9 +849,9 @@ $(document).ready(function () {
 
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
 
-    });    
+    });
 
-    test("child `add`", 21, function () {        
+    test("child `add`", 21, function () {
         emp.on('add:dependents', function () {
             ok(true, "Fired emp add:dependents...");
         });
@@ -846,7 +875,7 @@ $(document).ready(function () {
         });
         emp.on('change:dependents', function () {
             ok(true, "Fired emp change:dependents...");
-        });        
+        });
 
 
         emp.get('dependents').on('change', function () {
@@ -1383,11 +1412,11 @@ $(document).ready(function () {
         });
         node2.on("nestedevent:children", function () {
             ok(true, "node2 nestedevent:children fired...");
-        });        
+        });
 
         node1.on("change:children[0]", function () {
             ok(true, "node1 change:children[0] fired...");
-        });        
+        });
         node2.on("change:children[0]", function () {
             ok(true, "node2 change:children[0] fired...");
         });
