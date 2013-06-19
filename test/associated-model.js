@@ -587,7 +587,7 @@ $(document).ready(function () {
     });
 
 
-    test("child `change:*`", 5, function () {
+    test("child `nested-change`", 5, function () {
         emp.get('works_for').get('locations').on('change', function () {
             ok(true, "Regular backbone change event from collections...");
         });
@@ -608,6 +608,33 @@ $(document).ready(function () {
         });
 
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
+    });
+
+    test("Issue #28", 2, function () {
+        var ItemModel = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'product',
+                    relatedModel:Backbone.AssociatedModel
+                }
+            ],
+            initialize:function () {
+                this.on('change', function () {
+                    ok('change');
+                });
+                this.on('nested-change', function () {
+                    ok('change');
+                });
+                this.on('change:product', function () {
+                    ok('change:product');
+                });
+            }
+        });
+
+        var item = new ItemModel({ product:{ name:'johnny' } });
+
+        item.get('product').set({ name:'dave' });
     });
 
 
@@ -909,6 +936,62 @@ $(document).ready(function () {
         emp.get("dependents").add([child3, child4]); //4
         emp.get("dependents").remove([child1, child4]); //5
         emp.get("dependents").reset(); //2
+    });
+
+    test("child `add with *`", 21, function () {
+        emp.on('add:dependents', function () {
+            ok(true, "Fired emp add:dependents...");
+        });
+        emp.on('remove:dependents', function () {
+            ok(true, "Fired emp remove:dependents...");
+        });
+        emp.on('reset:dependents', function () {
+            ok(true, "Fired emp reset:dependents...");
+        });
+        emp.on('change:dependents[0].age', function () {
+            ok(true, "Fired emp change:dependents[0].age...");
+        });
+        emp.on('change:dependents[*].age', function () {
+            ok(true, "Fired emp change:dependents[*].age...");
+        });
+        emp.on('change:dependents[0]', function () {
+            ok(true, "Fired emp change:dependents[0]...");
+        });
+        emp.on('change:dependents[*]', function () {
+            ok(true, "Fired emp change:dependents[*]...");
+        });
+        emp.on('change:dependents', function () {
+            ok(true, "Fired emp change:dependents...");
+        });
+
+
+        emp.get('dependents').on('change', function () {
+            ok(true, "Fired dependents change...");
+        });
+        emp.get('dependents').on('change:age', function () {
+            ok(true, "Fired dependents change:age...");
+        });
+        emp.get('dependents').at(0).on('change', function () {
+            ok(true, "Fired at0 dependents change...");
+        });
+        emp.get('dependents').at(0).on('change:age', function () {
+            ok(true, "Fired at0 dependents change:age...");
+        });
+        emp.get('dependents').at(0).on('remove', function () {
+            ok(true, "Fired at0 dependents remove...");
+        });
+        emp.get('dependents').on('add', function () {
+            ok(true, "Fired dependents add...");
+        });
+        emp.get('dependents').on('remove', function () {
+            ok(true, "Fired dependents remove...");
+        });
+        emp.get('dependents').on('reset', function () {
+            ok(true, "Fired dependents reset...");
+        });
+
+        emp.get('works_for').get("locations").at(0).set('zip', 94403);
+
     });
 
     test("Check clone while assigning prev attributes in event bubble-up", 1, function () {
