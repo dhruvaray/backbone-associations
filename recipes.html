@@ -62,9 +62,10 @@
             <div class="well sidebar-nav bs-docs-sidebar affix">
                 <ul class="nav nav-list bs-docs-sidenav">
                     <li class="nav-header">Recipes</li>
-                    <li class="active"><a href="#tut-amd" class="active">AMD</a></li>
+                    <li class="active"><a href="#tut-ccgp">Grand parent notified of <br/> collection updates</a></li>
+                    <li><a href="#tut-savefetch">Simple save and fetch</a></li>
                     <li><a href="#tut-map">Use a reference store</a></li>
-                    <li><a href="#tut-ccgp">Grand parent notified of <br/> collection updates</a></li>
+                    <li><a href="#tut-amd" class="active">AMD</a></li>
                     <li class="nav-header">Contributions</li>
                     <li><a href="#tut-contrib">Submit</a></li>
 
@@ -72,11 +73,19 @@
             </div>
         </div>
         <div class="span9">
-            <section id="tut-amd">
-                <h4>Using Backbone-Associations as an AMD module</h4>
+            <section id="tut-ccgp">
+                <h4>Demonstrates how a grandparent can listen in to changes in a (nested) collection</h4>
+                <hr/>
+                In this example, an Account (Grand-parent) is notified of changes in the shopping cart (grand-children)
+                <div class="well well-large">
+                    <script src="https://gist.github.com/dhruvaray/5791783.js"></script>
+                </div>
+            </section>
+            <section id="tut-savefetch">
+                <h4>Simple save and fetch</h4>
                 <hr/>
                 <div class="well well-large">
-                    <script src="https://gist.github.com/jdkanani/5256463.js"></script>
+                    <script src="https://gist.github.com/jdkanani/5822296.js"></script>
                 </div>
             </section>
             <section id="tut-map">
@@ -85,15 +94,13 @@
                 Use a local reference store to transform type (or id) info to AssociatedModel's
                 <div class="well well-large">
                     <script src="https://gist.github.com/dhruvaray/5791711.js"></script>
-
                 </div>
             </section>
-            <section id="tut-ccgp">
-                <h4>Demonstrates how a grandparent can listen in to changes in a (nested) collection</h4>
+            <section id="tut-amd">
+                <h4>Using Backbone-Associations as an AMD module</h4>
                 <hr/>
-                In this example, an Account (Grand-parent) is notified of changes in the shopping cart (grand-children)
                 <div class="well well-large">
-                    <script src="https://gist.github.com/dhruvaray/5791783.js"></script>
+                    <script src="https://gist.github.com/jdkanani/5256463.js"></script>
                 </div>
             </section>
             <section id="tut-contrib">
