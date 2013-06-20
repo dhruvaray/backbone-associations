@@ -4,6 +4,8 @@
 * change, add, remove, reset, destroy and sort events are compatible with * operator.
 * Implicit reverse relations.
 * Provision for mapping data before assigning to AssociatedModel attribute.
+* Whether to create or update a nested AssociatedModel (or Backbone Collection) is now dependent on value of the
+existing idAttribute on the AssociatedModel or Collection.
 * New website with improved help and tutorials.
 
 #### Version 0.4.2 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.1...v0.4.2)
