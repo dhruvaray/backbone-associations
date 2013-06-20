@@ -1663,6 +1663,79 @@ $(document).ready(function () {
         equal(cloneNode.get('parent').get('name'), 'clone-n2', "name of node1's parent should be `clone-n2`");
     });
 
+    module("Backbone.Associations", {
+        setup: function() {
+            emp = new Employee({
+                fname:"John",
+                lname:"Smith",
+                age:21,
+                sex:"M"
+            });
+
+            child1 = new Dependent({
+                fname:"Jane",
+                lname:"Smith",
+                sex:"F",
+                relationship:"C"
+            });
+
+            child2 = new Dependent({
+                fname:"Barbara",
+                lname:"Ruth",
+                sex:"F",
+                relationship:"C"
+            });
+
+            emp.set({"dependents":[child1, child2]});
+        }
+    });
+
+    test("VERSION", 1, function() {
+        ok(Backbone.Associations.VERSION, "Backbone.Associations.VERSION exists");
+    });
+
+    test("deepAttributes", 7, function() {
+        var deepAttributes = Backbone.Associations.deepAttributes;
+        var empAttributes = {
+          "age": 21,
+          "dependents": [
+            {
+              "age": 0,
+              "fname": "Jane",
+              "lname": "Smith",
+              "relationship": "C",
+              "sex": "F"
+            },
+            {
+              "age": 0,
+              "fname": "Barbara",
+              "lname": "Ruth",
+              "relationship": "C",
+              "sex": "F"
+            }
+          ],
+          "fname": "John",
+          "lname": "Smith",
+          "manager": null,
+          "sex": "M",
+          "works_for": {
+            "controls": [],
+            "locations": [],
+            "name": "",
+            "number": -1
+          }
+        };
+
+        deepEqual(deepAttributes(emp), empAttributes);
+        // test various types, and make sure they don't do anything weird
+        deepEqual(deepAttributes({"a": "b", "c": "d"}), {"a": "b", "c": "d"});
+        deepEqual(deepAttributes([1, 2, 3]), [1, 2, 3]);
+        deepEqual(deepAttributes(1), 1);
+        deepEqual(deepAttributes("foo"), "foo");
+        deepEqual(deepAttributes(true), true);
+        deepEqual(deepAttributes(null), null);
+    });
+
     module("Examples", {
         setup:function () {
 
