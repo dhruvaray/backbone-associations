@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="utf-8">
     <title>Backbone-Associations</title>
@@ -68,6 +68,7 @@
             <li class="active"><a href="#e-intro">Introduction</a></li>
             <li><a href="#e-catalogue">Event Catalogue</a></li>
             <li><a href="#e-cr-api">Change-Related API</a></li>
+            <li><a href="#e-id-attr">Intelli-update</a></li>
             <li><a href="#e-pitfalls">Pitfalls</a></li>
         </ul>
     </div>
@@ -465,6 +466,39 @@ emp.on("destroy:works_for.controls[*].locations", function(){
 
 
 </section>
+<section id="e-id-attr">
+    <h4>Intelli-update : Create or update objects based on idAttribute value</h4>
+    <hr/>
+    <div class="well well-large">
+        From v0.5.0, Backbone-associations will use the <a href="http://backbonejs.org/#Model-idAttribute">idAttribute</a> value to determine whether to update a nested object or to create a new one. The example below should make this clear.
+
+    <pre class="prettyprint">
+var dept = new Department({
+    name:"R&D",
+    number:"23",
+    id:1
+});
+emp.set('works_for',dept);
+
+emp.get('works_for').on("change", function () {
+    //Comes here because the dept has been updated
+    equal(emp.get('works_for').get('name'), "R&D++");
+});
+
+// Setting a department with the same id causes an update
+emp.set('works_for',{id:1, name:"R&D++"});
+
+//emp.get('works_for') === dept;
+
+//Should not trigger event in emp.get('works_for').on("change", callback) as we have a diff dept id (and instance)
+emp.set('works_for', {id:3, name:"A new department name"});
+
+//emp.get('works_for') !== dept;
+    </pre>
+        <small>Note : Earlier versions of Backbone-associations used to blindly create new instances; causing previously bound event handlers to not fire. This resulted in additional application complexity. This problem has now been rectified in v0.5.0+</small>
+    </div>
+</section>
+
 <section id="e-pitfalls">
     <h4>Pitfalls</h4>
     <hr/>
@@ -552,6 +586,8 @@ emp.on('nested-change', function () {
     </div>
 
 </section>
+
+
 </div>
 
 </div>
