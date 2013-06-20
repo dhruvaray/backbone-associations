@@ -27,18 +27,18 @@ $(document).ready(function () {
             add2:null,
             zip:"",
             state:""
-        }
+        },
+        urlRoot: '/location'
     });
 
     //location store
     var locations = new Backbone.Collection([
-        new Location({id:3, add1:"loc3"}),
-        new Location({id:4, add1:"loc4"}),
-        new Location({id:5, add1:"loc5"}),
-        new Location({id:6, add1:"loc6"}),
-        new Location({id:7, add1:"loc7"}),
-        new Location({id:8, add1:"loc8"})
-
+        new Location({id:3, add1:"loc3", state:"AL"}),
+        new Location({id:4, add1:"loc4", state:"VA"}),
+        new Location({id:5, add1:"loc5", state:"CA"}),
+        new Location({id:6, add1:"loc6", state:"IN"}),
+        new Location({id:7, add1:"loc7", state:"NY"}),
+        new Location({id:8, add1:"loc8", state:"NY"})
     ]);
 
     var map2locs = function (ids) {
@@ -74,7 +74,8 @@ $(document).ready(function () {
             name:"",
             number:0,
             locations:[]
-        }
+        },
+        urlRoot: '/project'
     });
 
 
@@ -97,7 +98,8 @@ $(document).ready(function () {
             locations:[],
             number:-1,
             controls:[]
-        }
+        },
+        urlRoot: '/department'
     });
 
     var Dependent = Backbone.AssociatedModel.extend({
@@ -110,7 +112,8 @@ $(document).ready(function () {
             sex:'F', //{F,M}
             age:0,
             relationship:'S' //Values {C=Child, P=Parents}
-        }
+        },
+        urlRoot: '/dependent'
     });
 
     //dept store
@@ -157,7 +160,8 @@ $(document).ready(function () {
             works_for:{},
             dependents:[],
             manager:null
-        }
+        },
+        urlRoot: '/employee'
     });
 
     Node = Backbone.AssociatedModel.extend({
@@ -511,7 +515,7 @@ $(document).ready(function () {
         emp.set('works_for', dept1);//0
     });
 
-    test("child `change in collection`", 21, function () {
+    test("child `change in collection`", 18, function () {
         emp.get('works_for').get('locations').at(0).on('change:zip', function () {
             ok(true, "Fired works_for locations[0]:zip change...");
         });
@@ -522,10 +526,6 @@ $(document).ready(function () {
             equal(changed['locations'].at(0).changed['zip'], 94403);
             equal(changed['controls'].at(0).changed['locations'].at(0).changed['zip'], 94403);
             ok(true, "Fired works_for locations0 change...");
-        });
-
-        emp.get('works_for').on('change:locations', function () {
-            ok(true, "Fired emp.works_for change:locations...");
         });
 
         emp.get('works_for').on('change:locations[*]', function () {
@@ -581,11 +581,171 @@ $(document).ready(function () {
         });
 
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
-        ok(true);
-        emp.set('works_for.locations', undefined);
-        emp.set('works_for.locations', [loc1]);
     });
 
+    test("collection `*` change", 12, function(){
+        emp.on('change:works_for.controls[0].locations[0]', function () {
+            ok(true, "Fired emp change:works_for.controls[0].locations[0]");
+        });
+        emp.on('change:works_for.controls[*].locations[*]', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations[*]");
+        });
+        emp.on('change:works_for.controls[*].locations[*].zip', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations[*].zip");
+        });
+
+        emp.on('change:works_for.controls[1].locations', function () {
+            ok(true, "Fired emp change:works_for.controls[1].locations");
+        });
+        emp.on('change:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations");
+        });
+        emp.get('works_for.controls[0].locations[0]').set('zip', 94406); //3
+        emp.get('works_for.controls[1].locations[0]').set('add1', 'new changed address'); //1
+
+        emp.set('works_for.controls[1].locations', undefined); // 2
+        emp.set('works_for.controls[1].locations', [loc1]); // 2
+
+        emp.on('change:works_for.locations[0]', function () {
+            ok(false, "emp change:works_for.locations[0] should not be fired");
+        });
+        emp.on('change:works_for.locations[1]', function () {
+            ok(true, "Fired emp change:works_for.locations[1]");
+        });
+        emp.on('change:works_for.locations[*]', function () {
+            ok(true, "Fired emp change:works_for.locations[*]");
+        });
+        emp.get('works_for.locations[1]').set('zip', 94407); //2
+
+        emp.get('works_for').on('change:locations', function () {
+            ok(true, "Fired emp.works_for change:locations...");
+        });
+
+        emp.set('works_for.locations', undefined); //1
+        emp.set('works_for.locations', [loc1]); //1
+    });
+
+    test("collection `*` add", 5, function(){
+        emp.on('add:works_for.controls[0].locations', function () {
+            ok(true, "Fired emp add:works_for.controls[0].locations...");
+        });
+        emp.on('add:works_for.controls[1].locations', function () {
+            ok(true, "Fired emp add:works_for.controls[1].locations...");
+        });
+        emp.on('add:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp add:works_for.controls[*].locations...");
+        });
+
+        emp.on('add:works_for.locations', function () {
+            ok(true, "add:works_for.locations");
+        });
+
+        emp.on('add:works_for.locations[*]', function () {
+            ok(false, "emp add:works_for.location[*] should not be fired.");
+        });
+
+        emp.get('works_for.controls[0].locations').add(loc2); //2
+        emp.get('works_for.controls[1].locations').add({ //2
+            id:3,
+            add1:"loc3"
+        });
+        emp.get('works_for.locations').add({ //1
+            id: 4,
+            add1: "loc4"
+        });
+    });
+
+    test("collection `*` remove", 5, function(){
+        emp.get('works_for.controls[0].locations').add(loc2);
+        emp.get('works_for.locations').add(loc2);
+
+        emp.on('remove:works_for.controls[0].locations', function () {
+            ok(true, "Fired emp remove:works_for.controls[0].locations...");
+        });
+        emp.on('remove:works_for.controls[1].locations', function () {
+            ok(true, "Fired emp remove:works_for.controls[1].locations...");
+        });
+        emp.on('remove:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp remove:works_for.controls[*].locations...");
+        });
+
+        emp.on('remove:works_for.locations', function () {
+            ok(true, "Fired remove:works_for.locations");
+        });
+
+        emp.on('remove:works_for.locations[*]', function () {
+            ok(false, "emp remove:works_for.location[*] should not be fired.");
+        });
+
+        emp.get('works_for.controls[0].locations').remove(loc2); //2
+        emp.get('works_for.controls[1].locations').remove(loc2); //2
+        emp.get('works_for.locations').remove(loc2); //1
+    });
+
+    test("collection `*` reset", 3, function(){
+        emp.on('reset:works_for.controls[0].locations', function () {
+            ok(true, "Fired emp reset:works_for.controls[0].locations");
+        });
+
+        emp.on('reset:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp reset:works_for.controls[*].locations");
+        });
+
+        emp.on('reset:works_for.locations', function () {
+            ok(true, "Fired reset:works_for.locations");
+        });
+        emp.get('works_for.controls[0].locations').reset();
+        emp.get('works_for.locations').reset();
+    });
+
+    test("collection `*` destroy", function(){
+        emp.on("destroy:works_for.controls[0].locations", function(){
+            ok(true, "Fired emp destroy:works_for.controls[0].locations");
+        });
+        emp.on("destroy:works_for.controls[*].locations", function(){
+            ok(true, "Fired emp destroy:works_for.controls[*].locations");
+        });
+        var loc = emp.get('works_for.controls[0].locations[0]');
+        loc.sync = function (method, model, options) {
+            return options.success.call(this, null, options);
+        };
+        loc.destroy();
+    });
+
+    test("collection `*` sort", function(){
+        emp.on('change:works_for.controls[0].locations', function () {
+            ok(true, "Fired emp change:works_for.controls[0].locations");
+        });
+        emp.on('change:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations");
+        });
+        emp.get('works_for').on('change:controls[0]', function () {
+            ok(true, "Fired emp change:works_for.controls[0]");
+        });
+        emp.on('nested-change', function () {
+            ok(true, "Fired emp nested-change");
+        });
+        emp.set('works_for.controls[0].locations', locations); //4
+
+        // check length and add comparator
+        var locCol = emp.get('works_for.controls[0].locations');
+        equal(locCol.length, 6, "location collection's length should be 6.");
+
+        locCol.comparator = function(l){
+            return l.get("state");
+        };
+
+        emp.on('sort:works_for.controls[0].locations', function(){
+            ok(true, "Fired emp sort:works_for.controls[0].locations");
+        });
+        emp.on('sort:works_for.controls[*].locations', function(){
+            ok(true, "Fired emp sort:works_for.controls[*].locations");
+        });
+        emp.on('sort:works_for.controls.locations', function(){
+            ok(false, "emp sort:works_for.controls.locations should not be fired");
+        });
+        emp.get('works_for.controls[0].locations').sort();
+    });
 
     test("child `nested-change`", 5, function () {
         emp.get('works_for').get('locations').on('change', function () {

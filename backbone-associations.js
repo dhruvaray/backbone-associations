@@ -19,7 +19,8 @@
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
     var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
-        CollectionProto, defaultEvents, AssociatedModel, pathChecker;
+        CollectionProto, defaultEvents, AssociatedModel, pathChecker,
+        collectionEvents;
 
     if (typeof window === 'undefined') {
         _ = require('underscore');
@@ -39,8 +40,8 @@
     pathChecker = /[\.\[\]]+/g;
 
     // Built-in Backbone `events`.
-    defaultEvents = ["change", "add", "remove", "reset", "destroy",
-        "sync", "error", "sort", "request"];
+    defaultEvents = ["change", "add", "remove", "reset", "sort", "destroy"];
+    collectionEvents = ["reset", "sort"];
 
     Backbone.Associations = {
         VERSION:"0.4.2"
@@ -240,11 +241,13 @@
                 eventType = opt[0],
                 catch_all = args[0] == "nested-change",
                 eventObject = args[1],
+                colObject = args[2],
                 indexEventObject = -1,
                 _proxyCalls = relationValue._proxyCalls,
                 cargs,
                 eventPath,
-                basecolEventPath;
+                basecolEventPath,
+                isDefaultEvent = _.indexOf(defaultEvents, eventType) !== -1;
 
             //Short circuit the listen in to the nested-graph event
             if (catch_all) return;
@@ -252,8 +255,12 @@
             // Change the event name to a fully qualified path.
             _.size(opt) > 1 && (eventPath = opt[1]);
 
+            if (_.indexOf(collectionEvents, eventType) !== -1) {
+                colObject = eventObject;
+            }
+
             // Find the specific object in the collection which has changed.
-            if (relationValue instanceof BackboneCollection && "change" === eventType && eventObject) {
+            if (relationValue instanceof BackboneCollection && isDefaultEvent && eventObject) {
                 var pathTokens = getPathArray(eventPath),
                     initialTokens = _.initial(pathTokens), colModel;
 
@@ -262,20 +269,25 @@
                     if (!model) return false;
                     var changedModel = model.get(initialTokens);
 
-                    if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) &&
-                        eventObject === changedModel) return true;
+                    if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) 
+                        && eventObject === changedModel)
+                        return true;
 
                     changedModel = model.get(pathTokens);
 
-                    return ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
-                        && eventObject === changedModel);
+                    if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
+                        && eventObject === changedModel)
+                        return true;
+
+                    if (changedModel instanceof BackboneCollection && colObject
+                        && colObject === changedModel)
+                        return true;
                 });
                 colModel && (indexEventObject = relationValue.indexOf(colModel));
-                if (indexEventObject === -1) return this;
             }
 
             // Manipulate `eventPath`.
-            eventPath = relationKey + (indexEventObject !== -1 ?
+            eventPath = relationKey + ((indexEventObject !== -1 && (eventType === "change" || eventPath)) ?
                 "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
 
             // Short circuit collection * events
