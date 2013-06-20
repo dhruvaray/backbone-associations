@@ -77,16 +77,12 @@
                 <hr/>
                 <div class="well well-large">
                     <p>
-                        Backbone-associations provides a way of specifying 1:1 and 1:N relationships between Backbone
-                        models. Additionally, parent model instances (and objects extended from Backbone.Events) can
-                        listen in to CRUD events initiated on any children - in the object graph - by providing an
-                        appropriately qualified event path name. It aims to provide a clean implementation which is easy
-                        to understand and extend. It is performant for CRUD operations - even on deeply nested object
-                        graphs - and uses a low memory footprint. Web applications leveraging the client-side-MVC
-                        architectural style will benefit by using backbone-associations to define and manipulate client
-                        object graphs.
+                        Associations allows Backbone applications to model 1:1 & 1:N associations between application models and collections. More importantly, applications can listen to any kind of change (change, add, remove, reset, destroy) in this hierarchy using standard Backbone events and respond to them. (views can re-render for example). The implementation strives to be tiny (2.2KB), easy-to-understand, light-weight and highly performing.
 
-                        It was originally born out of a need to provide a simpler and speedier implementation of
+                        <br/><br/>Web applications leveraging the client-side-MVC
+                        architectural style will benefit by using backbone-associations to define rich application structure. <br/>
+
+                        <br/>It was originally born out of a need to provide a simpler and speedier implementation of
                         Backbone-relational.
 
                     </p>
