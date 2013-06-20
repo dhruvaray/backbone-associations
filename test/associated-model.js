@@ -28,7 +28,7 @@ $(document).ready(function () {
             zip:"",
             state:""
         },
-        urlRoot: '/location'
+        urlRoot:'/location'
     });
 
     //location store
@@ -75,7 +75,7 @@ $(document).ready(function () {
             number:0,
             locations:[]
         },
-        urlRoot: '/project'
+        urlRoot:'/project'
     });
 
 
@@ -99,7 +99,7 @@ $(document).ready(function () {
             number:-1,
             controls:[]
         },
-        urlRoot: '/department'
+        urlRoot:'/department'
     });
 
     var Dependent = Backbone.AssociatedModel.extend({
@@ -113,7 +113,7 @@ $(document).ready(function () {
             age:0,
             relationship:'S' //Values {C=Child, P=Parents}
         },
-        urlRoot: '/dependent'
+        urlRoot:'/dependent'
     });
 
     //dept store
@@ -161,7 +161,7 @@ $(document).ready(function () {
             dependents:[],
             manager:null
         },
-        urlRoot: '/employee'
+        urlRoot:'/employee'
     });
 
     Node = Backbone.AssociatedModel.extend({
@@ -528,6 +528,7 @@ $(document).ready(function () {
             ok(true, "Fired works_for locations0 change...");
         });
 
+
         emp.get('works_for').on('change:locations[*]', function () {
             ok(true, "Fired emp.works_for change:locations[*]...");
         });
@@ -583,7 +584,7 @@ $(document).ready(function () {
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
     });
 
-    test("collection `*` change", 12, function(){
+    test("collection `*` change", 12, function () {
         emp.on('change:works_for.controls[0].locations[0]', function () {
             ok(true, "Fired emp change:works_for.controls[0].locations[0]");
         });
@@ -625,7 +626,7 @@ $(document).ready(function () {
         emp.set('works_for.locations', [loc1]); //1
     });
 
-    test("collection `*` add", 5, function(){
+    test("collection `*` add", 5, function () {
         emp.on('add:works_for.controls[0].locations', function () {
             ok(true, "Fired emp add:works_for.controls[0].locations...");
         });
@@ -650,12 +651,12 @@ $(document).ready(function () {
             add1:"loc3"
         });
         emp.get('works_for.locations').add({ //1
-            id: 4,
-            add1: "loc4"
+            id:4,
+            add1:"loc4"
         });
     });
 
-    test("collection `*` remove", 5, function(){
+    test("collection `*` remove", 5, function () {
         emp.get('works_for.controls[0].locations').add(loc2);
         emp.get('works_for.locations').add(loc2);
 
@@ -682,7 +683,7 @@ $(document).ready(function () {
         emp.get('works_for.locations').remove(loc2); //1
     });
 
-    test("collection `*` reset", 3, function(){
+    test("collection `*` reset", 3, function () {
         emp.on('reset:works_for.controls[0].locations', function () {
             ok(true, "Fired emp reset:works_for.controls[0].locations");
         });
@@ -698,11 +699,11 @@ $(document).ready(function () {
         emp.get('works_for.locations').reset();
     });
 
-    test("collection `*` destroy", function(){
-        emp.on("destroy:works_for.controls[0].locations", function(){
+    test("collection `*` destroy", function () {
+        emp.on("destroy:works_for.controls[0].locations", function () {
             ok(true, "Fired emp destroy:works_for.controls[0].locations");
         });
-        emp.on("destroy:works_for.controls[*].locations", function(){
+        emp.on("destroy:works_for.controls[*].locations", function () {
             ok(true, "Fired emp destroy:works_for.controls[*].locations");
         });
         var loc = emp.get('works_for.controls[0].locations[0]');
@@ -712,7 +713,7 @@ $(document).ready(function () {
         loc.destroy();
     });
 
-    test("collection `*` sort", function(){
+    test("collection `*` sort", function () {
         emp.on('change:works_for.controls[0].locations', function () {
             ok(true, "Fired emp change:works_for.controls[0].locations");
         });
@@ -731,17 +732,17 @@ $(document).ready(function () {
         var locCol = emp.get('works_for.controls[0].locations');
         equal(locCol.length, 6, "location collection's length should be 6.");
 
-        locCol.comparator = function(l){
+        locCol.comparator = function (l) {
             return l.get("state");
         };
 
-        emp.on('sort:works_for.controls[0].locations', function(){
+        emp.on('sort:works_for.controls[0].locations', function () {
             ok(true, "Fired emp sort:works_for.controls[0].locations");
         });
-        emp.on('sort:works_for.controls[*].locations', function(){
+        emp.on('sort:works_for.controls[*].locations', function () {
             ok(true, "Fired emp sort:works_for.controls[*].locations");
         });
-        emp.on('sort:works_for.controls.locations', function(){
+        emp.on('sort:works_for.controls.locations', function () {
             ok(false, "emp sort:works_for.controls.locations should not be fired");
         });
         emp.get('works_for.controls[0].locations').sort();

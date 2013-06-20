@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.4.2
+//  Backbone-associations.js 0.5.0
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -269,7 +269,7 @@
                     if (!model) return false;
                     var changedModel = model.get(initialTokens);
 
-                    if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection) 
+                    if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
                         && eventObject === changedModel)
                         return true;
 
