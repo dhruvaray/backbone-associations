@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Backbone-Associations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Dhruva Ray">
+
+
+    <link href="./assets/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+            position: relative;
+        }
+
+        section {
+            padding-top: 40px;
+        }
+
+        section > .page-header,
+        section > .lead {
+            color: #5a5a5a;
+        }
+
+        section > ul li {
+            margin-bottom: 5px;
+        }
+
+    </style>
+    <link href="./assets/css/bootstrap-responsive.css" rel="stylesheet">
+
+</head>
+
+<body data-target=".bs-docs-sidebar" data-spy="scroll">
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="brand" href="index.html">Backbone Associations</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li><a href="./index.html">Home</a></li>
+                    <li><a href="./getting-started.html">Getting Started</a></li>
+                    <li class="active"><a href="./specify-associations.html" class="active">Specifying Associations</a>
+                    </li>
+                    <li><a href="./events.html">Events</a></li>
+                    <li><a href="./tutorial.html">Tutorials</a></li>
+                    <li><a href="./recipes.html">Recipes</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+<!-- Example row of columns -->
+<div class="row-fluid">
+<div class="span3">
+    <div class="well sidebar-nav bs-docs-sidebar affix">
+        <ul class="nav nav-list bs-docs-sidenav">
+            <li class="nav-header">Specify Associations</li>
+            <li class="active"><a href="#sa-api">API</a></li>
+            <li><a href="#sa-one">1:1</a></li>
+            <li><a href="#sa-many">1:M</a></li>
+            <li><a href="#sa-reverse">Reverse</a></li>
+            <li><a href="#sa-map">Lookup Transformations</a></li>
+            <li class="nav-header">Navigate Associations</li>
+            <li><a href="#sa-getop">Get</a></li>
+            <li><a href="#sa-setop">Set</a></li>
+        </ul>
+    </div>
+</div>
+<div class="span9">
+
+<section id="sa-api">
+    <h4>API</h4>
+    <hr/>
+    <div class="well well-large">
+
+        Backbone.AssociatedModel allows for associations to be set-up between other Backbone Models and Collections.
+        To achieve this, extend Backbone.AssociatedModel to specify an array of relations.
+
+        Each association (relation) is defined by the following attributes.
+        <dl class="dl-horizontal">
+            <dt>relatedModel<br/>
+                (required)
+            </dt>
+            <dd>
+                <ul>
+                    <li>A function which returns a reference to a Backbone.AssociatedModel type.</li>
+                    <li>A reference to a Backbone.AssociatedModel type.</li>
+                    <li>A fully qualified string which can be resolved to an object type on the global scope.</li>
+                </ul>
+            </dd>
+        </dl>
+
+
+        <hr/>
+
+        <dl class="dl-horizontal">
+            <dt>key (required)</dt>
+            <dd>A string which references an attribute name on relatedModel.</dd>
+        </dl>
+
+        <hr/>
+
+        <dl class="dl-horizontal">
+            <dt>type (required)</dt>
+            <dd>
+                <ul>
+                    <li>Backbone.One for 1:1 Associations.</li>
+                    <li>Backbone.Many for 1:M Associations.</li>
+                </ul>
+            </dd>
+        </dl>
+
+        <hr/>
+
+        <dl class="dl-horizontal">
+            <dt>collectionType <br/>(optional)</dt>
+            <dd>
+                Used to determine the type of collections used for a Backbone.Many relation.
+                <ul>
+                    <li>A function which returns a reference to a Backbone.AssociatedModel type.</li>
+                    <li>A reference to a Backbone.Collection type.</li>
+                    <li>A fully qualified string which can be resolved to an object type on the global scope.</li>
+                </ul>
+            </dd>
+        </dl>
+
+        <hr/>
+
+        <dl class="dl-horizontal">
+            <dt>map (optional)</dt>
+            <dd>
+                Specify a transformation function to convert the value before it is assigned to the key on the
+                relatedModel.
+            </dd>
+        </dl>
+
+    </div>
+</section>
+<section id="sa-one">
+    <h4>Specifying 1:1 associations</h4>
+    <hr/>
+    <div class="well well-large">
+        Use Backbone.One to specify a 1:1 relationship between two Backbone Models. The key specifies the attribute on
+        the AssociatedModel which will hold the instance of relatedModel.
+                <pre class="prettyprint lang-js">
+
+var Employee = Backbone.AssociatedModel.extend({
+    relations: [
+        {
+            type: Backbone.One, //nature of the relationship
+            key: 'manager', // attribute of Employee
+            relatedModel: 'Employee' //AssociatedModel for attribute key
+        }
+    ],
+    defaults: {
+        age : 0,
+        fname : "",
+        lname : "",
+        manager : null
+    }
+});
+                </pre>
+    </div>
+
+</section>
+<section id="sa-many">
+    <h4>Specifying 1:M associations</h4>
+    <hr/>
+    <div class="well well-large">
+        Use Backbone.Many to specify a 1:M relationship between two Backbone Models. Otherwise, identical to specifying
+        1:1 associations.
+            <pre class="prettyprint lang-js">
+var Location = Backbone.AssociatedModel.extend({
+  defaults: {
+    add1 : "",
+    add2 : null,
+    zip : "",
+    state : ""
+  }
+});
+
+var Project = Backbone.AssociatedModel.extend({
+  relations: [
+      {
+        type: Backbone.Many,//nature of the relation
+        key: 'locations', //attribute of Project
+        relatedModel:Location //AssociatedModel for attribute key
+      }
+  ],
+  defaults: {
+    name : "",
+    number : 0,
+    locations : []
+  }
+});
+            </pre>
+    </div>
+
+</section>
+<section id="sa-reverse">
+    <h4>Specifying Reverse Associations</h4>
+    <hr/>
+    <div class="well well-large">
+
+        These are automatically inferred by Backbone-associations. You can access reverse associations via a parents
+        property on the AssociationModel or Backbone Collection. Note that the parents property is an array - as there
+        could be multiple parents for a given AssociatedModel or Collection.
+
+                    <pre class="prettyprint">
+dept1 = new Department({
+    name:"R&D",
+    number:"23"
+});
+
+var emp1 = new Employee({
+    fname:"Tom",
+    lname:"Hanks",
+    age:41,
+    sex:"M"
+});
+
+var emp2 = new Employee({
+    fname:"Michelle",
+    lname:"Pfiefer",
+    age:42,
+    sex:"F"
+});
+
+emp1.set({"works_for":dept1});
+emp2.set({"works_for":dept1});
+
+
+dept1.parents //[emp1, emp2]
+                    </pre>
+    </div>
+
+</section>
+<section id="sa-map">
+    <h4>Specifying Transformations</h4>
+    <hr/>
+    <div class="well well-large">
+        Use a map function to transform values before assigning them to a model attribute. Could be typically used to
+        transform (master) ids to a (master) AssociatedModel references.
+<pre class="prettyprint">
+var MasterType = Backbone.Model.extend({
+    defaults:{
+        id:"-1",
+        type:"",
+        validations:""
+    }
+});
+
+store = new Backbone.Collection([
+    {id:1, type:"phone", validations:"regex to validate phone #s here"},
+    {id:2, type:'email', validations:"regex to validate email formats here"}
+], {model:MasterType});
+
+
+var Field = Backbone.AssociatedModel.extend({
+    relations:[
+        {
+            type:Backbone.One,
+            key:'type',
+            relatedModel:MasterType,
+            map:function (id) {
+                //a local master store holding the master data reference
+                return store.findWhere({type:id});
+            }
+        }
+    ],
+
+    defaults:{
+        type:undefined,
+        data:undefined,
+        name:""
+    }
+
+});
+
+var phone = new Field({name:'Residence Phone', type:'phone' });
+var email = new Field({name:'Primary Email', type:'email'});
+
+phone.get('type').get('validations') //regex to validate phone #s
+email.get('type').get('validations'), //regex to validate email
+</pre>
+    </div>
+</section>
+
+<section id="sa-getop">
+    <h4>Retrieve values from the object graph</h4>
+    <hr/>
+    <div class="well well-large">
+        Values can be retrieved by either specifying a fully qualified path or by explicitly traversing the object
+        graph.
+<pre class="prettyprint">
+emp.get('works_for.controls[0].locations[0].zip') //94404
+
+//or
+
+emp.get('works_for').get('controls').at(0).get('locations').at(0).get('zip');
+</pre>
+    </div>
+</section>
+<section id="sa-setop">
+    <h4>Set values in the object graph</h4>
+    <hr/>
+    <div class="well well-large">
+        Values can be set by either specifying a fully qualified path or by explicitly traversing the object graph to
+        that property before setting the value.
+
+<pre class="prettyprint">
+emp.set('works_for.locations[0].zip', 94403);
+
+//or
+
+emp.get('works_for').get('locations').at(0).set('zip',94403);
+</pre>
+    </div>
+</section>
+
+</div>
+
+</div>
+
+
+</div>
+
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="http:////ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?skin=sunburst"></script>
+<script src="./assets/js/bootstrap.js"></script>
+<script src="./assets/js/ba.js"></script>
+
+
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Backbone-Associations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Dhruva Ray">
+
+
+    <link href="./assets/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+
+        section {
+            padding-top: 40px;
+        }
+
+        section > .page-header,
+        section > .lead {
+            color: #5a5a5a;
+        }
+
+        section > ul li {
+            margin-bottom: 5px;
+        }
+    </style>
+    <link href="./assets/css/bootstrap-responsive.css" rel="stylesheet">
+
+</head>
+
+<body data-target=".bs-docs-sidebar" data-spy="scroll">
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="brand" href="index.html">Backbone Associations</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li><a href="./index.html">Home</a></li>
+                    <li class="active"><a href="./getting-started.html">Getting Started</a></li>
+                    <li><a href="./specify-associations.html">Specifying Associations</a></li>
+                    <li><a href="./events.html">Events</a></li>
+                    <li><a href="./tutorial.html">Tutorials</a></li>
+                    <li><a href="./recipes.html">Recipes</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container">
+
+    <!-- Example row of columns -->
+    <div class="row-fluid">
+        <div class="span3">
+            <div class="well sidebar-nav bs-docs-sidebar affix">
+                <ul class="nav nav-list bs-docs-sidenav">
+                    <li class="active"><a href="#sa-intro">Introduction</a></li>
+                    <li><a href="#sa-download">Download</a></li>
+                    <li><a href="#sa-use">Installation</a></li>
+                    <li><a href="#sa-ns">Next Steps</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="span9">
+
+            <section id="sa-intro">
+                <h4>Introduction</h4>
+                <hr/>
+                <div class="well well-large">
+                    <p>
+                        Backbone-associations provides a way of specifying 1:1 and 1:N relationships between Backbone
+                        models. Additionally, parent model instances (and objects extended from Backbone.Events) can
+                        listen in to CRUD events initiated on any children - in the object graph - by providing an
+                        appropriately qualified event path name. It aims to provide a clean implementation which is easy
+                        to understand and extend. It is performant for CRUD operations - even on deeply nested object
+                        graphs - and uses a low memory footprint. Web applications leveraging the client-side-MVC
+                        architectural style will benefit by using backbone-associations to define and manipulate client
+                        object graphs.
+
+                        It was originally born out of a need to provide a simpler and speedier implementation of
+                        Backbone-relational.
+
+                    </p>
+                </div>
+
+            </section>
+            <section id="sa-download">
+                <h4>Download</h4>
+                <hr/>
+                <div class="well well-large">
+                    <a class="btn btn-primary"
+                       href="http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js"> Production
+                        version - 0.5.0 &nbsp;&nbsp;&nbsp; </a> - 5.5K packed and gzipped
+                    <br/><br/>
+                    <a class="btn btn-primary"
+                       href="http://dhruvaray.github.com/backbone-associations/backbone-associations.js"> Development
+                        version - 0.5.0 </a> - <a href="./docs/backbone-associations.html">Annotated source code</a>
+                    <br/><br/>
+                    <a class="btn btn-primary"
+                       href="http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js"> Edge
+                        version &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </a>
+                    - <a href="https://travis-ci.org/dhruvaray/backbone-associations"><img
+                        src="https://travis-ci.org/dhruvaray/backbone-associations.png?branch=master"/></a>
+
+                    <br/><br/>
+                    If you like or use the library, do show your appreciation by <a
+                        href="https://github.com/dhruvaray/backbone-associations">starring us</a>
+                </div>
+            </section>
+            <section id="sa-use">
+                <h4>Installation</h4>
+                <hr/>
+                <div class="well well-large">
+        <pre class="prettyprint">
+&lt;script type="text/javascript" src="./js/underscore.js"&gt;&lt;/script&gt;
+&lt;script type="text/javascript" src="./js/backbone.js">&lt;/script&gt;
+&lt;script type="text/javascript" src="./js/backbone-associations.js"&gt;&lt;/script&gt;
+        </pre>
+                    <br/>
+                    Backbone-associations v0.5.0 works with Backbone v0.9.10+ & Underscore v1.4.3+.
+                    <br/>
+                    If you like or use the library, do show your appreciation by <a
+                        href="https://github.com/dhruvaray/backbone-associations">starring us</a>
+
+                </div>
+            </section>
+            <section id="sa-ns">
+                <h4>Next Steps</h4>
+                <hr/>
+                <div class="well well-large">
+                    <ol>
+                        <li> Learn how to <a href="./specify-associations.html"> specify and navigate association </a>hierarchies.
+                        </li>
+                        <li> Learn how to <a href="./events.html">listen to changes</a> in the association hierarchies.
+                        </li>
+                        <li> Go through a <a href="./tutorial.html">comprehensive tutorial</a>.</li>
+                        <li> See real-world <a href="./recipes.html">recipes</a> contributed by users.</li>
+
+                    </ol>
+
+                </div>
+            </section>
+
+        </div>
+    </div>
+</div>
+
+<!-- Placed at the end of the document so the pages load faster -->
+
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?skin=sunburst"></script>
+<script src="http:////ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="./assets/js/bootstrap.js"></script>
+<script src="./assets/js/ba.js"></script>
+
+</body>
+</html>

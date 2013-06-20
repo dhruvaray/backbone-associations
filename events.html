@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Backbone-Associations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Dhruva Ray">
+
+
+    <link href="./assets/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+
+        section {
+            padding-top: 40px;
+        }
+
+        section > .page-header,
+        section > .lead {
+            color: #5a5a5a;
+        }
+
+        section > ul li {
+            margin-bottom: 5px;
+        }
+    </style>
+    <link href="./assets/css/bootstrap-responsive.css" rel="stylesheet">
+
+</head>
+
+<body data-target=".bs-docs-sidebar" data-spy="scroll">
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+
+            <a class="brand" href="index.html">Backbone Associations</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li><a href="./index.html">Home</a></li>
+                    <li><a href="./getting-started.html">Getting Started</a></li>
+                    <li><a href="./specify-associations.html">Specifying Associations</a></li>
+                    <li class="active"><a href="./events.html">Events</a></li>
+                    <li><a href="./tutorial.html">Tutorials</a></li>
+                    <li><a href="./recipes.html">Recipes</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+<!-- Example row of columns -->
+<div class="row-fluid">
+<div class="span3">
+    <div class="well sidebar-nav bs-docs-sidebar affix">
+        <ul class="nav nav-list bs-docs-sidenav">
+            <li class="nav-header">Events</li>
+            <li class="active"><a href="#e-intro">Introduction</a></li>
+            <li><a href="#e-catalogue">Event Catalogue</a></li>
+            <li><a href="#e-cr-api">Change-Related API</a></li>
+            <li><a href="#e-pitfalls">Pitfalls</a></li>
+        </ul>
+    </div>
+</div>
+<div class="span9">
+<section id="e-intro">
+    <h4>Introduction to Events</h4>
+    <hr/>
+    <div class="well well-large">
+        <p>
+            Typically Backbone Applications will store application-relevant object graphs in a context (either
+            application-wide or local) which will be referred to by other entities (views typically, but possibly even
+            other models) in the application as the source of data. It therefore becomes very important to provide a
+            mechanism to listen to any kind of create-update-remove operations happening on these graphs.
+            Backbone-Associations piggy-backs on the <a href="http://backbonejs.org/#Events-catalog">standard backbone
+            events </a> to provide applications a way to stay tuned to these updates. However, with an object graph, the
+            use of a <strong>fully qualified path name </strong> to specify an event name is more appropriate. A fully
+            qualified event name simply specifies the path from the source of the event to the receiver of the event.
+            The fully qualified event name reduces to the regular Backbone event names for Backbone Models (single node
+            graphs). The remaining event arguments are identical to the Backbone event arguments and vary based on event
+            type(change,add remove etc). Backbone-Associations also honours the Backbone <a
+                href="http://backbonejs.org/#Model-hasChanged">change-related state</a> API. This means that previous
+            and changed attributes will continue to work as expected with CRUD operations on the object graph.
+        </p>
+
+        An update like this
+
+    <pre class="prettyprint">
+    emp.get('works_for').get("locations").at(0).set('zip', 94403);
+    </pre>
+
+        can be listened to at various levels (in the object hierarchy) by spelling out the appropriate path
+
+    <pre class="prettyprint">
+    emp.on('change:works_for.locations[0].zip', callback_function);
+    //Fully qualified event name is 'works_for.locations[0].zip'
+
+    emp.on('change:works_for.locations[*]', callback_function);
+    //Fully qualified event name is 'works_for.locations[*]'
+
+    emp.get('works_for').on('change:locations[0].zip', callback_function);
+    //Fully qualified event name is 'locations[0].zip'
+
+    emp.get('works_for').get('locations').at(0).on('change:zip', callback_function);
+    //Fully qualified event name is 'zip'
+    </pre>
+
+        With Backbone v0.9.9+ another object can also listen in to events like this
+
+    <pre class="prettyprint">
+    var listener = {};
+    _.extend(listener, Backbone.Events);
+
+    listener.listenTo(emp, 'change:works_for.locations[0].zip', callback_function);
+
+    listener.listenTo(emp.get('works_for'), 'change:locations[0].zip', callback_function);
+
+    listener.listenTo(emp.get('works_for').get('locations').at(0), 'change:zip', callback_function);
+    </pre>
+    </div>
+</section>
+<section id="e-catalogue">
+<h4>Event Catalogue</h4>
+<hr/>
+<div class="well well-large">
+
+<p>Backbone-Associations only changes the event name (of standard Backbone events) to a fully qualified event name.
+    Beyond that, the regular Backbone events, their arguments and the <a href="http://backbonejs.org/#Model-hasChanged">change-related
+        methods</a> should continue to work as usual. Additionally, Backbone-associations introduces a new event -
+    nested-change - which becomes relevant in an object graph scenario.</p>
+
+
+<dl class="dl-horizontal">
+    <dt>"change:[path]"</dt>
+    <dd>path to the nested Model or Collection which caused the update. This can be easily understood with examples
+
+        <ul>
+            <li>
+                <h5>Scenario I : Source of update is an item in a collection</h5>
+                            <pre class="prettyprint">
+emp.get('works_for').get("locations").at(0).set('zip', 94403);
+                            </pre>
+                <p>
+                    emp could listen in to changes happening in locations in these possible ways
+                <ol>
+                    <li>
+                                        <pre class="prettyprint">
+//Listen to a specific item in the collection
+emp.on('change:works_for.locations[0]', callback_function)
+                                        </pre>
+                    </li>
+                    <li>
+                                        <pre class="prettyprint">
+//Listen to changes in any item in the collection. The arguments will contain the changed item
+emp.on('change:works_for.locations[*]', callback_function)
+                                        </pre>
+                    </li>
+                    <li>
+                                        <pre class="prettyprint">
+//Listen to a specific attribute in a specific item in the collection
+emp.on('change:works_for.locations[0].zip', callback_function)
+                                        </pre>
+                    </li>
+                    <li>
+                                        <pre class="prettyprint">
+//Listen to a specific attribute in any item in the collection
+emp.on('change:works_for.locations[*].zip', callback_function)
+                                        </pre>
+                    </li>
+
+                </ol>
+
+
+                </p>
+            </li>
+            <li>
+                <h5>Scenario II : Source of update is an AssociatedModel</h5>
+                            <pre class="prettyprint">
+emp.get('works_for').set({name:"Marketing"});
+                            </pre>
+
+                <p>
+                    emp could listen in to changes happening in name
+                <ol>
+                    <li>
+                                        <pre class="prettyprint">
+//Listen to any change in works_for attribute
+emp.on('change:works_for', callback_function)
+                                        </pre>
+                    </li>
+                    <li>
+                                        <pre class="prettyprint">
+//Listen to changes in a specific attribute of works_for
+emp.on('change:works_for.name', callback_function)
+                                        </pre>
+                    </li>
+                    <li>
+                                        <pre class="prettyprint">
+//Listen to changes in any child Model or Collection at any depth
+emp.on('nested-change', callback_function)
+                                        </pre>
+                    </li>
+                    <li>
+                                        <pre class="prettyprint">
+//Will NOT fire. See nested-change event documentation for why this is so
+emp.on('change', callback_function)
+                                        </pre>
+                    </li>
+
+
+                </ol>
+
+
+                </p>
+            </li>
+
+
+        </ul>
+
+        </table>
+
+    </dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>"nested-change"</dt>
+    <dd>
+        <p>
+            In a single node graph (like Backbone), a change in any attribute would trigger the "change" event. However
+            when model attributes can be other Models (and Collections), a property change in a contained Model would
+            not trigger a "change" event in the parent. This is because the reference to the contained Model has not
+            really changed (in the sense of a memory replacement). This can be limiting if the intention is to listen in
+            to any "change" event in the entire object graph (without specifying fully qualified paths) at a higher
+            level (like the root of the hierarchy). The nested-change event was born to address this flow. This will be
+            useful in scenarios where it is just important to know that something in sub hierarchies has changed.
+        </p>
+        Consider this example to make it clear
+
+                    <pre class="prettyprint">
+//Listen to changes in *any* child Model or Collection at any depth
+emp.on('nested-change', function () {
+    //arguments[0] > "works_for.controls[0].locations[0]"
+    //arguments[1] > emp.get("works_for.controls[0].locations[0]")
+});
+
+//Will NOT fire.
+emp.on('change', callback_function)
+
+emp.get('works_for').get("locations").at(0).set('zip', 94403);
+                    </pre>
+
+
+        <table class="table table-condensed table-bordered">
+            <tr>
+                <td>Arguments</td>
+                <td>Description</td>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>The full path to the changed object</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>The changed object
+                </td>
+            </tr>
+        </table>
+
+
+    </dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>
+        add:[path]
+    </dt>
+    <dd>
+        path to the nested Collection where the item was added.
+        This can be easily understood with an example.
+
+        <p>
+
+                        <pre class="prettyprint">
+emp.get('works_for.controls[1].locations').add({
+    id:3,
+    add1:"loc3"
+});
+                        </pre>
+        emp can tune in to add events by specifying a path like this
+                        <pre class="prettyprint">
+emp.on('add:works_for.controls[1].locations', function () {
+// Add action happened for location collection inside the sub-graph rooted at controls[1]
+});
+emp.on('add:works_for.controls[*].locations', function () {
+// Add action happened for location collection inside any control sub-graphs
+});
+                        </pre>
+        </p>
+
+
+    </dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>
+        remove:[path]
+    </dt>
+    <dd>
+        path to the nested Collection where the item was removed.
+        This can be easily understood with an example.
+
+        <p>
+
+                        <pre class="prettyprint">
+emp.get('works_for.controls[0].locations').remove(loc2);
+                        </pre>
+        emp can tune in to remove events by specifying a path like this
+                        <pre class="prettyprint">
+emp.on('remove:works_for.controls[0].locations', function () {
+//Listen to remove changes in the locations collection rooted at controls[0]
+});
+emp.on('remove:works_for.controls[*].locations', function () {
+//Listen to remove changes in the locations collection rooted inside any `controls` sub-graph
+});
+                        </pre>
+        </p>
+
+
+    </dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>
+        reset:[path]
+    </dt>
+    <dd>
+        path to the collection which was reset.
+        This can be easily understood with an example.
+
+        <p>
+
+                        <pre class="prettyprint">
+emp.get('works_for.controls[0].locations').reset();
+                        </pre>
+        emp can tune in to reset events by specifying a path like this
+                        <pre class="prettyprint">
+emp.on('reset:works_for.controls[0].locations', function () {
+//Listen to reset changes in the locations collection rooted at controls[0]
+});
+
+emp.on('reset:works_for.controls[*].locations', function () {
+//Listen to reset changes in the locations collection rooted inside any `controls` sub-graph
+});
+                        </pre>
+        </p>
+
+
+    </dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>
+        sort:[path]
+    </dt>
+    <dd>
+        path to the collection which was sorted.
+        This can be easily understood with an example.
+
+        <p>
+
+                        <pre class="prettyprint">
+locCol.comparator = function(l){
+    return l.get("state");
+};
+emp.get('works_for.controls[0].locations').sort();
+                        </pre>
+        emp can tune in to sort events by specifying a path like this
+                        <pre class="prettyprint">
+emp.on('sort:works_for.controls[0].locations', function(){
+//Listen to sort changes in the locations collection rooted at controls[0]
+});
+emp.on('sort:works_for.controls[*].locations', function(){
+//Listen to sort changes in the locations collection rooted inside any `controls` sub-graph
+});
+
+                        </pre>
+        </p>
+
+
+    </dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>
+        destroy:[path]
+    </dt>
+    <dd>
+        path to the collection which was destroyed.
+        This can be easily understood with an example.
+
+        <p>
+
+                        <pre class="prettyprint">
+loc = emp.get('works_for.controls[0].locations[0]');
+loc.destroy();
+                        </pre>
+        emp can tune in to destroy events by specifying a path like this
+                        <pre class="prettyprint">
+emp.on("destroy:works_for.controls[0].locations", function(){
+//Listen to destroy events in the locations collection rooted at controls[0]
+});
+emp.on("destroy:works_for.controls[*].locations", function(){
+//Listen to destroy events in the locations collection rooted inside any `controls` sub-graph
+});
+                        </pre>
+        </p>
+
+
+    </dd>
+</dl>
+
+</div>
+
+
+</section>
+<section id="e-cr-api">
+    <h4>Change related API</h4>
+    <hr/>
+    <div class="well well-large">
+
+
+        <p>
+            Backbone-Associations also honours the Backbone <a href="http://backbonejs.org/#Model-hasChanged">change-related
+            state</a> API. This means that previous and changed attributes will continue to work as expected with CRUD
+            operations on the object graph.
+
+            <pre class="prettyprint">
+
+    emp.on('change:works_for', function () {
+        console.log("Fired emp > change:works_for.name...");
+        //emp.get("works_for").hasChanged() === true;
+        //emp.hasChanged() === true;
+        //emp.hasChanged("works_for") === true;
+        //emp.changedAttributes()['works_for'].toJSON() equals emp.get("works_for").toJSON();
+        //emp.get("works_for").previousAttributes()["name"] === "R&D";
+        //emp.get("works_for").previous("name") === "R&D";
+    });
+
+
+    emp.get('works_for').set({name:"Marketing"});
+            </pre>
+        </p>
+
+    </div>
+
+
+</section>
+<section id="e-pitfalls">
+    <h4>Pitfalls</h4>
+    <hr/>
+    <div class="well well-large">
+
+
+        <ol>
+            <li>
+                <h5>Query the appropriate object to determine change</h5>
+
+                <p>When assigning a previously created object graph to a property in an associated model, care must be
+                    taken to query the appropriate object for the changed properties.</p>
+
+                <pre class="prettyprint">
+dept1 = new Department({
+    name:"R&D",
+    number:"23"
+});
+
+//dept1.hasChanged() === false;
+
+emp.set('works_for', dept1);
+                </pre>
+
+                Then inside a previously defined change event handler
+
+                <pre class="prettyprint">
+emp.on('change:works_for', function () {
+//emp.get('works_for').hasChanged() === false; as we query a previously created `dept1` instance
+//emp.hasChanged('works_for') === true; as we query emp whose 'works_for' attribute has changed
+});
+                </pre>
+
+            </li>
+
+            <br/><br/>
+            <li>
+                <h5>Use unqualified change event name with care</h5>
+
+                <p>
+                    This extension makes use of fully-qualified-event-path names to identify the location of the change
+                    in the object graph. (And the event arguments would have the changed object or object property).
+
+                    The unqualified change event would work if an entire object graph is being replaced with another.
+                    For example
+
+                <pre class="prettyprint">
+emp.on('change', function () {
+    //This WILL fire
+});
+emp.on('change:works_for', function () {
+    //This WILL fire
+});
+emp.set('works_for', {name:'Marketing', number:'24'});
+                </pre>
+
+                However, if attributes of a nested object are changed, the unqualified change event will not fire for
+                objects (and their parents) who have that nested object as their child.
+
+                <pre class="prettyprint">
+emp.on('change', function () {
+   //This will NOT fire
+});
+emp.on('change:works_for', function () {
+   //This WILL fire because something in works_for has changed
+});
+emp.get('works_for').set('name','Marketing');
+                </pre>
+
+                To listen to changes in sub-hierarchies at a higher level (like emp in this case), use the nested-change
+                instead
+
+                 <pre class="prettyprint">
+emp.on('nested-change', function () {
+   //This will  fire
+   //args[0] > works_for
+   //args[1] > emp.get('works_for')
+});
+                </pre>
+
+                </p>
+            </li>
+
+        </ol>
+    </div>
+
+</section>
+</div>
+
+</div>
+
+
+</div>
+
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="http:////ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?skin=sunburst"></script>
+<script src="./assets/js/bootstrap.js"></script>
+<script src="./assets/js/ba.js"></script>
+
+
+</body>
+</html>

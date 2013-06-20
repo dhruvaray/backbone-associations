@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Backbone-Associations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Dhruva Ray">
+
+
+    <link href="./assets/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+        }
+
+        #footer {
+            background-color: #f5f5f5;
+            border-top: 1px solid #E5E5E5;
+            margin-top: 20px;
+            padding: 30px 0;
+            text-align: center;
+        }
+
+            /* Lastly, apply responsive CSS fixes as necessary */
+        @media (max-width: 767px) {
+            #footer {
+                margin-left: -20px;
+                margin-right: -20px;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+
+    </style>
+    <link href="./assets/css/bootstrap-responsive.css" rel="stylesheet">
+</head>
+<body>
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="brand" href="index.html">Backbone Associations</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="./index.html" class="active">Home</a></li>
+                    <li><a href="./getting-started.html">Getting Started</a></li>
+                    <li><a href="./specify-associations.html">Specifying Associations</a></li>
+                    <li><a href="./events.html">Events</a></li>
+                    <li><a href="./tutorial.html">Tutorials</a></li>
+                    <li><a href="./recipes.html">Recipes</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <!-- Main hero unit for a primary marketing message or call to action -->
+    <div class="hero-unit">
+        <h1>Backbone Associations</h1>
+        <br/>
+
+        <p>Backbone plugin to specify 1:1 & 1:N associations between Backbone Models. <br/>Navigate object hierarchies
+            with a simple path notation.<br/> Tune-in to changes in the web of associated objects with standard Backbone
+            events - change, add, remove, reset and others.</p>
+
+        <p><a href="./getting-started.html" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+    </div>
+
+    <!-- Example row of columns -->
+    <div class="row">
+        <div class="span4">
+            <h2>Fast & lightweight</h2>
+
+            <p>Low memory footprint. Only 5.5KB gzipped & minified. Significantly faster than similar
+                implementations... </p>
+
+            <p><a class="btn" href="./speed.html">View details &raquo;</a></p>
+        </div>
+        <div class="span4">
+            <h2>Low learning curve</h2>
+
+            <p>Specify the associations and you are ready to go with the regular Backbone style eventing...</p>
+
+            <p><a class="btn" href="./getting-started.html">View details &raquo;</a></p>
+        </div>
+        <div class="span4">
+            <h2>Backbone style eventing</h2>
+
+            <p>Backbone-Associations only changes the event name (of standard Backbone events) to a fully qualified
+                event name. Beyond that, the regular Backbone events, their arguments and the <a
+                        href="http://backbonejs.org/#Model-hasChanged">change-related methods</a> should continue to
+                work as usual...</p>
+
+            <p><a class="btn" href="./events.html">View details &raquo;</a></p>
+        </div>
+    </div>
+</div>
+<!-- /container -->
+
+<div id="footer">
+    <div class="container">
+        <ul class="inline">
+            <li>
+                <iframe src="./ext/github-btn.html?user=dhruvaray&repo=backbone-associations&type=watch&count=true&size=large"
+                        allowtransparency="true" frameborder="0" scrolling="0" width="170" height="30"></iframe>
+            </li>
+            <li>
+                <iframe src="./ext/github-btn.html?user=dhruvaray&repo=backbone-associations&type=fork&count=true&size=large"
+                        allowtransparency="true" frameborder="0" scrolling="0" width="170" height="30"></iframe>
+            </li>
+        </ul>
+        <small>
+            Code licensed under <a
+                href="https://github.com/dhruvaray/backbone-associations/blob/master/LICENSE.txt">MIT</a>
+            <ul class="inline">
+                <li>
+                    <a href="https://github.com/dhruvaray/backbone-associations/changelog.md">Change log</a>
+                </li>
+                <li class="muted"> |</li>
+                <li>
+                    <a href="https://github.com/dhruvaray/backbone-associations/issues?sort=created&state=open">Issues</a>
+                </li>
+                <li class="muted"> |</li>
+                <li>
+                    <a href="https://github.com/dhruvaray/backbone-associations/contributors">Contributors</a>
+                </li>
+            </ul>
+        </small>
+    </div>
+</div>
+
+<!-- Le javascript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="http:////ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="./assets/js/bootstrap.js"></script>
+<script src="./assets/js/ba.js"></script>
+</body>
+</html>
