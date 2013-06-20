@@ -22,26 +22,60 @@ $(document).ready(function () {
 
     var Location = Backbone.AssociatedModel.extend({
         defaults:{
+            id:-1,
             add1:"",
             add2:null,
             zip:"",
             state:""
-        }
+        },
+        urlRoot:'/location'
     });
+
+    //location store
+    var locations = new Backbone.Collection([
+        new Location({id:3, add1:"loc3", state:"AL"}),
+        new Location({id:4, add1:"loc4", state:"VA"}),
+        new Location({id:5, add1:"loc5", state:"CA"}),
+        new Location({id:6, add1:"loc6", state:"IN"}),
+        new Location({id:7, add1:"loc7", state:"NY"}),
+        new Location({id:8, add1:"loc8", state:"NY"})
+    ]);
+
+    var map2locs = function (ids) {
+
+        if (ids instanceof Backbone.Collection) return ids;
+        if (_.isArray(ids) && ids.length > 0) {
+            if (_.isObject(ids[0])) //dummy logic to check whether array has ids or objects
+                return ids;
+        } else {
+            if (_.isObject(ids))
+                return ids;
+        }
+
+        ids = _.isArray(ids) ? ids.slice() : [ids];
+        return _.map(ids, function (id) {
+            var mapped = _.find(locations.models, function (m) {
+                if (m.get('id') == id) return m;
+            });
+            return mapped ? mapped : id;
+        });
+    };
 
     var Project = Backbone.AssociatedModel.extend({
         relations:[
             {
                 type:Backbone.Many,
                 key:'locations',
-                relatedModel:Location
+                relatedModel:Location,
+                map:map2locs
             }
         ],
         defaults:{
             name:"",
             number:0,
             locations:[]
-        }
+        },
+        urlRoot:'/project'
     });
 
 
@@ -55,7 +89,8 @@ $(document).ready(function () {
             {
                 type:Backbone.Many,
                 key:'locations',
-                relatedModel:Location
+                relatedModel:Location,
+                map:map2locs
             }
         ],
         defaults:{
@@ -63,7 +98,8 @@ $(document).ready(function () {
             locations:[],
             number:-1,
             controls:[]
-        }
+        },
+        urlRoot:'/department'
     });
 
     var Dependent = Backbone.AssociatedModel.extend({
@@ -76,15 +112,31 @@ $(document).ready(function () {
             sex:'F', //{F,M}
             age:0,
             relationship:'S' //Values {C=Child, P=Parents}
-        }
+        },
+        urlRoot:'/dependent'
     });
+
+    //dept store
+    var store = new Backbone.Collection([new Department({number:99, name:"sales"}), new Department({number:100, name:"admin"})]);
+
+    var map2dept = function (id) {
+
+        if (id instanceof Department) return id;
+        if (_.isObject(id)) return id;
+
+        var found = _.find(store.models, function (m) {
+            return m.get('number') == id
+        });
+        return found ? found : id;
+    };
 
     Employee = Backbone.AssociatedModel.extend({
         relations:[
             {
                 type:Backbone.One,
                 key:'works_for',
-                relatedModel:Department
+                relatedModel:Department,
+                map:map2dept
             },
             {
                 type:Backbone.Many,
@@ -108,7 +160,8 @@ $(document).ready(function () {
             works_for:{},
             dependents:[],
             manager:null
-        }
+        },
+        urlRoot:'/employee'
     });
 
     Node = Backbone.AssociatedModel.extend({
@@ -180,14 +233,16 @@ $(document).ready(function () {
             loc1 = new Location({
                 add1:"P.O Box 3899",
                 zip:"94404",
-                state:"CA"
+                state:"CA",
+                id:"1"
 
             });
 
             loc2 = new Location({
                 add1:"P.O Box 4899",
                 zip:"95502",
-                state:"CA"
+                state:"CA",
+                id:"2"
             });
 
             project1 = new Project({
@@ -218,6 +273,10 @@ $(document).ready(function () {
 
     test("initialize", 1, function () {
         equal(emp.get('fname'), 'John', 'name should be John');
+    });
+
+    test("VERSION", 1, function () {
+        ok(Backbone.Associations.VERSION, "Backbone.Associations.VERSION exists");
     });
 
     test("primitive attribute set operation", 2, function () {
@@ -369,10 +428,10 @@ $(document).ready(function () {
 
     test("change : second model of nested collection", 1, function () {
 
-        dept1.on('change:locations[0]', function() {
+        dept1.on('change:locations[0]', function () {
             ok(false, 'First model in nested collection should not change');
         });
-        dept1.on('change:locations[1]', function() {
+        dept1.on('change:locations[1]', function () {
             ok(true, 'Second model in nested collection should change');
         });
         loc2.set('zip', '97008');
@@ -421,7 +480,6 @@ $(document).ready(function () {
     });
 
     test("child `change`", 17, function () {
-
         emp.on('change', function () {
             ok(true, "Fired emp change...");
         });
@@ -444,22 +502,12 @@ $(document).ready(function () {
 
             ok(true, "Fired emp change:works_for.name...");
         });
-
         emp.get('works_for').on('change', function () {
             ok(true, "Fired works_for change...");
         });
         emp.get('works_for').on('change:name', function () {
             ok(true, "Fired works_for dept:name change...");
         });
-
-        emp.get('works_for').get('locations').at(0).on('change:zip', function () {
-            ok(true, "Fired works_for locations0:zip change...");
-        });
-
-        emp.get('works_for').get('locations').at(0).on('change', function () {
-            ok(true, "Fired works_for locations0 change...");
-        });
-
         emp.set({'works_for.name':'Marketing'});//4+7
         emp.set('works_for', {name:"Marketing", number:29});//2
         emp.set('works_for', undefined);//2
@@ -467,9 +515,9 @@ $(document).ready(function () {
         emp.set('works_for', dept1);//0
     });
 
-    test("child `change in collection`", 14, function () {
+    test("child `change in collection`", 18, function () {
         emp.get('works_for').get('locations').at(0).on('change:zip', function () {
-            ok(true, "Fired works_for locations0:zip change...");
+            ok(true, "Fired works_for locations[0]:zip change...");
         });
         emp.get('works_for').get('locations').at(0).on('change', function () {
             equal(true, emp.get('works_for').hasChanged());
@@ -480,29 +528,17 @@ $(document).ready(function () {
             ok(true, "Fired works_for locations0 change...");
         });
 
+
+        emp.get('works_for').on('change:locations[*]', function () {
+            ok(true, "Fired emp.works_for change:locations[*]...");
+        });
+
         emp.get('works_for').on('change:locations[0].zip', function () {
             ok(true, "Fired emp.works_for change:locations[0].zip...");
         });
 
         emp.get('works_for').on('change:locations[0]', function () {
             ok(true, "Fired emp.works_for change:locations[0]...");
-        });
-
-        emp.on('change:works_for.locations[0].zip', function () {
-            ok(true, "Fired emp change:works_for.locations[0].zip...");
-        });
-
-        emp.on('change:works_for.locations[0]', function () {
-            ok(true, "Fired emp change:works_for.locations[0]...");
-        });
-
-
-        emp.on('change:works_for.controls[0].locations[0].zip', function () {
-            ok(true, "Fired emp change:works_for.controls[0].locations[0].zip...");
-        });
-
-        emp.on('change:works_for.controls[0].locations[0]', function () {
-            ok(true, "Fired emp change:works_for.controls[0].locations[0]...");
         });
 
         emp.get('works_for').on('change:controls[0].locations[0].zip', function () {
@@ -513,9 +549,461 @@ $(document).ready(function () {
             ok(true, "Fired emp.works_for change:controls[0].locations[0]...");
         });
 
-        emp.get('works_for').get("locations").at(0).set('zip', 94403);//10 + 4
+        emp.get('works_for').on('change:controls.locations', function () {
+            ok(true, "Fired emp.works_for change:controls.locations...");
+        });
+
+        emp.on('change:works_for.locations[0].zip', function () {
+            ok(true, "Fired emp change:works_for.locations[0].zip...");
+        });
+
+        emp.on('change:works_for.locations[0]', function () {
+            ok(true, "Fired emp change:works_for.locations[0]...");
+        });
+
+        emp.on('change:works_for.locations[*]', function () {
+            ok(true, "Fired emp change:works_for.locations[*]...");
+        });
+
+        emp.on('change:works_for.controls[0].locations[0].zip', function () {
+            ok(true, "Fired emp change:works_for.controls[0].locations[0].zip...");
+        });
+
+        emp.on('change:works_for.controls[0].locations[0]', function () {
+            ok(true, "Fired emp change:works_for.controls[0].locations[0]...");
+        });
+
+        emp.on('change:works_for.controls[*].locations[*]', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations[*]...");
+        });
+
+        emp.on('change:works_for.controls[*].locations[*].zip', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations[*].zip...");
+        });
+
+        emp.get('works_for').get("locations").at(0).set('zip', 94403);
     });
 
+    test("collection `*` change", 12, function () {
+        emp.on('change:works_for.controls[0].locations[0]', function () {
+            ok(true, "Fired emp change:works_for.controls[0].locations[0]");
+        });
+        emp.on('change:works_for.controls[*].locations[*]', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations[*]");
+        });
+        emp.on('change:works_for.controls[*].locations[*].zip', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations[*].zip");
+        });
+
+        emp.on('change:works_for.controls[1].locations', function () {
+            ok(true, "Fired emp change:works_for.controls[1].locations");
+        });
+        emp.on('change:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations");
+        });
+        emp.get('works_for.controls[0].locations[0]').set('zip', 94406); //3
+        emp.get('works_for.controls[1].locations[0]').set('add1', 'new changed address'); //1
+
+        emp.set('works_for.controls[1].locations', undefined); // 2
+        emp.set('works_for.controls[1].locations', [loc1]); // 2
+
+        emp.on('change:works_for.locations[0]', function () {
+            ok(false, "emp change:works_for.locations[0] should not be fired");
+        });
+        emp.on('change:works_for.locations[1]', function () {
+            ok(true, "Fired emp change:works_for.locations[1]");
+        });
+        emp.on('change:works_for.locations[*]', function () {
+            ok(true, "Fired emp change:works_for.locations[*]");
+        });
+        emp.get('works_for.locations[1]').set('zip', 94407); //2
+
+        emp.get('works_for').on('change:locations', function () {
+            ok(true, "Fired emp.works_for change:locations...");
+        });
+
+        emp.set('works_for.locations', undefined); //1
+        emp.set('works_for.locations', [loc1]); //1
+    });
+
+    test("collection `*` add", 5, function () {
+        emp.on('add:works_for.controls[0].locations', function () {
+            ok(true, "Fired emp add:works_for.controls[0].locations...");
+        });
+        emp.on('add:works_for.controls[1].locations', function () {
+            ok(true, "Fired emp add:works_for.controls[1].locations...");
+        });
+        emp.on('add:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp add:works_for.controls[*].locations...");
+        });
+
+        emp.on('add:works_for.locations', function () {
+            ok(true, "add:works_for.locations");
+        });
+
+        emp.on('add:works_for.locations[*]', function () {
+            ok(false, "emp add:works_for.location[*] should not be fired.");
+        });
+
+        emp.get('works_for.controls[0].locations').add(loc2); //2
+        emp.get('works_for.controls[1].locations').add({ //2
+            id:3,
+            add1:"loc3"
+        });
+        emp.get('works_for.locations').add({ //1
+            id:4,
+            add1:"loc4"
+        });
+    });
+
+    test("collection `*` remove", 5, function () {
+        emp.get('works_for.controls[0].locations').add(loc2);
+        emp.get('works_for.locations').add(loc2);
+
+        emp.on('remove:works_for.controls[0].locations', function () {
+            ok(true, "Fired emp remove:works_for.controls[0].locations...");
+        });
+        emp.on('remove:works_for.controls[1].locations', function () {
+            ok(true, "Fired emp remove:works_for.controls[1].locations...");
+        });
+        emp.on('remove:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp remove:works_for.controls[*].locations...");
+        });
+
+        emp.on('remove:works_for.locations', function () {
+            ok(true, "Fired remove:works_for.locations");
+        });
+
+        emp.on('remove:works_for.locations[*]', function () {
+            ok(false, "emp remove:works_for.location[*] should not be fired.");
+        });
+
+        emp.get('works_for.controls[0].locations').remove(loc2); //2
+        emp.get('works_for.controls[1].locations').remove(loc2); //2
+        emp.get('works_for.locations').remove(loc2); //1
+    });
+
+    test("collection `*` reset", 3, function () {
+        emp.on('reset:works_for.controls[0].locations', function () {
+            ok(true, "Fired emp reset:works_for.controls[0].locations");
+        });
+
+        emp.on('reset:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp reset:works_for.controls[*].locations");
+        });
+
+        emp.on('reset:works_for.locations', function () {
+            ok(true, "Fired reset:works_for.locations");
+        });
+        emp.get('works_for.controls[0].locations').reset();
+        emp.get('works_for.locations').reset();
+    });
+
+    test("collection `*` destroy", function () {
+        emp.on("destroy:works_for.controls[0].locations", function () {
+            ok(true, "Fired emp destroy:works_for.controls[0].locations");
+        });
+        emp.on("destroy:works_for.controls[*].locations", function () {
+            ok(true, "Fired emp destroy:works_for.controls[*].locations");
+        });
+        var loc = emp.get('works_for.controls[0].locations[0]');
+        loc.sync = function (method, model, options) {
+            return options.success.call(this, null, options);
+        };
+        loc.destroy();
+    });
+
+    test("collection `*` sort", function () {
+        emp.on('change:works_for.controls[0].locations', function () {
+            ok(true, "Fired emp change:works_for.controls[0].locations");
+        });
+        emp.on('change:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp change:works_for.controls[*].locations");
+        });
+        emp.get('works_for').on('change:controls[0]', function () {
+            ok(true, "Fired emp change:works_for.controls[0]");
+        });
+        emp.on('nested-change', function () {
+            ok(true, "Fired emp nested-change");
+        });
+        emp.set('works_for.controls[0].locations', locations); //4
+
+        // check length and add comparator
+        var locCol = emp.get('works_for.controls[0].locations');
+        equal(locCol.length, 6, "location collection's length should be 6.");
+
+        locCol.comparator = function (l) {
+            return l.get("state");
+        };
+
+        emp.on('sort:works_for.controls[0].locations', function () {
+            ok(true, "Fired emp sort:works_for.controls[0].locations");
+        });
+        emp.on('sort:works_for.controls[*].locations', function () {
+            ok(true, "Fired emp sort:works_for.controls[*].locations");
+        });
+        emp.on('sort:works_for.controls.locations', function () {
+            ok(false, "emp sort:works_for.controls.locations should not be fired");
+        });
+        emp.get('works_for.controls[0].locations').sort();
+    });
+
+    test("child `nested-change`", 5, function () {
+        emp.get('works_for').get('locations').on('change', function () {
+            ok(true, "Regular backbone change event from collections...");
+        });
+
+        emp.get('works_for').on('nested-change', function () {
+
+            if (arguments[0] == "controls[0].locations[0]")
+                ok(true, "Fired emp.works_for change:controls[0].locations[0]...");
+            if (arguments[0] == "locations[0]")
+                ok(true, "Fired emp.works_for change:locations[0]...");
+        });
+
+        emp.on('nested-change', function () {
+            if (arguments[0] == "works_for.controls[0].locations[0]")
+                ok(true, "Fired emp change:works_for.controls[0].locations[0]...");
+            if (arguments[0] == "works_for.locations[0]")
+                ok(true, "Fired emp change:works_for.locations[0]...");
+        });
+
+        emp.get('works_for').get("locations").at(0).set('zip', 94403);
+    });
+
+    test("Issue #28", 2, function () {
+        var ItemModel = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'product',
+                    relatedModel:Backbone.AssociatedModel
+                }
+            ],
+            initialize:function () {
+                this.on('change', function () {
+                    ok('change');
+                });
+                this.on('nested-change', function () {
+                    ok('change');
+                });
+                this.on('change:product', function () {
+                    ok('change:product');
+                });
+            }
+        });
+
+        var item = new ItemModel({ product:{ name:'johnny' } });
+
+        item.get('product').set({ name:'dave' });
+    });
+
+
+    test("transform from store", 16, function () {
+        emp.set('works_for', 99);
+        ok(emp.get('works_for').get('name') == "sales", "Mapped id to dept instance");
+
+        emp.get('works_for').set('locations', [3, 4]);
+        ok(emp.get('works_for').get('locations').length == 2, "Mapped ids to location instances");
+        ok(emp.get('works_for').get('locations').at(0).get("id") == 3);
+        ok(emp.get('works_for').get('locations').at(1).get("id") == 4);
+
+        emp.get('works_for').get('locations').add(5);
+
+        ok(emp.get('works_for').get('locations').length == 3, "Mapped ids to location instances");
+        ok(emp.get('works_for').get('locations').at(2).get("id") == 5);
+
+        emp.get('works_for').get('locations').remove(3);
+        ok(emp.get('works_for').get('locations').length == 2);
+        ok(emp.get('works_for').get('locations').at(0).get("id") == 4);
+        ok(emp.get('works_for').get('locations').at(1).get("id") == 5);
+
+        emp.get('works_for').get('locations').reset([6, 7, 8]);
+        ok(emp.get('works_for').get('locations').length == 3);
+        ok(emp.get('works_for').get('locations').at(0).get("id") == 6);
+        ok(emp.get('works_for').get('locations').at(1).get("id") == 7);
+        ok(emp.get('works_for').get('locations').at(2).get("id") == 8);
+
+        emp.get('works_for').get('locations').set([3, 7]);
+        ok(emp.get('works_for').get('locations').length == 2);
+        ok(emp.get('works_for').get('locations').at(0).get("id") == 7);
+        ok(emp.get('works_for').get('locations').at(1).get("id") == 3);
+
+    });
+
+    test("Issue  #35", 4, function () {
+
+        var FieldInputType = Backbone.Model.extend({
+            defaults:{
+                id:"-1",
+                type:"",
+                source:"<div/>"
+            }
+        });
+
+        store = new Backbone.Collection([
+            {id:1, type:"text", source:"<input type='text'/>"},
+            {id:2, type:'email', source:"<input type='email'/>"
+            }
+        ], {model:FieldInputType});
+
+        var Field = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'type',
+                    relatedModel:FieldInputType,
+                    map:function (id) {
+                        return store.findWhere({type:id});
+                    }
+                }
+            ],
+
+            defaults:{
+                type:undefined,
+                data:undefined,
+                name:""
+            },
+
+
+            //Custom over-ride for James-demo to simulate a network
+            sync:function (method, model, options) {
+                var name = "Field" + Math.floor((Math.random() * 10) + 1);
+                return options.success.call(this, {
+                    type:"text",
+                    data:"value to be shown on UI",
+                    name:name
+                }, options);
+            }
+
+        });
+
+        //Scenario 1 : Local set/get
+        var second = new Field({name:'First Name', type:'text' });
+        var job = new Field({name:'Job', type:'email'});
+
+        equal(second.get('type').get('source'), "<input type='text'/>");
+        equal(job.get('type').get('source'), "<input type='email'/>");
+
+        //Scenario 2 : Over the wire set/get
+        var first = new Field();
+        first.fetch();
+
+        equal(first.get('type').get('source'), "<input type='text'/>");
+
+        //Scenario 3: Set the id to a different value at a later stage
+        second.set('type', "email");
+        equal(second.get('type').get('source'), "<input type='email'/>");
+
+
+    });
+
+
+    test("Issue #40", 5, function () {
+
+        var CartItem = Backbone.AssociatedModel.extend({
+            defaults:{
+                qty:0
+            }
+        });
+
+        var Cart = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.Many,
+                    key:'items',
+                    relatedModel:CartItem
+                }
+            ],
+            getCartQty:function () {
+                return this.get('items').reduce(function (memo, item) {
+                    return memo + item.get('qty');
+                }, 0);
+            },
+
+            defaults:{
+                items:undefined
+            }
+        });
+
+        var Account = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'cart',
+                    relatedModel:Cart
+                }
+            ],
+            defaults:{
+                cart:undefined
+            }
+        });
+
+        var a = new Account();
+        var c = new Cart();
+
+        a.set('cart', c);
+
+        a.on('change:cart.items', function () {
+            ok(true, "Fired change:cart.items");
+        });
+
+        var ci1 = new CartItem({qty:5});
+        var ci2 = new CartItem({qty:7});
+        c.set('items', [ci1, ci2]); // change:cart.items => 1
+        equal(a.get('cart').getCartQty(), 12); // => 1        
+
+        a.once('add:cart.items', function () {
+            ok(true, "Fired add:cart.items");
+        });
+
+        var ci3 = new CartItem({qty:7});
+        c.get('items').add(ci3); // add:cart.items => 1
+        equal(a.get('cart').getCartQty(), 19); // => 1
+
+        a.on('change:cart.items[*]', function () {
+            equal(a.get('cart').getCartQty(), 24);
+        });
+
+        c.get('items').at(0).set('qty', 10); // change:cart.items[*] => 1
+    });
+
+    test("Issue #31", 5, function () {
+
+        var Model1 = Backbone.AssociatedModel.extend({});
+        var Model2 = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:"model1",
+                    relatedModel:Model1
+                }
+            ]
+        });
+        var m2 = new Model2({id:1, model1:{id:2, name:"Name"}, version:"m2.0"});
+        var m1 = m2.get("model1");
+        m2.once("change:model1", function () {
+            //both the parent object and the child object have the updated values in the event handler
+            equal(m2.get('version'), "m2.1");
+            equal(m2.get('model1').get('name'), "Name2");
+        });
+
+        m2.get('model1').on("change", function () {
+            //both the parent object and the child object have the updated values in the event handler
+            equal(m2.get('version'), "m2.1");
+            equal(m2.get('model1').get('name'), "Name2");
+        });
+
+        // Fake server response : The response from server side can update m2 on success
+        m2.set({id:1, model1:{id:2, name:"Name2"}, version:"m2.1"});
+
+        equal(m1, m2.get("model1"));
+
+        //Should not trigger event in m2.get('model1').on("change", callback) as we have a diff model1 instance
+        m2.set({id:1, model1:{id:3, name:"Name3"}, version:"m2.1"});
+
+
+    });
 
     test("add multiple refs to the same collection", 6, function () {
 
@@ -551,56 +1039,7 @@ $(document).ready(function () {
 
     });
 
-    test("child `raise nested events: Issue #15`", 6, function () {
-
-        emp.on('change', function () {
-            ok(true, "Fired emp change...");
-        });
-        emp.on('change:works_for', function () {
-            ok(true, "Fired emp change:works_for...");
-        });
-        emp.on('change:works_for.name', function () {
-            ok(true, "Fired emp change:works_for.name...");
-        });
-        emp.on('change:works_for.number', function () {
-            ok(true, "Fired emp change:works_for.number...");
-        });
-        emp.on('nestedevent:works_for', function () {
-            ok(true, "Fired emp nestedevent:works_for...");
-        });
-
-
-        emp.get('works_for').on('change', function () {
-            emp.get('works_for').trigger("nestedevent", arguments);
-            ok(true, "Fired works_for change...");
-        });
-        emp.get('works_for').on('change:name', function () {
-            ok(true, "Fired works_for dept:name change...");
-        });
-        emp.get('works_for').on('nestedevent', function () {
-            ok(true, "Fired works_for nestedevent...");
-        });
-
-        emp.get('works_for').set({name:"Marketing"});//6
-
-    });
-
-    test("child `add`", 19, function () {
-
-        /*emp.on('all',function(event){
-         ok(true,"Fired emp " + event);
-         });
-
-         emp.get('dependents').on('all',function(event){
-         ok(true,"Fired emp.dependents " + event);
-         });
-         emp.get('dependents').at(0).on('all',function(event){
-         ok(true,"Fired emp.dependents.at(0) " + event);
-         });*/
-
-        emp.on('add', function () {
-            ok(true, "Fired emp change...");
-        });
+    test("child `add`", 21, function () {
         emp.on('add:dependents', function () {
             ok(true, "Fired emp add:dependents...");
         });
@@ -613,8 +1052,17 @@ $(document).ready(function () {
         emp.on('change:dependents[0].age', function () {
             ok(true, "Fired emp change:dependents[0].age...");
         });
+        emp.on('change:dependents[*].age', function () {
+            ok(true, "Fired emp change:dependents[*].age...");
+        });
         emp.on('change:dependents[0]', function () {
             ok(true, "Fired emp change:dependents[0]...");
+        });
+        emp.on('change:dependents[*]', function () {
+            ok(true, "Fired emp change:dependents[*]...");
+        });
+        emp.on('change:dependents', function () {
+            ok(true, "Fired emp change:dependents...");
         });
 
 
@@ -643,16 +1091,15 @@ $(document).ready(function () {
             ok(true, "Fired dependents reset...");
         });
 
-        emp.get("dependents").at(0).set({age:15});//6
+        emp.get("dependents").at(0).set({age:15}); //8
 
-        emp.get("dependents").add(child2);//2
-        emp.get("dependents").add([child3, child4]);//4
-        emp.get("dependents").remove([child1, child4]);//5
-        emp.get("dependents").reset();//2
-
+        emp.get("dependents").add(child2); //2
+        emp.get("dependents").add([child3, child4]); //4
+        emp.get("dependents").remove([child1, child4]); //5
+        emp.get("dependents").reset(); //2
     });
 
-    test("Check clone while assigning prev attributes in event bubble-up",1,function(){
+    test("Check clone while assigning prev attributes in event bubble-up", 1, function () {
         emp.set({"works_for":dept1});
         emp.get('works_for').set({name:"Marketing"});
 
@@ -675,14 +1122,14 @@ $(document).ready(function () {
         var json2 = emp.toJSON();
         var rawJson2 = {"works_for":{"controls":[
             {"locations":[
-                {"add1":"P.O Box 3899", "add2":null, "zip":"94404", "state":"CA"}
+                {"add1":"P.O Box 3899", "add2":null, "id":"1", "zip":"94404", "state":"CA"}
             ], "name":"Project X", "number":"2"},
             {"locations":[
-                {"add1":"P.O Box 4899", "add2":null, "zip":"95502", "state":"CA"}
+                {"add1":"P.O Box 4899", "add2":null, "id":"2", "zip":"95502", "state":"CA"}
             ], "name":"Project Y", "number":"2"}
         ], "locations":[
-            {"add1":"P.O Box 3899", "add2":null, "zip":"94404", "state":"CA"},
-            {"add1":"P.O Box 4899", "add2":null, "zip":"95502", "state":"CA"}
+            {"add1":"P.O Box 3899", "add2":null, "id":"1", "zip":"94404", "state":"CA"},
+            {"add1":"P.O Box 4899", "add2":null, "id":"2", "zip":"95502", "state":"CA"}
         ], "name":"R&D", "number":"23"}, "dependents":[
             {"fname":"Jane", "lname":"Smith", "sex":"F", "age":0, "relationship":"C"},
             {"fname":"Edgar", "lname":"Smith", "sex":"M", "age":0, "relationship":"P"}
@@ -731,7 +1178,7 @@ $(document).ready(function () {
         });
 
         emp2.get('manager').set({'fname':'newEmp2'});
-        equal(emp2.get('fname'), 'newEmp2', "emp's fname should be canged");
+        equal(emp2.get('fname'), 'newEmp2', "emp's fname should be changed");
         equal(emp2.get('manager').get('fname'), 'newEmp2', "manager's fname should be canged");
     });
 
@@ -774,6 +1221,33 @@ $(document).ready(function () {
         );
         equal(emp.get('works_for').get('number'), -1);
         equal(emp.get('works_for').get('type'), void 0);
+
+        emp.set('works_for', undefined);
+        emp.set(
+            {
+                works_for:{
+                    id:6,
+                    number:6
+                }
+            }
+        );
+        equal(emp.get('works_for').get('number'), 6);
+        emp.set(
+            {
+                works_for:{
+                    id:6,
+                    name:'PR'
+                }
+            }
+        );
+        equal(emp.get('works_for').get('number'), 6);
+        emp.set(
+            {
+                works_for:{
+                }
+            }
+        );
+        equal(emp.get('works_for').get('number'), -1);
 
     });
 
@@ -824,8 +1298,102 @@ $(document).ready(function () {
         });
     });
 
+    test("parents", 6, function () {
+        emp.set('works_for', {name:"Marketing", number:29});
 
-    test("relation's options : parse", 3, function () {
+        var emp2 = new Employee({
+            fname:"Tom",
+            lname:"Hanks",
+            age:41,
+            sex:"M"
+        });
+
+        var emp3 = new Employee({
+            fname:"Michelle",
+            lname:"Pfiefer",
+            age:42,
+            sex:"F"
+        });
+
+        var works_for = emp.get('works_for');
+
+        equal(works_for.parents.length, 1);
+
+        emp3.set('works_for', works_for);
+        emp2.set('works_for', works_for);
+        //add multiple times. Should be idempotent
+        emp3.set('works_for', works_for);
+
+        equal(works_for.parents.length, 3);
+
+        emp2.set('works_for', undefined);
+        equal(works_for.parents.length, 2);
+
+        emp.set('works_for', undefined);
+        equal(works_for.parents.length, 1);
+
+        equal(emp.parents.length, 0);
+        equal(emp2.parents.length, 0);
+
+        console.log(works_for.parents);
+
+        //Could cause mem leaks
+        //emp3 = undefined;
+        //equal(works_for.parents.length,1);
+        //console.log(works_for.parents);
+
+
+    });
+
+    test("parents - Issue #39", 3, function () {
+        var Nested = Backbone.AssociatedModel.extend();
+
+        var Child = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'nested',
+                    relatedModel:Nested
+                }
+            ]
+        });
+
+        var Root = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'child',
+                    relatedModel:Child
+                },
+                {
+                    type:Backbone.One,
+                    key:'nested',
+                    relatedModel:Nested
+                }
+            ]
+        });
+
+        var root = new Root;
+        var child = new Child;
+
+        // Add 'nested' to root model
+        root.set('nested', new Nested);
+        equal(root.get('nested').parents[0] === root, true);
+
+
+        // Add 'nested' to child model
+        child.set('nested', new Nested);
+        equal(child.get('nested').parents[0] === child, true);
+
+        // Add child to parent
+        root.set('child', child);
+        equal(root.get('nested').parents[0] === root, true);
+
+
+    });
+
+
+    test("Many relation's options : parse", 3, function () {
         //relation options with `set`
         var NewEmployee = Employee.extend({
             parse:function (obj) {
@@ -881,6 +1449,47 @@ $(document).ready(function () {
             success:function (model, response) {
                 equal(model.get("name"), "c-name", "Company name should be c-name");
                 equal(model.get("employees").at(0).get('prefix'), "Mr.", "Prefix of male employees of company should be Mr.");
+            }
+        });
+    });
+
+    test("One relation's options passed from parent", 2, function () {
+        var NewEmployee = Employee.extend({
+            parse:function (obj) {
+                obj.prefix = "Mr.";
+                return obj;
+            }
+        });
+
+        var Room = Backbone.AssociatedModel.extend({
+            url:"/unit",
+            relations:[
+                {
+                    type:Backbone.One,
+                    relatedModel:NewEmployee,
+                    key:'employee'
+                }
+            ],
+            defaults:{
+                name:'',
+                employee:null
+            },
+            //proxy for server
+            sync:function (method, model, options) {
+                return options.success.call(this, {
+                    name:'room-name',
+                    employee:{
+                        fname:"John",
+                        lname:"Smith"
+                    }
+                }, options);
+            }
+        });
+        var room = new Room(null, {parse:true});
+        room.fetch({
+            success:function (model, response) {
+                equal(model.get("name"), "room-name", "Unit name should be room-name");
+                equal(model.get("employee").get('prefix'), "Mr.", "Prefix of employee should be Mr.");
             }
         });
     });
@@ -992,9 +1601,6 @@ $(document).ready(function () {
         node2.on("nestedevent:children", function () {
             ok(true, "node2 nestedevent:children fired...");
         });
-        node3.on("nestedevent", function () {
-            ok(true, "node3 nested fired...");
-        });
 
         node1.on("change:children[0]", function () {
             ok(true, "node1 change:children[0] fired...");
@@ -1005,19 +1611,6 @@ $(document).ready(function () {
         node3.on("change:children[0]", function () {
             ok(true, "node3 change:children[0] fired...");
         });
-
-
-        //For all the events which could possibly fire
-        /*node2.on('all',function(event){
-         ok(true,"node2 " + event);
-         });
-         node1.on('all',function(event){
-         ok(true,"node1 " + event);
-         });
-         node3.on('all',function(event){
-         ok(true,"node3 " + event);
-         });*/
-
 
         node1.set({parent:node2, children:[node3]});//2+1
         node2.set({parent:node3, children:[node1]});//4+2

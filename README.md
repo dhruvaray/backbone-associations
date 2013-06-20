@@ -6,7 +6,7 @@ It comes with
 * An online [test suite](http://dhruvaray.github.com/backbone-associations/test/test-suite.html) which includes backbone test cases run with `AssociatedModel`s.
 * Performance [tests](http://dhruvaray.github.com/backbone-associations/test/speed-comparison.html).
 
-It was originally born out of a need to provide a simpler and speedier implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/)
+It was originally born out of a need to provide a simpler and speedier implementation of [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/). For specific differences in functionalities and philosophies, refer to this [discussion](https://github.com/dhruvaray/backbone-associations/issues/32). 
 
 ## Contents
 * [Download](#download)
@@ -17,8 +17,10 @@ It was originally born out of a need to provide a simpler and speedier implement
 * [Tutorial : Eventing with a graph of `AssociatedModel` objects](#tutorial-eventing)
 * [Perform set and get operations with fully qualified paths](#paths)
 * [Pitfalls](#pitfalls)
+* [AMD](#amd)
 * [Performance Comparison](#performance)
 * [Change Log](#changelog)
+* [Authors & Contributors](#create)
 
 
 ## <a name="download"/>Download
@@ -26,6 +28,8 @@ It was originally born out of a need to provide a simpler and speedier implement
 * [Production version - 0.4.2](http://dhruvaray.github.com/backbone-associations/backbone-associations-min.js) (1.44K packed and gzipped)
 * [Development version - 0.4.2](http://dhruvaray.github.com/backbone-associations/backbone-associations.js)
 * [Edge version : ] (https://raw.github.com/dhruvaray/backbone-associations/master/backbone-associations.js)[![Build Status](https://travis-ci.org/dhruvaray/backbone-associations.png?branch=master)](https://travis-ci.org/dhruvaray/backbone-associations)
+
+If you like/use the library, do show your appreciation by starring this repository or/and giving a [gittip](https://www.gittip.com/dhruvaray/).
 
 
 ## <a name="installation"/>Installation
@@ -40,6 +44,7 @@ Backbone-associations depends on [backbone](https://github.com/documentcloud/bac
 
 Backbone-associations works with Backbone v0.9.10 upwards. Underscore v1.4.3 upwards is supported.
 
+If you like/use the library, do show your appreciation by starring this repository or/and giving a [gittip](https://www.gittip.com/dhruvaray/).
 
 ## <a name="associations"/>Specifying Associations
 
@@ -564,6 +569,10 @@ However, if attributes of a nested object are changed, the unqualified `change` 
 ```
 Refer to issue [#28](https://github.com/dhruvaray/backbone-associations/issues/28) for a more detailed reasoning.
 
+## <a name="amd"/>AMD
+To use backbone-associations as an AMD module you can refer to this [example](https://gist.github.com/jdkanani/5256463)
+
+
 ## <a name="performance"/>Performance Comparison
 
 ![Performance](http://dhruvaray.github.com/backbone-associations/docs/img/speed0.4.2-0.8.5.png)
@@ -604,4 +613,8 @@ Added support for cyclic object graphs.
 
 #### Version 0.1.0
 Initial Backbone-associations release.
+
+## <a name="create"/> Authors & Contributors
+* Core Team : [Dhruva Ray](https://github.com/dhruvaray), [Jaynti Kanani](https://github.com/jdkanani)
+* Other contributors : [here](https://github.com/dhruvaray/backbone-associations/contributors)
 
