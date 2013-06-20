@@ -1,10 +1,10 @@
 #### Version 0.5.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.2...v0.5.0)
-* Introducing "nested-change" event to allow parents (and higher) to listen to any changes in the hierarchy
+* Introducing "nested-change" event to allow parents (and higher) to listen to any changes in the hierarchy.
 * Introducing * operator in paths involving collections. Has semantics of any item in the collection.
-* change, add, remove, reset, destroy and sort events are compatible with * operator
-* Implicit reverse relations
-* Provision for mapping data before assigning to AssociatedModel attribute
-* New website with improved help and tutorials
+* change, add, remove, reset, destroy and sort events are compatible with * operator.
+* Implicit reverse relations.
+* Provision for mapping data before assigning to AssociatedModel attribute.
+* New website with improved help and tutorials.
 
 #### Version 0.4.2 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.4.1...v0.4.2)
 * Support for backbone 1.0.0.
