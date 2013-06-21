@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="utf-8">
     <title>Backbone-Associations</title>
@@ -87,6 +87,8 @@
             <li class="nav-header">Navigate Associations</li>
             <li><a href="#sa-getop">Get</a></li>
             <li><a href="#sa-setop">Set</a></li>
+            <li class="nav-header">Serialize Associations</li>
+            <li><a href="#sa-sfop">Save & Fetch</a></li>
         </ul>
     </div>
 </div>
@@ -339,6 +341,14 @@ emp.set('works_for.locations[0].zip', 94403);
 
 emp.get('works_for').get('locations').at(0).set('zip',94403);
 </pre>
+    </div>
+</section>
+
+<section id="sa-sfop">
+    <h4>Serialize and De-serialize object graphs</h4>
+    <hr/>
+    <div class="well well-large">
+        It would not very meaningful (or speedy) for web applications to transfer object graphs in their entirety across the network . Most applications would save and fetch parts of the object hierarchy incrementally. Many times, the primary keys of the nested object may be serialized rather than the actual instance itself. Backbone-associations leaves these decisions to the application. The base Backbone framework (and associations) provides hooks to easily achieve this. A representative scenario is implemented using these hooks in this <a href="https://gist.github.com/jdkanani/5822296">gist</a> and corresponding <a href="http://jsfiddle.net/jdkanani/a33Zt/">fiddle</a>.
     </div>
 </section>
 
