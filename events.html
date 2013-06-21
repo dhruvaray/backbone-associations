@@ -69,6 +69,7 @@
             <li><a href="#e-catalogue">Event Catalogue</a></li>
             <li><a href="#e-cr-api">Change-Related API</a></li>
             <li><a href="#e-id-attr">Intelli-update</a></li>
+            <li><a href="#e-cycle">Self References</a></li>
             <li><a href="#e-pitfalls">Pitfalls</a></li>
         </ul>
     </div>
@@ -498,7 +499,65 @@ emp.set('works_for', {id:3, name:"A new department name"});
         <small>Note : Earlier versions of Backbone-associations used to blindly create new instances; causing previously bound event handlers to not fire. This resulted in additional application complexity. This problem has now been rectified in v0.5.0+</small>
     </div>
 </section>
+<section id="e-cycle">
+    <h4>Self References a.k.a Cycles</h4>
+    <hr/>
+    <div class="well well-large">
+        Backbone-associations supports cyclic graphs. Consequently, it allows relatedModels to point to themselves.  This could be useful in composition scenarios - where the composed object is itself the container.<br/><br/>
+        The example below shows how to specify self-references during model definition.
+    <pre class="prettyprint">
+Employee = Backbone.AssociatedModel.extend({
+    relations:[
+        {
+            type:Backbone.One,
+            key:'manager',
+            relatedModel:'Employee'
+        }
+    ],
+    defaults:{
+        fname:"",
+        lname:"",
+        manager:undefined
+    },
+});
+    </pre>
+        The next example assigns the manager to himself. (The case of the company owner)
+        <pre class="prettyprint">
+var owner = new Employee({'fname':'Jack', 'lname':'Welch'});
+owner.set({'manager':owner});
+        </pre>
+        Since Backbone-associations API are cycle aware, eventing will not loop indefinitely. Ditto for toJSON, clone APIs. The next example demonstrates eventing with self-references.
+    <pre class="prettyprint">
+var owner = new Employee({'fname':'Jack', 'lname':'Welch'});
 
+owner.on('change:manager', function () {
+    console.log("emp > `change:manager` fired...");
+});
+
+owner.set({'manager':owner});
+
+//Console log
+//emp : emp > `change:manager` fired...
+//manager (who is also an emp) : emp > `change:manager` fired...
+
+owner.get("manager").on('change', function () {
+    console.log("manager > `change` fired...");
+});
+
+owner.get('manager').set({'fname':'Jack Sr.'});
+
+//Console log
+//emp     > `change:manager` fired...
+//manager > `change` fired...
+
+//Both should have the same name as they are identical objects
+owner.get('fname') == "Jack Sr."
+owner.get('manager').get('fname')  == "Jack Sr."
+ </pre>
+
+    </div>
+
+</section>
 <section id="e-pitfalls">
     <h4>Pitfalls</h4>
     <hr/>
