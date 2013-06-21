@@ -19,6 +19,8 @@
         },
         "main":"backbone-associations.js",
         "include": [
+            "backbone-associations.js",
+            "backbone-associations-min.js",
             "README.md",
             "CHANGELOG.md"
         ]
@@ -28,12 +30,7 @@
     },
     "main":"backbone-associations.js",
     "version":"0.5.0",
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/dhruvaray/backbone-associations.git"
-        }
-    ],
+    "repository":"git://github.com/dhruvaray/backbone-associations.git",
     "licenses": [
         {
             "type": "MIT",
