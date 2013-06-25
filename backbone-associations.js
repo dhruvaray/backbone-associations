@@ -169,15 +169,14 @@
                                 // Create a new collection
                                 if (!currVal) {
                                     data = collectionType ? new collectionType() : this._createCollection(relatedModel);
-                                    data.add(val, relationOptions);
                                 } else {
+                                    data = currVal;
                                     // Setting this flag will prevent events from firing immediately. That way clients
                                     // will not get events until the entire object graph is updated.
-                                    currVal._deferEvents = true;
-                                    // Use Backbone.Collection's smart `set` method
-                                    currVal.set(val, options);
-                                    data = currVal;
+                                    data._deferEvents = true;
                                 }
+                                // Use Backbone.Collection's `reset` or smart `set` method
+                                data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                             }
 
                         } else if (relation.type === Backbone.One && relatedModel) {
@@ -194,7 +193,7 @@
                                         // will not get events until the entire object graph is updated.
                                         currVal._deferEvents = true;
                                         // Perform the traditional `set` operation
-                                        currVal._set(val, options);
+                                        currVal._set(val, relationOptions);
                                         data = currVal;
                                     } else {
                                         data = new relatedModel(val, relationOptions);

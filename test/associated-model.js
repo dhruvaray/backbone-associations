@@ -771,6 +771,133 @@ $(document).ready(function () {
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
     });
 
+    test("Fetch collection with reset: Issue#45", 5, function(){
+        var Product = Backbone.AssociatedModel.extend({
+            defaults: {
+                name: undefined, // String
+                productId: undefined // String
+            }
+        });
+
+        var Category = Backbone.AssociatedModel.extend();
+        var Brand = Backbone.AssociatedModel.extend();
+        var Vendor = Backbone.AssociatedModel.extend();
+        var Tag = Backbone.AssociatedModel.extend();
+
+        var SearchFacet = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.Many,
+                    key:'categories',
+                    relatedModel: Category
+                },
+                {
+                    type:Backbone.Many,
+                    key:'brands',
+                    relatedModel: Brand
+                },
+                {
+                    type:Backbone.Many,
+                    key:'vendors',
+                    relatedModel: Vendor
+                },
+                {
+                    type:Backbone.Many,
+                    key:'tags',
+                    relatedModel: Tag
+                }
+            ]
+        });
+        var counter = 1;
+        var SearchResult = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type: Backbone.One,
+                    key:'searchFacet',
+                    relatedModel: SearchFacet
+                },
+                {
+                    type: Backbone.Many,
+                    key:'products',
+                    relatedModel: Product
+                },
+            ],
+            sync: function(method, model, options){
+                return options.success.call(this, {
+                    id: 1,
+                    products: [
+                        {
+                            id: counter,
+                            name: 'product'+counter,
+                            productId: 'productId'+counter++
+                        },
+                        {
+                            id: counter,
+                            name: 'product'+counter,
+                            productId: 'productId'+counter++
+                        },
+                        {
+                            id: counter,
+                            name: 'product'+counter,
+                            productId: 'productId'+counter++
+                        },
+                        {
+                            id: counter,
+                            name: 'product'+counter,
+                            productId: 'productId'+counter++
+                        }
+                    ],
+                    searchFacet: {
+                        id: 'sf1',
+                        categories: [
+                            {
+                                name: 'category' + counter++
+                            }
+                        ],
+                        brands: [
+                            {
+                                name: 'brand' + counter++
+                            }
+                        ],
+                        tags: [
+                            {
+                                name: 'tag' + counter++
+                            }
+                        ],
+                        vendors: [
+                            {
+                                name: 'vendor' + counter++
+                            }
+                        ]
+                    }
+                });
+            },
+            urlRoot: '/search'
+        });
+
+        var searchResult = new SearchResult();
+        searchResult.on("reset:products", function(e){
+            ok(false, 'searchResult reset:products should not fired.'); //0
+        });
+        searchResult.on("reset:searchFacet.tags", function(e){
+            ok(false, 'searchResult reset:searchFacet.tags should not fired.'); //0
+        });
+        searchResult.fetch();
+        equal(searchResult.get('products').length, 4, "searchResult.products.length should be 4."); //1
+        searchResult.fetch();
+        equal(searchResult.get('products').length, 4, "searchResult.products.length should be 4."); //1
+
+        searchResult.off();
+        searchResult.on("reset:products", function(e){
+            ok(true, 'searchResult reset:products fired.'); //1
+        });
+        searchResult.on("reset:searchFacet.tags", function(e){
+            ok(true, 'searchResult reset:searchFacet.tags fired.'); //1
+        });
+        searchResult.fetch({reset: true});
+        equal(searchResult.get('products').length, 4, "searchResult.products.length should be 4."); //1
+    });
+
     test("Issue #28", 2, function () {
         var ItemModel = Backbone.AssociatedModel.extend({
             relations:[
