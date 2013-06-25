@@ -85,8 +85,7 @@
             <li><a href="#sa-reverse">Reverse</a></li>
             <li><a href="#sa-map">Lookup Transformations</a></li>
             <li class="nav-header">Navigate Associations</li>
-            <li><a href="#sa-getop">Get</a></li>
-            <li><a href="#sa-setop">Set</a></li>
+            <li><a href="#sa-getsetop">Get & Set</a></li>
             <li class="nav-header">Serialize Associations</li>
             <li><a href="#sa-sfop">Save & Fetch</a></li>
         </ul>
@@ -312,10 +311,10 @@ email.get('type').get('validations'), //regex to validate email
     </div>
 </section>
 
-<section id="sa-getop">
-    <h4>Retrieve values from the object graph</h4>
-    <hr/>
+<section id="sa-getsetop">
+    <h4>Get & set values from the object graph</h4><hr/>
     <div class="well well-large">
+        <h5>Retrieve values from the object graph</h5>
         Values can be retrieved by either specifying a fully qualified path or by explicitly traversing the object
         graph.
 <pre class="prettyprint">
@@ -325,12 +324,8 @@ emp.get('works_for.controls[0].locations[0].zip') //94404
 
 emp.get('works_for').get('controls').at(0).get('locations').at(0).get('zip');
 </pre>
-    </div>
-</section>
-<section id="sa-setop">
-    <h4>Set values in the object graph</h4>
-    <hr/>
-    <div class="well well-large">
+
+    <h5>Set values in the object graph</h5>
         Values can be set by either specifying a fully qualified path or by explicitly traversing the object graph to
         that property before setting the value.
 
@@ -341,7 +336,8 @@ emp.set('works_for.locations[0].zip', 94403);
 
 emp.get('works_for').get('locations').at(0).set('zip',94403);
 </pre>
-    </div>
+
+</div>
 </section>
 
 <section id="sa-sfop">
