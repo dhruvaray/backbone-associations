@@ -140,7 +140,7 @@
                         map = relation.map,
                         currVal = this.attributes[relationKey],
                         idKey = currVal && currVal.idAttribute,
-                        val, relationOptions, data, relationValue;
+                        val, relationOptions, data, relationValue, newCtx = false;
 
                     //Get class if relation and map is stored as a string.
                     relatedModel && _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
@@ -165,6 +165,8 @@
 
                             if (val instanceof BackboneCollection) {
                                 data = val;
+                                // Compute whether the context is a new one after this assignment.
+                                newCtx = (currVal != val);
                             } else {
                                 // Create a new collection
                                 if (!currVal) {
@@ -182,6 +184,8 @@
                         } else if (relation.type === Backbone.One && relatedModel) {
                             if (val instanceof AssociatedModel) {
                                 data = val;
+                                // Compute whether the context is a new one after this assignment.
+                                newCtx = (currVal != val);
                             } else {
                                 //Create a new model
                                 if (!currVal) {
@@ -207,8 +211,8 @@
                         relationValue = data;
 
                         // Add proxy events to respective parents.
-                        // Only add callback if not defined.
-                        if (relationValue && !relationValue._proxyCallback) {
+                        // Only add callback if not defined or new Ctx has been identified.
+                        if (newCtx || (relationValue && !relationValue._proxyCallback)) {
                             relationValue._proxyCallback = function () {
                                 return this._bubbleEvent.call(this, relationKey, relationValue, arguments);
                             };

@@ -771,11 +771,69 @@ $(document).ready(function () {
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
     });
 
-    test("Fetch collection with reset: Issue#45", 5, function(){
+    test("Fetch collection with reset: Issue#47", 3, function () {
+
+        var User = Backbone.AssociatedModel.extend({
+            defaults:{
+                name:"",
+                email:""
+            }
+        });
+
+        var Container = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.Many,
+                    key:'xxx',
+                    relatedModel:User
+                }
+            ],
+            defaults:{
+                'xxx':[],
+                name:""
+            }
+        });
+
+        var ContainerCollection = Backbone.Collection.extend({
+            model:Container,
+            url:"fc",
+            sync:function (resp, model, options) {
+                options.success(
+                    [
+                        {
+                            "id":425,
+                            "name":"I am so cool",
+                            "xxx":[
+                                {
+                                    "id":418,
+                                    "email":"art@garfunkel.com"
+                                }
+                            ]
+                        }
+                    ]
+                );
+            }
+
+        });
+
+        var f = new ContainerCollection();
+        f.on('add:xxx', function () {
+            ok(true)
+        });
+
+        f.fetch();
+        f.at(0).get('xxx').add({name:"n1"}); //Fire add:xxx
+        f.at(0).get('xxx').add({name:"n4"}); //Fire add:xxx
+
+        f.fetch();
+        f.at(0).get('xxx').add({name:"n2"}); //Fire add:xxx
+    });
+
+    test("Fetch collection with reset: Issue#45", 5, function () {
         var Product = Backbone.AssociatedModel.extend({
-            defaults: {
-                name: undefined, // String
-                productId: undefined // String
+            defaults:{
+                name:undefined, // String
+                productId:undefined // String
             }
         });
 
@@ -789,22 +847,22 @@ $(document).ready(function () {
                 {
                     type:Backbone.Many,
                     key:'categories',
-                    relatedModel: Category
+                    relatedModel:Category
                 },
                 {
                     type:Backbone.Many,
                     key:'brands',
-                    relatedModel: Brand
+                    relatedModel:Brand
                 },
                 {
                     type:Backbone.Many,
                     key:'vendors',
-                    relatedModel: Vendor
+                    relatedModel:Vendor
                 },
                 {
                     type:Backbone.Many,
                     key:'tags',
-                    relatedModel: Tag
+                    relatedModel:Tag
                 }
             ]
         });
@@ -812,74 +870,74 @@ $(document).ready(function () {
         var SearchResult = Backbone.AssociatedModel.extend({
             relations:[
                 {
-                    type: Backbone.One,
+                    type:Backbone.One,
                     key:'searchFacet',
-                    relatedModel: SearchFacet
+                    relatedModel:SearchFacet
                 },
                 {
-                    type: Backbone.Many,
+                    type:Backbone.Many,
                     key:'products',
-                    relatedModel: Product
-                },
+                    relatedModel:Product
+                }
             ],
-            sync: function(method, model, options){
+            sync:function (method, model, options) {
                 return options.success.call(this, {
-                    id: 1,
-                    products: [
+                    id:1,
+                    products:[
                         {
-                            id: counter,
-                            name: 'product'+counter,
-                            productId: 'productId'+counter++
+                            id:counter,
+                            name:'product' + counter,
+                            productId:'productId' + counter++
                         },
                         {
-                            id: counter,
-                            name: 'product'+counter,
-                            productId: 'productId'+counter++
+                            id:counter,
+                            name:'product' + counter,
+                            productId:'productId' + counter++
                         },
                         {
-                            id: counter,
-                            name: 'product'+counter,
-                            productId: 'productId'+counter++
+                            id:counter,
+                            name:'product' + counter,
+                            productId:'productId' + counter++
                         },
                         {
-                            id: counter,
-                            name: 'product'+counter,
-                            productId: 'productId'+counter++
+                            id:counter,
+                            name:'product' + counter,
+                            productId:'productId' + counter++
                         }
                     ],
-                    searchFacet: {
-                        id: 'sf1',
-                        categories: [
+                    searchFacet:{
+                        id:'sf1',
+                        categories:[
                             {
-                                name: 'category' + counter++
+                                name:'category' + counter++
                             }
                         ],
-                        brands: [
+                        brands:[
                             {
-                                name: 'brand' + counter++
+                                name:'brand' + counter++
                             }
                         ],
-                        tags: [
+                        tags:[
                             {
-                                name: 'tag' + counter++
+                                name:'tag' + counter++
                             }
                         ],
-                        vendors: [
+                        vendors:[
                             {
-                                name: 'vendor' + counter++
+                                name:'vendor' + counter++
                             }
                         ]
                     }
                 });
             },
-            urlRoot: '/search'
+            urlRoot:'/search'
         });
 
         var searchResult = new SearchResult();
-        searchResult.on("reset:products", function(e){
+        searchResult.on("reset:products", function (e) {
             ok(false, 'searchResult reset:products should not fired.'); //0
         });
-        searchResult.on("reset:searchFacet.tags", function(e){
+        searchResult.on("reset:searchFacet.tags", function (e) {
             ok(false, 'searchResult reset:searchFacet.tags should not fired.'); //0
         });
         searchResult.fetch();
@@ -888,13 +946,13 @@ $(document).ready(function () {
         equal(searchResult.get('products').length, 4, "searchResult.products.length should be 4."); //1
 
         searchResult.off();
-        searchResult.on("reset:products", function(e){
+        searchResult.on("reset:products", function (e) {
             ok(true, 'searchResult reset:products fired.'); //1
         });
-        searchResult.on("reset:searchFacet.tags", function(e){
+        searchResult.on("reset:searchFacet.tags", function (e) {
             ok(true, 'searchResult reset:searchFacet.tags fired.'); //1
         });
-        searchResult.fetch({reset: true});
+        searchResult.fetch({reset:true});
         equal(searchResult.get('products').length, 4, "searchResult.products.length should be 4."); //1
     });
 
@@ -1471,6 +1529,7 @@ $(document).ready(function () {
 
 
     });
+
 
     test("parents - Issue #39", 3, function () {
         var Nested = Backbone.AssociatedModel.extend();
