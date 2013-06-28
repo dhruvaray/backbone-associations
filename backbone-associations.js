@@ -166,7 +166,7 @@
                             if (val instanceof BackboneCollection) {
                                 data = val;
                                 // Compute whether the context is a new one after this assignment.
-                                newCtx = (currVal != val);
+                                newCtx = (currVal !== val);
                             } else {
                                 // Create a new collection
                                 if (!currVal) {
@@ -185,7 +185,7 @@
                             if (val instanceof AssociatedModel) {
                                 data = val;
                                 // Compute whether the context is a new one after this assignment.
-                                newCtx = (currVal != val);
+                                newCtx = (currVal !== val);
                             } else {
                                 //Create a new model
                                 if (!currVal) {

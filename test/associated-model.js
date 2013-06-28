@@ -130,6 +130,8 @@ $(document).ready(function () {
         return found ? found : id;
     };
 
+    Employee = {};
+
     Employee = Backbone.AssociatedModel.extend({
         relations:[
             {
@@ -146,7 +148,7 @@ $(document).ready(function () {
             {
                 type:Backbone.One,
                 key:'manager',
-                relatedModel:'Employee'
+                relatedModel:Employee
             }
         ],
         validate:function (attr) {
@@ -771,7 +773,48 @@ $(document).ready(function () {
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
     });
 
-    test("Fetch collection with reset: Issue#47", 3, function () {
+    test("Set closure scope correctly - while setting BB Collection & Model instances directly", 3, function () {
+
+        var Location = Backbone.AssociatedModel.extend({
+            defaults:{
+                name:"",
+                zip:""
+            }
+        });
+
+        var Group = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'meetup',
+                    relatedModel:Location
+                }
+            ],
+            defaults:{
+                meetup:undefined,
+                name:""
+            }
+        });
+
+        var loc1 = new Location({name:"CA", zip:"94404", id:1});
+        var loc2 = new Location({name:"OH", zip:"92201", id:2});
+        var g1 = new Group({name:"AO", meetup:loc1});
+        var cb = function () {
+            ok(true)
+        };
+        g1.on("change:meetup", cb);
+
+        var g2 = new Group({name:"SO", meetup:loc2});
+        g2.on("change:meetup", cb);
+
+        g1.set('meetup', loc2); //1
+
+        g2.set('meetup.zip', '93303'); //Should fire change for both g1 and g2
+
+
+    });
+
+    test("Fetch collection repeatedly: Issue#47", 3, function () {
 
         var User = Backbone.AssociatedModel.extend({
             defaults:{
@@ -828,6 +871,7 @@ $(document).ready(function () {
         f.fetch();
         f.at(0).get('xxx').add({name:"n2"}); //Fire add:xxx
     });
+
 
     test("Fetch collection with reset: Issue#45", 5, function () {
         var Product = Backbone.AssociatedModel.extend({
@@ -1364,7 +1408,7 @@ $(document).ready(function () {
 
         emp2.get('manager').set({'fname':'newEmp2'});
         equal(emp2.get('fname'), 'newEmp2', "emp's fname should be changed");
-        equal(emp2.get('manager').get('fname'), 'newEmp2', "manager's fname should be canged");
+        equal(emp2.get('manager').get('fname'), 'newEmp2', "manager's fname should be changed");
     });
 
     test("Self-Reference `toJSON`", function () {
