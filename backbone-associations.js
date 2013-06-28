@@ -140,7 +140,7 @@
                         map = relation.map,
                         currVal = this.attributes[relationKey],
                         idKey = currVal && currVal.idAttribute,
-                        val, relationOptions, data, relationValue;
+                        val, relationOptions, data, relationValue, newCtx = false;
 
                     //Get class if relation and map is stored as a string.
                     relatedModel && _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
@@ -165,24 +165,27 @@
 
                             if (val instanceof BackboneCollection) {
                                 data = val;
+                                // Compute whether the context is a new one after this assignment.
+                                newCtx = (currVal !== val);
                             } else {
                                 // Create a new collection
                                 if (!currVal) {
                                     data = collectionType ? new collectionType() : this._createCollection(relatedModel);
-                                    data.add(val, relationOptions);
                                 } else {
+                                    data = currVal;
                                     // Setting this flag will prevent events from firing immediately. That way clients
                                     // will not get events until the entire object graph is updated.
-                                    currVal._deferEvents = true;
-                                    // Use Backbone.Collection's smart `set` method
-                                    currVal.set(val, options);
-                                    data = currVal;
+                                    data._deferEvents = true;
                                 }
+                                // Use Backbone.Collection's `reset` or smart `set` method
+                                data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                             }
 
                         } else if (relation.type === Backbone.One && relatedModel) {
                             if (val instanceof AssociatedModel) {
                                 data = val;
+                                // Compute whether the context is a new one after this assignment.
+                                newCtx = (currVal !== val);
                             } else {
                                 //Create a new model
                                 if (!currVal) {
@@ -194,7 +197,7 @@
                                         // will not get events until the entire object graph is updated.
                                         currVal._deferEvents = true;
                                         // Perform the traditional `set` operation
-                                        currVal._set(val, options);
+                                        currVal._set(val, relationOptions);
                                         data = currVal;
                                     } else {
                                         data = new relatedModel(val, relationOptions);
@@ -208,8 +211,8 @@
                         relationValue = data;
 
                         // Add proxy events to respective parents.
-                        // Only add callback if not defined.
-                        if (relationValue && !relationValue._proxyCallback) {
+                        // Only add callback if not defined or new Ctx has been identified.
+                        if (newCtx || (relationValue && !relationValue._proxyCallback)) {
                             relationValue._proxyCallback = function () {
                                 return this._bubbleEvent.call(this, relationKey, relationValue, arguments);
                             };
@@ -225,8 +228,10 @@
                         if (updated) {
                             updated.parents = updated.parents || [];
                             (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
-                        } else if (original && original.parents.length > 0) {
+                        } else if (original && original.parents.length > 0) { // New value is undefined
                             original.parents = _.difference(original.parents, [this]);
+                            // Don't bubble to this parent anymore
+                            original._proxyCallback && original.off("all", original._proxyCallback, this);
                         }
                     }
                 }, this);
