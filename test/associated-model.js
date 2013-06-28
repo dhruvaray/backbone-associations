@@ -773,7 +773,7 @@ $(document).ready(function () {
         emp.get('works_for').get("locations").at(0).set('zip', 94403);
     });
 
-    test("Set closure scope correctly - while setting BB Collection & Model instances directly", 3, function () {
+    test("Set closure scope correctly - while setting BB Collection & Model instances directly", 5, function () {
 
         var Location = Backbone.AssociatedModel.extend({
             defaults:{
@@ -798,10 +798,12 @@ $(document).ready(function () {
 
         var loc1 = new Location({name:"CA", zip:"94404", id:1});
         var loc2 = new Location({name:"OH", zip:"92201", id:2});
-        var g1 = new Group({name:"AO", meetup:loc1});
+
         var cb = function () {
             ok(true)
         };
+
+        var g1 = new Group({name:"AO", meetup:loc1});
         g1.on("change:meetup", cb);
 
         var g2 = new Group({name:"SO", meetup:loc2});
@@ -809,7 +811,10 @@ $(document).ready(function () {
 
         g1.set('meetup', loc2); //1
 
-        g2.set('meetup.zip', '93303'); //Should fire change for both g1 and g2
+        g2.set('meetup.zip', '93303'); //2 : Should fire change for both g1 and g2
+
+        g1.set('meetup', undefined); //1
+        g2.set('meetup.zip', '93304'); //1 : Should fire change for g2 only
 
 
     });

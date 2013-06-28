@@ -228,8 +228,10 @@
                         if (updated) {
                             updated.parents = updated.parents || [];
                             (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
-                        } else if (original && original.parents.length > 0) {
+                        } else if (original && original.parents.length > 0) { // New value is undefined
                             original.parents = _.difference(original.parents, [this]);
+                            // Don't bubble to this parent anymore
+                            original._proxyCallback && original.off("all", original._proxyCallback, this);
                         }
                     }
                 }, this);
