@@ -130,8 +130,6 @@ $(document).ready(function () {
         return found ? found : id;
     };
 
-    Employee = {};
-
     Employee = Backbone.AssociatedModel.extend({
         relations:[
             {
@@ -148,7 +146,7 @@ $(document).ready(function () {
             {
                 type:Backbone.One,
                 key:'manager',
-                relatedModel:Employee
+                relatedModel:'Employee'
             }
         ],
         validate:function (attr) {
@@ -1414,6 +1412,44 @@ $(document).ready(function () {
         emp2.get('manager').set({'fname':'newEmp2'});
         equal(emp2.get('fname'), 'newEmp2', "emp's fname should be changed");
         equal(emp2.get('manager').get('fname'), 'newEmp2', "manager's fname should be changed");
+
+        var emp3 = new Employee({fname: 'emp3', manager: {fname: 'emp4'}});
+        equal(emp3.get('manager.fname'), 'emp4', "manager's fname should be emp4");
+    });
+
+    test("Backbone.Self", 9, function(){
+        var User = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    key: 'friends',
+                    type: Backbone.Many,
+                    relatedModel: Backbone.Self
+                }
+            ],
+            defaults: {
+                username: undefined,
+                fname: '',
+                lname: '',
+                aboutMe: '',
+                friends: []
+            }
+        });
+
+        var user1 = new User({id: 1, username: 'user1'});
+        var user2 = new User({id: 2, username: 'user2', friends: [user1]});
+        var user3 = new User({id: 3, username: 'user3', friends: [user1, {id: 4, username: 'user4'}]});
+
+        equal(user1.get('username'), 'user1', "user1's username should be correct");
+        equal(user1.get('friends').length, 0, "count of friends of user1 should be 0");
+
+        equal(user2.get('username'), 'user2', "user2's username should be correct");
+        equal(user2.get('friends').length, 1, "count of friends of user2 should be 1");
+        equal(user2.get('friends[0].username'), 'user1', "username of first follower of user2 should be user1");
+
+        equal(user3.get('username'), 'user3');
+        equal(user3.get('friends').length, 2);
+        equal(user3.get('friends[0].username'), 'user1');
+        equal(user3.get('friends[1].username'), 'user4');
     });
 
     test("Self-Reference `toJSON`", function () {

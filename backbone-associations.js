@@ -53,6 +53,7 @@
     //Add `Many` and `One` relations to Backbone Object.
     Backbone.Associations.Many = Backbone.Many = "Many";
     Backbone.Associations.One = Backbone.One = "One";
+    Backbone.Associations.Self = Backbone.Self = "Self";
     // Define `AssociatedModel` (Extends Backbone.Model).
     AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({
         // Define relations with Associated Model.
@@ -143,7 +144,9 @@
                         val, relationOptions, data, relationValue, newCtx = false;
 
                     //Get class if relation and map is stored as a string.
-                    relatedModel && _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
+                    if (relatedModel && _.isString(relatedModel)) {
+                        relatedModel = (relatedModel === Backbone.Self) ? this.constructor : map2Scope(relatedModel);
+                    }
                     collectionType && _.isString(collectionType) && (collectionType = map2Scope(collectionType));
                     map && _.isString(map) && (map = map2Scope(map));
                     // Merge in `options` specific to this relation.
