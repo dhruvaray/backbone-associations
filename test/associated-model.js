@@ -1413,31 +1413,31 @@ $(document).ready(function () {
         equal(emp2.get('fname'), 'newEmp2', "emp's fname should be changed");
         equal(emp2.get('manager').get('fname'), 'newEmp2', "manager's fname should be changed");
 
-        var emp3 = new Employee({fname: 'emp3', manager: {fname: 'emp4'}});
+        var emp3 = new Employee({fname:'emp3', manager:{fname:'emp4'}});
         equal(emp3.get('manager.fname'), 'emp4', "manager's fname should be emp4");
     });
 
-    test("Backbone.Self", 9, function(){
+    test("Backbone.Self", 9, function () {
         var User = Backbone.AssociatedModel.extend({
-            relations: [
+            relations:[
                 {
-                    key: 'friends',
-                    type: Backbone.Many,
-                    relatedModel: Backbone.Self
+                    key:'friends',
+                    type:Backbone.Many,
+                    relatedModel:Backbone.Self
                 }
             ],
-            defaults: {
-                username: undefined,
-                fname: '',
-                lname: '',
-                aboutMe: '',
-                friends: []
+            defaults:{
+                username:undefined,
+                fname:'',
+                lname:'',
+                aboutMe:'',
+                friends:[]
             }
         });
 
-        var user1 = new User({id: 1, username: 'user1'});
-        var user2 = new User({id: 2, username: 'user2', friends: [user1]});
-        var user3 = new User({id: 3, username: 'user3', friends: [user1, {id: 4, username: 'user4'}]});
+        var user1 = new User({id:1, username:'user1'});
+        var user2 = new User({id:2, username:'user2', friends:[user1]});
+        var user3 = new User({id:3, username:'user3', friends:[user1, {id:4, username:'user4'}]});
 
         equal(user1.get('username'), 'user1', "user1's username should be correct");
         equal(user1.get('friends').length, 0, "count of friends of user1 should be 0");
@@ -1568,7 +1568,7 @@ $(document).ready(function () {
         });
     });
 
-    test("parents", 6, function () {
+    test("parent relations", 7, function () {
         emp.set('works_for', {name:"Marketing", number:29});
 
         var emp2 = new Employee({
@@ -1605,13 +1605,13 @@ $(document).ready(function () {
         equal(emp.parents.length, 0);
         equal(emp2.parents.length, 0);
 
-        console.log(works_for.parents);
-
-        //Could cause mem leaks
+        //Could cause mem leaks if you set emp3 = undefined
         //emp3 = undefined;
         //equal(works_for.parents.length,1);
-        //console.log(works_for.parents);
 
+        emp3.cleanup();
+        emp3 = undefined;
+        equal(works_for.parents.length, 0);
 
     });
 

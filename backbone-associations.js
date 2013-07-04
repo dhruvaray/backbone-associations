@@ -427,6 +427,17 @@
             return new this.constructor(this.toJSON());
         },
 
+        // Call this if you want to set an `AssociatedModel` to a falsy value like undefined/null directly.
+        // Not calling this will leak memory and have a wrong parents.
+        // See test case "parent relations"
+        cleanup:function () {
+            _.each(this.relations, function (relation) {
+                var val = this.attributes[relation.key]
+                val && (val.parents = _.difference(val.parents, [this]));
+            }, this);
+            this.off();
+        },
+
         // Navigate the path to the leaf object in the path to query for the attribute value
         _getAttr:function (path) {
 
