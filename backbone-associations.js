@@ -136,14 +136,19 @@
                 // Iterate over `this.relations` and `set` model and collection values
                 // if `relations` are available.
                 _.each(this.relations, function (relation) {
-                    var relationKey = relation.key, relatedModel = relation.relatedModel,
+                    var relationKey = relation.key,
+                        relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
                         map = relation.map,
                         currVal = this.attributes[relationKey],
                         idKey = currVal && currVal.idAttribute,
                         val, relationOptions, data, relationValue, newCtx = false;
 
-                    //Get class if relation and map is stored as a string.
+                    // Call function if relatedModel is implemented as a function
+                    if (relatedModel && !(relatedModel.prototype instanceof BackboneModel))
+                        relatedModel = _.isFunction(relatedModel) ? relatedModel.call(this, attributes) : relatedModel;
+
+                    // Get class if relation and map is stored as a string.
                     if (relatedModel && _.isString(relatedModel)) {
                         relatedModel = (relatedModel === Backbone.Self) ? this.constructor : map2Scope(relatedModel);
                     }
@@ -428,11 +433,11 @@
         },
 
         // Call this if you want to set an `AssociatedModel` to a falsy value like undefined/null directly.
-        // Not calling this will leak memory and have a wrong parents.
+        // Not calling this will leak memory and have wrong parents.
         // See test case "parent relations"
         cleanup:function () {
             _.each(this.relations, function (relation) {
-                var val = this.attributes[relation.key]
+                var val = this.attributes[relation.key];
                 val && (val.parents = _.difference(val.parents, [this]));
             }, this);
             this.off();

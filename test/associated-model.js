@@ -875,6 +875,36 @@ $(document).ready(function () {
         f.at(0).get('xxx').add({name:"n2"}); //Fire add:xxx
     });
 
+    test("Polymorphic Associate : Issue#23", 2, function () {
+
+        var Models = {};
+        Models.Job = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'organizable',
+                    relatedModel:function (attributes) {
+                        return Models[attributes['organizable_type'] || this.get('organizable_type')];
+                    }
+                }
+            ]
+
+        });
+        Models.Company = Backbone.AssociatedModel.extend({
+
+        });
+        Models.Department = Backbone.AssociatedModel.extend({
+
+        });
+
+        var cjob = new Models.Job({organizable_type:'Company', name:"J1", organizable:{name:"Google"}});
+        var djob = new Models.Job({organizable_type:'Department', name:"J2", organizable:{name:"Google Reader"}});
+
+        equal(cjob.get('organizable') instanceof Models.Company, true);
+        equal(djob.get('organizable') instanceof Models.Department, true);
+
+    });
+
 
     test("Fetch collection with reset: Issue#45", 5, function () {
         var Product = Backbone.AssociatedModel.extend({
