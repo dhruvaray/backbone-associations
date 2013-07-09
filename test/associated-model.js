@@ -879,7 +879,8 @@ $(document).ready(function () {
 
         var Models = {},
             findRelatedType = (function (attributes, relation) {
-                return Models[attributes[relation.key + '_type'] || this.get(relation.key + '_type')];
+                var key = relation.key + '_type';
+                return Models[attributes[key] || this.get(key)];
             });
 
         Models.Job = Backbone.AssociatedModel.extend({
