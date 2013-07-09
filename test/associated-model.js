@@ -875,15 +875,19 @@ $(document).ready(function () {
         f.at(0).get('xxx').add({name:"n2"}); //Fire add:xxx
     });
 
-    test("Polymorphic Associate : Issue#23", 2, function () {
+    test("Polymorphic Associate : Issue#23", 3, function () {
 
-        var Models = {};
+        var Models = {},
+            relation;
+
         Models.Job = Backbone.AssociatedModel.extend({
             relations:[
                 {
                     type:Backbone.One,
                     key:'organizable',
-                    relatedModel:function (attributes) {
+                    relatedModel:function (attributes, _relation) {
+                        relation = _relation;
+
                         return Models[attributes['organizable_type'] || this.get('organizable_type')];
                     }
                 }
@@ -902,6 +906,8 @@ $(document).ready(function () {
 
         equal(cjob.get('organizable') instanceof Models.Company, true);
         equal(djob.get('organizable') instanceof Models.Department, true);
+
+        equal(relation, Models.Job.prototype.relations[0]);
 
     });
 
