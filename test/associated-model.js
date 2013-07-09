@@ -875,24 +875,35 @@ $(document).ready(function () {
         f.at(0).get('xxx').add({name:"n2"}); //Fire add:xxx
     });
 
-    test("Polymorphic Associate : Issue#23", 2, function () {
+    test("Polymorphic Associate : Issue#23", 4, function () {
 
-        var Models = {},
-            findRelatedType = (function (attributes, relation) {
-                var key = relation.key + '_type';
-                return Models[attributes[key] || this.get(key)];
-            });
+        var Models = {};
+        var findPolyMorphicType = Models.findPolyMorphicType = function (relation, attributes) {
+            var key = relation.key + '_type';
+            return Models[attributes[key] || this.get(key)];
+        };
 
         Models.Job = Backbone.AssociatedModel.extend({
             relations:[
                 {
                     type:Backbone.One,
                     key:'organizable',
-                    relatedModel: findRelatedType
+                    relatedModel:findPolyMorphicType
                 }
             ]
 
         });
+
+        Models.Comment = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'commentable',
+                    relatedModel:findPolyMorphicType
+                }
+            ]
+        });
+
         Models.Company = Backbone.AssociatedModel.extend({
 
         });
@@ -900,11 +911,33 @@ $(document).ready(function () {
 
         });
 
+
+        Models.Article = Backbone.AssociatedModel.extend({
+
+        });
+        Models.StatusUpdate = Backbone.AssociatedModel.extend({
+
+        });
+
         var cjob = new Models.Job({organizable_type:'Company', name:"J1", organizable:{name:"Google"}});
         var djob = new Models.Job({organizable_type:'Department', name:"J2", organizable:{name:"Google Reader"}});
 
+        var articleComment = new Models.Comment({
+            commentable_type:'Article',
+            name:"c1",
+            commentable:{body:"Wonderful post!"}
+        });
+        var statusComment = new Models.Comment({
+            commentable_type:'StatusUpdate',
+            name:"c2",
+            commentable:{body:"Why are you updating your status with pointless crap?"}
+        });
+
         equal(cjob.get('organizable') instanceof Models.Company, true);
         equal(djob.get('organizable') instanceof Models.Department, true);
+
+        equal(articleComment.get('commentable') instanceof Models.Article, true);
+        equal(statusComment.get('commentable') instanceof Models.StatusUpdate, true);
 
     });
 
