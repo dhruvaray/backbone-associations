@@ -146,7 +146,7 @@
 
                     // Call function if relatedModel is implemented as a function
                     if (relatedModel && !(relatedModel.prototype instanceof BackboneModel))
-                        relatedModel = _.isFunction(relatedModel) ? relatedModel.call(this, attributes) : relatedModel;
+                        relatedModel = _.isFunction(relatedModel) ? relatedModel.call(this, attributes, relation) : relatedModel;
 
                     // Get class if relation and map is stored as a string.
                     if (relatedModel && _.isString(relatedModel)) {

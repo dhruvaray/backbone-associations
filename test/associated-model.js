@@ -877,15 +877,18 @@ $(document).ready(function () {
 
     test("Polymorphic Associate : Issue#23", 2, function () {
 
-        var Models = {};
+        var Models = {},
+            findRelatedType = (function (attributes, relation) {
+                var key = relation.key + '_type';
+                return Models[attributes[key] || this.get(key)];
+            });
+
         Models.Job = Backbone.AssociatedModel.extend({
             relations:[
                 {
                     type:Backbone.One,
                     key:'organizable',
-                    relatedModel:function (attributes) {
-                        return Models[attributes['organizable_type'] || this.get('organizable_type')];
-                    }
+                    relatedModel: findRelatedType
                 }
             ]
 
