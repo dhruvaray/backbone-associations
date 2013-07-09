@@ -906,7 +906,7 @@ $(document).ready(function () {
         equal(djob.get('organizable') instanceof Models.Department, true);
 
     });
-    
+
 
     test("Fetch collection with reset: Issue#45", 5, function () {
         var Product = Backbone.AssociatedModel.extend({
