@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.5.0
+//  Backbone-associations.js 0.5.1
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -44,7 +44,7 @@
     collectionEvents = ["reset", "sort"];
 
     Backbone.Associations = {
-        VERSION:"0.5.0"
+        VERSION:"0.5.1"
     };
 
     // Backbone.AssociatedModel
@@ -53,6 +53,7 @@
     //Add `Many` and `One` relations to Backbone Object.
     Backbone.Associations.Many = Backbone.Many = "Many";
     Backbone.Associations.One = Backbone.One = "One";
+    Backbone.Associations.Self = Backbone.Self = "Self";
     // Define `AssociatedModel` (Extends Backbone.Model).
     AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({
         // Define relations with Associated Model.
@@ -135,15 +136,24 @@
                 // Iterate over `this.relations` and `set` model and collection values
                 // if `relations` are available.
                 _.each(this.relations, function (relation) {
-                    var relationKey = relation.key, relatedModel = relation.relatedModel,
+                    var relationKey = relation.key,
+                        relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
                         map = relation.map,
                         currVal = this.attributes[relationKey],
                         idKey = currVal && currVal.idAttribute,
                         val, relationOptions, data, relationValue, newCtx = false;
 
-                    //Get class if relation and map is stored as a string.
-                    relatedModel && _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
+                    // Call function if relatedModel is implemented as a function
+                    if (relatedModel && !(relatedModel.prototype instanceof BackboneModel))
+                        relatedModel = _.isFunction(relatedModel) ?
+                            relatedModel.call(this, relation, attributes) :
+                            relatedModel;
+
+                    // Get class if relation and map is stored as a string.
+                    if (relatedModel && _.isString(relatedModel)) {
+                        relatedModel = (relatedModel === Backbone.Self) ? this.constructor : map2Scope(relatedModel);
+                    }
                     collectionType && _.isString(collectionType) && (collectionType = map2Scope(collectionType));
                     map && _.isString(map) && (map = map2Scope(map));
                     // Merge in `options` specific to this relation.
@@ -422,6 +432,17 @@
         // Create a new model with identical attributes to this one.
         clone:function () {
             return new this.constructor(this.toJSON());
+        },
+
+        // Call this if you want to set an `AssociatedModel` to a falsy value like undefined/null directly.
+        // Not calling this will leak memory and have wrong parents.
+        // See test case "parent relations"
+        cleanup:function () {
+            _.each(this.relations, function (relation) {
+                var val = this.attributes[relation.key];
+                val && (val.parents = _.difference(val.parents, [this]));
+            }, this);
+            this.off();
         },
 
         // Navigate the path to the leaf object in the path to query for the attribute value
