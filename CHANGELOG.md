@@ -1,8 +1,8 @@
-### Upcoming (Edge version)
+### Version 0.5.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.0...v0.5.1)
 
 * `relatedModel` can now also be a function. Could be used to model polymorphic associations like in this [gist](https://gist.github.com/dhruvaray/5988996).
 * `relatedModel` can be passed a special value called `Backbone.self` to handle self references.
-* Introducing explict cleanup on `Backbone.Model` to prevent memory leaks when users set `Backbone.Model` to undefined explictly. 
+* Introducing explicit cleanup on `Backbone.Model` to prevent memory leaks when users set `Backbone.Model` to undefined explicitly.
 * Fixed the handling of {reset:true} option on `Backbone.Collection`.
 * Fixed a scenario where repeated fetch on the same `Backbone.Model` or `Backbone.Collection` caused event bubbling to stop.
 
