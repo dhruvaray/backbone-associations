@@ -88,6 +88,8 @@
             <li><a href="#sa-getsetop">Get & Set</a></li>
             <li class="nav-header">Serialize Associations</li>
             <li><a href="#sa-sfop">Save & Fetch</a></li>
+            <li class="nav-header">Next Steps</li>
+            <li><a href="#sa-events">Eventing</a></li>
         </ul>
     </div>
 </div>
@@ -108,7 +110,11 @@
             </dt>
             <dd>
                 <ul>
-                    <li>A function which returns a reference to a Backbone.AssociatedModel type.</li>
+                    <li><span class="label label-info">v0.5.1+</span>  A function(relation, attributes) - which returns a reference to a AssociatedModel type.
+                        <ul>
+                            <li>relation : the specific relation object in the array of relations.</li>
+                            <li>attributes :  hash of new values passed in via set.</li>
+                        </ul>See the <a href="./recipes.html">recipes</a> for an <a href="./recipes.html#tut-pa">example</a> of where this may be useful.
                     <li>A reference to a Backbone.AssociatedModel type.</li>
                     <li>A fully qualified string which can be resolved to an object type on the global scope.</li>
                 </ul>
@@ -142,7 +148,6 @@
             <dd>
                 Used to determine the type of collections used for a Backbone.Many relation.
                 <ul>
-                    <li>A function which returns a reference to a Backbone.AssociatedModel type.</li>
                     <li>A reference to a Backbone.Collection type.</li>
                     <li>A fully qualified string which can be resolved to an object type on the global scope.</li>
                 </ul>
@@ -219,6 +224,42 @@ var Project = Backbone.AssociatedModel.extend({
   }
 });
             </pre>
+
+To specify 1:M associations, one can alternatively use the collectionType property. This can be useful to specify implementation of custom or built-in properties at the Collection level.
+            <pre class="prettyprint lang-js">
+var Location = Backbone.AssociatedModel.extend({
+  defaults: {
+    add1 : "",
+    add2 : null,
+    zip : "",
+    state : ""
+  }
+});
+
+var Locations = Backbone.Collection.extend({
+    comparator: function(c){
+        return c.get('number');
+    },
+
+    model: Location
+});
+
+var Project = Backbone.AssociatedModel.extend({
+  relations: [
+      {
+        type: Backbone.Many,//nature of the relation
+        key: 'locations', //attribute of Project
+        collectionType: Locations //Collection to be used.
+        relatedModel:Location //Optional
+      }
+  ],
+  defaults: {
+    name : "",
+    number : 0,
+    locations : []
+  }
+});
+            </pre>
     </div>
 
 </section>
@@ -229,7 +270,10 @@ var Project = Backbone.AssociatedModel.extend({
 
         These are automatically inferred by Backbone-associations. You can access reverse associations via a parents
         property on the AssociationModel or Backbone Collection. Note that the parents property is an array - as there
-        could be multiple parents for a given AssociatedModel or Collection.
+        could be multiple parents for a given AssociatedModel or Collection. The parents property simply stores the references of objects pointing to it and is agnostic of the type of the object.
+
+        <br/><span class="label label-info">Remember : The parents property can contain different type instances</span><br/>
+
 
                     <pre class="prettyprint">
 dept1 = new Department({
@@ -254,9 +298,30 @@ var emp2 = new Employee({
 emp1.set({"works_for":dept1});
 emp2.set({"works_for":dept1});
 
-
 dept1.parents //[emp1, emp2]
+
+myco = new Company({
+   name:"Github Inc"
+});
+
+myco.set({research:dept1});
+
+dept1.parents //[emp1, emp2, myco]
                     </pre>
+
+        <span class="label label-warning">Prevent memory leaks</span><br/><span class="label label-info">Available in v0.5.1+</span><br/>
+
+ Memory leaks may be inadvertently caused and parents property may have wrong values if objects are set to undefined (or null) directly. Call the cleanup method before setting any object to undefined to prevent this from happening. The example below clarifies.
+
+<pre class="prettyprint">
+//Could cause mem leaks if you set emp2 = undefined
+//emp2 = undefined;
+//dept1.parents.length === 3 //Should have been 2
+
+emp2.cleanup();
+emp2 = undefined;
+//dept1.parents.length === 2
+</pre>
     </div>
 
 </section>
@@ -345,6 +410,15 @@ emp.get('works_for').get('locations').at(0).set('zip',94403);
     <hr/>
     <div class="well well-large">
         It would not very meaningful (or speedy) for web applications to transfer object graphs in their entirety across the network . Most applications would save and fetch parts of the object hierarchy incrementally. Many times, the primary keys of the nested object may be serialized rather than the actual instance itself. Backbone-associations leaves these decisions to the application. The base Backbone framework (and associations) provides hooks to easily achieve this. A representative scenario is implemented using these hooks in this <a href="https://gist.github.com/jdkanani/5822296">gist</a> and corresponding <a href="http://jsfiddle.net/jdkanani/a33Zt/">fiddle</a>.
+    </div>
+</section>
+
+<section id="sa-events">
+    <h4>Eventing</h4>
+    <hr/>
+    <div class="well well-large">
+        Once the object hierarchy instance is set up, the next step is to tune-in to any kind of changes (update, add, remove, destroy, sort etc) which happen in this object hierarchy. Views - for example - would like to re-render to reflect the new model data. This is the topic of the <a href="./events.html">eventing</a> section of the documentation.
+
     </div>
 </section>
 
