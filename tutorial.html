@@ -57,8 +57,8 @@
             <div class="nav-collapse collapse">
                 <ul class="nav">
                     <li><a href="./index.html">Home</a></li>
-                    <li><a href="./getting-started.html">Getting Started</a></li>
-                    <li><a href="./specify-associations.html">Specifying Associations</a></li>
+                    <li><a href="./getting-started.html">Get Started</a></li>
+                    <li><a href="./specify-associations.html">Specify Associations</a></li>
                     <li><a href="./events.html">Events</a></li>
                     <li class="active"><a href="./tutorial.html" class="active">Tutorials</a></li>
                     <li><a href="./recipes.html">Recipes</a></li>
@@ -281,12 +281,12 @@ emp.set({"dependents":[child1, parent1]});
 <h4>Update related examples</h4>
 <hr/>
 <div class="well well-large">
-    In this section, we look at scenarios where various kind of updates can be listen-ed to at higher levels.
-    <ul>
-        <li>
-            <h5>Assign Associated Model instances to other properties</h5>
-            Backbone-associations allows for assignment of previously instantiated model instances to another model's
-            attributes.
+In this section, we look at scenarios where various kind of updates can be listen-ed to at higher levels.
+<ul>
+    <li>
+        <h5>Assign Associated Model instances to other properties</h5>
+        Backbone-associations allows for assignment of previously instantiated model instances to another model's
+        attributes.
                 <pre class="prettyprint">
 emp.on('change', function () {
     console.log("Fired emp > change...");
@@ -308,10 +308,10 @@ emp.set({works_for:dept1});
 //Fired emp > change:works_for...
 //Fired emp > change...
                 </pre>
-        </li>
-        <li>
-            <h5>Listen to updates of attributes in nested AssociatedModel instances</h5> The example shows all the
-            possible ways to listen to changes at various levels within the object hierarchy.
+    </li>
+    <li>
+        <h5>Listen to updates of attributes in nested AssociatedModel instances</h5> The example shows all the
+        possible ways to listen to changes at various levels within the object hierarchy.
                 <pre class="prettyprint">
 emp.get('works_for').on('change', function () {
     console.log("Fired emp.works_for > change...");
@@ -357,15 +357,15 @@ emp.get('works_for').set({name:"Marketing"});
 //Fired emp > change:works_for...
 //Fired emp > nested-change...
                 </pre>
-        </li>
-        <li>
-            <h5>Listen to updates to an item within a collection of AssociatedModels</h5>The example shows all the
-            possible ways to listen to changes at various levels within the object hierarchy.
+    </li>
+    <li>
+        <h5>Listen to updates to an item within a collection of AssociatedModels</h5>The example shows all the
+        possible ways to listen to changes at various levels within the object hierarchy.
                 <pre class="prettyprint">
 //The actual set operation
 emp.get('works_for').get("locations").at(0).set('zip', 94403);
                 </pre>
-            A simple update like the one above can be listened to at various levels. See the examples below.
+        A simple update like the one above can be listened to at various levels. See the examples below.
                 <pre class="prettyprint">
 //Listen in @ emp.works_for.locations[0]. Should receive regular backbone events
 emp.get('works_for').get('locations').at(0).on('change:zip', function () {
@@ -478,9 +478,9 @@ emp.on('change:works_for.controls[*].locations[*].zip', function () {
             </pre>
 
 
-            </pre>
-        </li>
-    </ul>
+        </pre>
+    </li>
+</ul>
 </div>
 </section>
 <section id="sa-are">

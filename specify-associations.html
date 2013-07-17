@@ -59,8 +59,8 @@
             <div class="nav-collapse collapse">
                 <ul class="nav">
                     <li><a href="./index.html">Home</a></li>
-                    <li><a href="./getting-started.html">Getting Started</a></li>
-                    <li class="active"><a href="./specify-associations.html" class="active">Specifying Associations</a>
+                    <li><a href="./getting-started.html">Get Started</a></li>
+                    <li class="active"><a href="./specify-associations.html" class="active">Specify Associations</a>
                     </li>
                     <li><a href="./events.html">Events</a></li>
                     <li><a href="./tutorial.html">Tutorials</a></li>
@@ -162,7 +162,7 @@
     </div>
 </section>
 <section id="sa-one">
-    <h4>Specifying 1:1 associations</h4>
+    <h4>Specify 1:1 associations</h4>
     <hr/>
     <div class="well well-large">
         Use Backbone.One to specify a 1:1 relationship between two Backbone Models. The key specifies the attribute on
@@ -189,7 +189,7 @@ var Employee = Backbone.AssociatedModel.extend({
 
 </section>
 <section id="sa-many">
-    <h4>Specifying 1:M associations</h4>
+    <h4>Specify 1:M associations</h4>
     <hr/>
     <div class="well well-large">
         Use Backbone.Many to specify a 1:M relationship between two Backbone Models. Otherwise, identical to specifying
@@ -223,7 +223,7 @@ var Project = Backbone.AssociatedModel.extend({
 
 </section>
 <section id="sa-reverse">
-    <h4>Specifying Reverse Associations</h4>
+    <h4>Specify Reverse Associations</h4>
     <hr/>
     <div class="well well-large">
 
@@ -261,7 +261,7 @@ dept1.parents //[emp1, emp2]
 
 </section>
 <section id="sa-map">
-    <h4>Specifying Transformations</h4>
+    <h4>Specify Transformations</h4>
     <hr/>
     <div class="well well-large">
         Use a map function to transform values before assigning them to a model attribute. Could be typically used to
@@ -325,7 +325,7 @@ emp.get('works_for.controls[0].locations[0].zip') //94404
 emp.get('works_for').get('controls').at(0).get('locations').at(0).get('zip');
 </pre>
 
-    <h5>Set values in the object graph</h5>
+        <h5>Set values in the object graph</h5>
         Values can be set by either specifying a fully qualified path or by explicitly traversing the object graph to
         that property before setting the value.
 
@@ -337,7 +337,7 @@ emp.set('works_for.locations[0].zip', 94403);
 emp.get('works_for').get('locations').at(0).set('zip',94403);
 </pre>
 
-</div>
+    </div>
 </section>
 
 <section id="sa-sfop">
