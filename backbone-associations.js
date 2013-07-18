@@ -163,7 +163,7 @@
                         // Get value of attribute with relation key in `val`.
                         val = _.result(attributes, relationKey);
                         // Map `val` if a transformation function is provided.
-                        val = map ? map(val) : val;
+                        val = map ? map(val, relation) : val;
 
                         // If `relation.type` is `Backbone.Many`,
                         // Create `Backbone.Collection` with passed data and perform Backbone `set`.
