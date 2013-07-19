@@ -1150,7 +1150,9 @@ $(document).ready(function () {
                 {
                     type:Backbone.One,
                     key:'type',
-                    relatedModel:FieldInputType,
+                    relatedModel:function () {
+                        return  FieldInputType;
+                    },
                     map:function (id) {
                         return store.findWhere({type:id});
                     }
