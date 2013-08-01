@@ -1069,6 +1069,86 @@ $(document).ready(function () {
         equal(searchResult.get('products').length, 4, "searchResult.products.length should be 4."); //1
     });
 
+    test("Cycle save: Issue#51", 3, function () {
+        var MyApp = {
+            Models:{},
+            Context:{provinceRecords:[]},
+            findRecordById:function (val) {
+                return val instanceof Models.Record ?
+                    val :
+                    (val.id ?
+                        _.findWhere(MyApp.Context.provinceRecords, {id:val.id}) :
+                        _.findWhere(MyApp.Context.provinceRecords, {id:val}));
+            }
+        };
+
+        var Models = MyApp.Models;
+
+        Models.Record = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.Many,
+                    key:'childrenMinders',
+                    collectionType:Models.ChildrenMinders
+                }
+            ],
+
+            // For demo purposes only
+            sync:function (method, model, options) {
+                var response = {};
+                if (method === 'create') {
+                    response[model.idAttribute] = counter++; // dummy id
+                } else if (method === 'update') {
+                    // Let's assume that - after success update, server sends model's json object
+                    response = model.toJSON();
+                }
+                return options.success.call(this, response);
+            }
+        });
+
+        Models.ChildMinder = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'record',
+                    relatedModel:Models.Record,
+                    map:MyApp.findRecordById
+                }
+            ],
+
+            toJSON:function () {
+                return {
+                    id:this.get('id'),
+                    type:this.get('type'),
+                    record:{id:this.get('record').get('id')}
+                }
+            }
+        });
+
+        Models.ChildrenMinders = Backbone.Collection.extend({
+            model:Models.ChildMinder
+        });
+
+
+        var provinceRecord = new Models.Record({id:2, name:'test1'});
+        MyApp.Context.provinceRecords.push(provinceRecord);
+
+        var childrenMinders = new Models.ChildrenMinders([
+            new Models.ChildMinder({id:1, type:'test1', record:provinceRecord}),
+            new Models.ChildMinder({id:2, type:'test2', record:provinceRecord}),
+            new Models.ChildMinder({id:3, type:'test3', record:provinceRecord})
+        ]
+        );
+        provinceRecord.set('childrenMinders', childrenMinders);
+        provinceRecord.save();
+
+        equal(provinceRecord.get('childrenMinders').at(0).get('record') === provinceRecord, true);
+        equal(provinceRecord.get('childrenMinders') === childrenMinders, true);
+        equal(provinceRecord.get('childrenMinders').at(0) === childrenMinders.at(0), true);
+
+        console.log(provinceRecord);
+    });
+
     test("Issue #28", 2, function () {
         var ItemModel = Backbone.AssociatedModel.extend({
             relations:[
@@ -1150,7 +1230,9 @@ $(document).ready(function () {
                 {
                     type:Backbone.One,
                     key:'type',
-                    relatedModel:FieldInputType,
+                    relatedModel:function () {
+                        return  FieldInputType;
+                    },
                     map:function (id) {
                         return store.findWhere({type:id});
                     }
