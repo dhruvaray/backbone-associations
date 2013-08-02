@@ -1074,11 +1074,7 @@ $(document).ready(function () {
             Models:{},
             Context:{provinceRecords:[]},
             findRecordById:function (val) {
-                return val instanceof Models.Record ?
-                    val :
-                    (val.id ?
-                        _.findWhere(MyApp.Context.provinceRecords, {id:val.id}) :
-                        _.findWhere(MyApp.Context.provinceRecords, {id:val}));
+                return _.findWhere(MyApp.Context.provinceRecords, {id:val.id});
             }
         };
 
@@ -1134,9 +1130,9 @@ $(document).ready(function () {
         MyApp.Context.provinceRecords.push(provinceRecord);
 
         var childrenMinders = new Models.ChildrenMinders([
-            new Models.ChildMinder({id:1, type:'test1', record:provinceRecord}),
-            new Models.ChildMinder({id:2, type:'test2', record:provinceRecord}),
-            new Models.ChildMinder({id:3, type:'test3', record:provinceRecord})
+            new Models.ChildMinder({id:1, type:'test1', record:{id:2}}),
+            new Models.ChildMinder({id:2, type:'test2', record:{id:2}}),
+            new Models.ChildMinder({id:3, type:'test3', record:{id:2}})
         ]
         );
         provinceRecord.set('childrenMinders', childrenMinders);
