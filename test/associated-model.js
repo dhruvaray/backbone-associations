@@ -1149,6 +1149,52 @@ $(document).ready(function () {
         console.log(provinceRecord);
     });
 
+
+    test("Polymorphic associations + map: Issue#54", 3, function () {
+        var Fruit = Backbone.AssociatedModel.extend();
+        var Banana = Fruit.extend();
+        var Tomato = Fruit.extend();
+
+        var polymorphic = function (relation, attributes) {
+            var key = relation.key + '_type';
+            return attributes[key] || this.get(key);
+
+        };
+
+        var fruitStore = [
+            new Banana({species:"Robusta", id:3}),
+            new Banana({species:"Yallaki", id:4}),
+            new Tomato({species:"Cherry", id:5})
+        ];
+
+        var lazy = function (val) {
+            return _.filter(fruitStore, function (fruit) {
+                return (fruit.id === val);
+            });
+        };
+
+        var Oatmeal = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'fruitable',
+                    relatedModel:polymorphic,
+                    map:lazy
+                }
+            ]
+        });
+
+        aHealthyBowl = new Oatmeal({fruitable_type:'Banana', fruitable:{species:"Robusta"}});
+
+        equal(aHealthyBowl.get('fruitable') instanceof Banana, false); //true
+        equal(aHealthyBowl.get('fruitable') instanceof Tomato, false); //false
+
+
+        aHealthyBowl2 = new Oatmeal({fruitable_type:Banana, fruitable:3});
+
+        equal(aHealthyBowl2.get('fruitable') instanceof Banana, true); //false
+
+    });
     test("Issue #28", 2, function () {
         var ItemModel = Backbone.AssociatedModel.extend({
             relations:[
