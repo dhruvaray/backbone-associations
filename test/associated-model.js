@@ -1180,13 +1180,13 @@ $(document).ready(function () {
             ]
         });
 
-        aHealthyBowl = new Oatmeal({fruitable_type:'Banana', fruitable:{species:"Robusta"}});
+        var aHealthyBowl = new Oatmeal({fruitable_type:'Banana', fruitable:{species:"Robusta"}});
 
         equal(aHealthyBowl.get('fruitable') instanceof Banana, false); //true
         equal(aHealthyBowl.get('fruitable') instanceof Tomato, false); //false
 
 
-        aHealthyBowl2 = new Oatmeal({fruitable_type:Banana, fruitable:3});
+        var aHealthyBowl2 = new Oatmeal({fruitable_type:Banana, fruitable:3});
 
         equal(aHealthyBowl2.get('fruitable') instanceof Banana, true); //false
 
