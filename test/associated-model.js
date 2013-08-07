@@ -1142,11 +1142,10 @@ $(document).ready(function () {
         equal(provinceRecord.get('childrenMinders') === childrenMinders, true);
         equal(provinceRecord.get('childrenMinders').at(0) === childrenMinders.at(0), true);
 
-        console.log(provinceRecord);
     });
 
 
-    test("Polymorphic associations + map: Issue#54", 3, function () {
+    test("Polymorphic associations + map: Issue#54", 9, function () {
         var Fruit = Backbone.AssociatedModel.extend();
         var Banana = Fruit.extend();
         var Tomato = Fruit.extend();
@@ -1163,10 +1162,16 @@ $(document).ready(function () {
             new Tomato({species:"Cherry", id:5})
         ];
 
-        var lazy = function (val) {
-            return _.filter(fruitStore, function (fruit) {
-                return (fruit.id === val);
-            });
+        //Handles both an array of ids and an id
+        var lazy = function (fids, type) {
+            fids = _.isArray(fids) ? fids : [fids];
+            equal(new type() instanceof Banana, true);
+            return _.map(
+                fids,
+                function (fid) {
+                    return _.findWhere(fruitStore, {id:fid});
+                }
+            );
         };
 
         var Oatmeal = Backbone.AssociatedModel.extend({
@@ -1180,17 +1185,38 @@ $(document).ready(function () {
             ]
         });
 
-        var aHealthyBowl = new Oatmeal({fruitable_type:'Banana', fruitable:{species:"Robusta"}});
+        var aHealthyBowl = new Oatmeal({fruitable_type:Banana, fruitable:{species:"Robusta"}});
 
-        equal(aHealthyBowl.get('fruitable') instanceof Banana, false); //true
-        equal(aHealthyBowl.get('fruitable') instanceof Tomato, false); //false
+        equal(aHealthyBowl.get('fruitable') instanceof Banana, true);
+        equal(aHealthyBowl.get('fruitable') instanceof Tomato, false);
 
 
         var aHealthyBowl2 = new Oatmeal({fruitable_type:Banana, fruitable:3});
 
-        equal(aHealthyBowl2.get('fruitable') instanceof Banana, true); //false
+        equal(aHealthyBowl2.get('fruitable') instanceof Banana, true);
+
+
+        //Test with Backbone.Many
+        var FruitExplosion = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.Many,
+                    key:'fruitable',
+                    relatedModel:polymorphic,
+                    map:lazy
+                }
+            ]
+        });
+
+        var potpourri = new FruitExplosion({fruitable_type:Banana, fruitable:[3, 4, 5]});
+        equal(potpourri.get('fruitable').at(0).get('species') === "Robusta", true);
+        equal(potpourri.get('fruitable').at(1).get('species') === "Yallaki", true);
+        equal(potpourri.get('fruitable').at(2).get('species') === "Cherry", true);
+
 
     });
+
+
     test("Issue #28", 2, function () {
         var ItemModel = Backbone.AssociatedModel.extend({
             relations:[
@@ -1429,15 +1455,17 @@ $(document).ready(function () {
     test("Issue #31 nested collection", 2, function () {
         var Node = Backbone.AssociatedModel.extend({
             defaults:{
-                id: null,
-                value: "",
+                id:null,
+                value:"",
                 nodes:[]
             },
-            relations:[{
-                type: Backbone.Many,
-                key:"nodes",
-                relatedModel: Backbone.Self
-            }]
+            relations:[
+                {
+                    type:Backbone.Many,
+                    key:"nodes",
+                    relatedModel:Backbone.Self
+                }
+            ]
         });
 
         var treeJson = {
@@ -1447,10 +1475,12 @@ $(document).ready(function () {
                 {
                     id:1,
                     value:"1",
-                    nodes:[{
+                    nodes:[
+                        {
                             id:2,
                             value:"2"
-                        }]
+                        }
+                    ]
                 }
             ]
         };

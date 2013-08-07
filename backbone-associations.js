@@ -160,10 +160,10 @@
                     relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
 
                     if (attributes[relationKey]) {
-                         // Get value of attribute with relation key in `val`.
+                        // Get value of attribute with relation key in `val`.
                         val = _.result(attributes, relationKey);
                         // Map `val` if a transformation function is provided.
-                        val = map ? map(val) : val;
+                        val = map ? map.call(this, val, collectionType ? collectionType : relatedModel) : val;
 
                         // If `relation.type` is `Backbone.Many`,
                         // Create `Backbone.Collection` with passed data and perform Backbone `set`.
@@ -189,8 +189,8 @@
                                 }
                                 // Use Backbone.Collection's `reset` or smart `set` method
                                 data[relationOptions.reset ? 'reset' : 'set'](val instanceof BackboneCollection
-                                        ? val.models
-                                        : val, relationOptions);
+                                    ? val.models
+                                    : val, relationOptions);
                             }
 
                         } else if (relation.type === Backbone.One && relatedModel) {
