@@ -1424,7 +1424,45 @@ $(document).ready(function () {
         //Should not trigger event in m2.get('model1').on("change", callback) as we have a diff model1 instance
         m2.set({id:1, model1:{id:3, name:"Name3"}, version:"m2.1"});
 
+    });
 
+    test("Issue #31 nested collection", 2, function () {
+        var Node = Backbone.AssociatedModel.extend({
+            defaults:{
+                id: null,
+                value: "",
+                nodes:[]
+            },
+            relations:[{
+                type: Backbone.Many,
+                key:"nodes",
+                relatedModel: Backbone.Self
+            }]
+        });
+
+        var treeJson = {
+            id:0,
+            value:"0",
+            nodes:[
+                {
+                    id:1,
+                    value:"1",
+                    nodes:[{
+                            id:2,
+                            value:"2"
+                        }]
+                }
+            ]
+        };
+
+        var treeModel = new Node(treeJson);
+        var nodes0 = treeModel.get("nodes");
+        var nodes1 = treeModel.get("nodes[0].nodes");
+
+        ///The response from server side can update treeModel on success
+        treeModel.set(treeJson);
+        equal(nodes0 === treeModel.get("nodes"), true);
+        equal(nodes1 === treeModel.get("nodes[0].nodes"), true);
     });
 
     test("add multiple refs to the same collection", 6, function () {
