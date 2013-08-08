@@ -1072,10 +1072,7 @@ $(document).ready(function () {
     test("Cycle save: Issue#51", 3, function () {
         var MyApp = {
             Models:{},
-            Context:{provinceRecords:[]},
-            findRecordById:function (val) {
-                return _.findWhere(MyApp.Context.provinceRecords, {id:val.id});
-            }
+            Context:{provinceRecords:[]}
         };
 
         var Models = MyApp.Models;
@@ -1098,6 +1095,7 @@ $(document).ready(function () {
                     // Let's assume that - after success update, server sends model's json object
                     response = model.toJSON();
                 }
+                options.merge = false;
                 return options.success.call(this, response);
             }
         });
@@ -1107,8 +1105,7 @@ $(document).ready(function () {
                 {
                     type:Backbone.One,
                     key:'record',
-                    relatedModel:Models.Record,
-                    map:MyApp.findRecordById
+                    relatedModel:Models.Record
                 }
             ],
 
@@ -1130,9 +1127,9 @@ $(document).ready(function () {
         MyApp.Context.provinceRecords.push(provinceRecord);
 
         var childrenMinders = new Models.ChildrenMinders([
-            new Models.ChildMinder({id:1, type:'test1', record:{id:2}}),
-            new Models.ChildMinder({id:2, type:'test2', record:{id:2}}),
-            new Models.ChildMinder({id:3, type:'test3', record:{id:2}})
+            new Models.ChildMinder({id:1, type:'test1', record:provinceRecord}),
+            new Models.ChildMinder({id:2, type:'test2', record:provinceRecord}),
+            new Models.ChildMinder({id:3, type:'test3', record:provinceRecord})
         ]
         );
         provinceRecord.set('childrenMinders', childrenMinders);
