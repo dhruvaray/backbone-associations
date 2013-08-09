@@ -163,7 +163,7 @@
                         // Get value of attribute with relation key in `val`.
                         val = _.result(attributes, relationKey);
                         // Map `val` if a transformation function is provided.
-                        val = map ? map.call(this, val, relatedModel) : val;
+                        val = map ? map.call(this, val, collectionType ? collectionType : relatedModel) : val;
 
                         // If `relation.type` is `Backbone.Many`,
                         // Create `Backbone.Collection` with passed data and perform Backbone `set`.
@@ -173,10 +173,10 @@
                                 throw new Error('collectionType must inherit from Backbone.Collection');
                             }
 
-                            if (val instanceof BackboneCollection) {
+                            if (val instanceof BackboneCollection && !currVal) {
                                 data = val;
-                                // Compute whether the context is a new one after this assignment.
-                                newCtx = (currVal !== val);
+                                // Set current context as new context
+                                newCtx = true;
                             } else {
                                 // Create a new collection
                                 if (!currVal) {
@@ -188,7 +188,9 @@
                                     data._deferEvents = true;
                                 }
                                 // Use Backbone.Collection's `reset` or smart `set` method
-                                data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
+                                data[relationOptions.reset ? 'reset' : 'set'](val instanceof BackboneCollection
+                                    ? val.models
+                                    : val, relationOptions);
                             }
 
                         } else if (relation.type === Backbone.One && relatedModel) {

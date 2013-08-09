@@ -1072,14 +1072,7 @@ $(document).ready(function () {
     test("Cycle save: Issue#51", 3, function () {
         var MyApp = {
             Models:{},
-            Context:{provinceRecords:[]},
-            findRecordById:function (val) {
-                return val instanceof Models.Record ?
-                    val :
-                    (val.id ?
-                        _.findWhere(MyApp.Context.provinceRecords, {id:val.id}) :
-                        _.findWhere(MyApp.Context.provinceRecords, {id:val}));
-            }
+            Context:{provinceRecords:[]}
         };
 
         var Models = MyApp.Models;
@@ -1102,6 +1095,7 @@ $(document).ready(function () {
                     // Let's assume that - after success update, server sends model's json object
                     response = model.toJSON();
                 }
+                options.merge = false;
                 return options.success.call(this, response);
             }
         });
@@ -1111,8 +1105,7 @@ $(document).ready(function () {
                 {
                     type:Backbone.One,
                     key:'record',
-                    relatedModel:Models.Record,
-                    map:MyApp.findRecordById
+                    relatedModel:Models.Record
                 }
             ],
 
@@ -1146,8 +1139,96 @@ $(document).ready(function () {
         equal(provinceRecord.get('childrenMinders') === childrenMinders, true);
         equal(provinceRecord.get('childrenMinders').at(0) === childrenMinders.at(0), true);
 
-        console.log(provinceRecord);
     });
+
+
+    test("Polymorphic associations + map: Issue#54", 7, function () {
+        var Fruit = Backbone.AssociatedModel.extend();
+        var Banana = Fruit.extend();
+        var Tomato = Fruit.extend();
+
+        var polymorphic = function (relation, attributes) {
+            var key = relation.key + '_type';
+            return attributes[key] || this.get(key);
+
+        };
+
+        var fruitStore = {};
+        fruitStore['Banana'] = [
+            new Banana({species:"Robusta", id:3}),
+            new Banana({species:"Yallaki", id:4}),
+        ];
+        fruitStore['Tomato'] = [
+            new Tomato({species:"Cherry", id:3}),
+            new Tomato({species:"Regular", id:4}),
+        ];
+
+
+        //Handles both an array of ids and an id
+        var lazy = function (fids, type) {
+            fids = _.isArray(fids) ? fids : [fids];
+
+
+            var store = function (type) {
+                if (type == Banana)
+                    return fruitStore['Banana'];
+                if (type == Tomato)
+                    return fruitStore['Tomato'];
+            }(type);
+
+            return _.map(
+                fids,
+                function (fid) {
+                    return _.findWhere(store, {id:fid});
+                }
+            );
+        };
+
+        var Oatmeal = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'fruitable',
+                    relatedModel:polymorphic,
+                    map:lazy
+                }
+            ]
+        });
+
+        var aHealthyBowl = new Oatmeal({fruitable_type:Banana, fruitable:{species:"Robusta"}});
+
+        equal(aHealthyBowl.get('fruitable') instanceof Banana, true);
+        equal(aHealthyBowl.get('fruitable') instanceof Tomato, false);
+
+
+        var aHealthyBowl2 = new Oatmeal({fruitable_type:Banana, fruitable:3});
+
+        equal(aHealthyBowl2.get('fruitable') instanceof Banana, true);
+
+
+        //Test with Backbone.Many
+        var FruitExplosion = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.Many,
+                    key:'fruitable',
+                    relatedModel:polymorphic,
+                    map:lazy
+                }
+            ]
+        });
+
+        var bananaExplosion = new FruitExplosion({fruitable_type:Banana, fruitable:[3, 4]});
+        equal(bananaExplosion.get('fruitable').at(0).get('species') === "Robusta", true);
+        equal(bananaExplosion.get('fruitable').at(1).get('species') === "Yallaki", true);
+
+        var tomatoExplosion = new FruitExplosion({fruitable_type:Tomato, fruitable:[3, 4]});
+        equal(tomatoExplosion.get('fruitable').at(0).get('species') === "Cherry", true);
+        equal(tomatoExplosion.get('fruitable').at(1).get('species') === "Regular", true);
+
+
+    });
+
 
     test("Issue #28", 2, function () {
         var ItemModel = Backbone.AssociatedModel.extend({
@@ -1382,7 +1463,49 @@ $(document).ready(function () {
         //Should not trigger event in m2.get('model1').on("change", callback) as we have a diff model1 instance
         m2.set({id:1, model1:{id:3, name:"Name3"}, version:"m2.1"});
 
+    });
 
+    test("Issue #31 nested collection", 2, function () {
+        var Node = Backbone.AssociatedModel.extend({
+            defaults:{
+                id:null,
+                value:"",
+                nodes:[]
+            },
+            relations:[
+                {
+                    type:Backbone.Many,
+                    key:"nodes",
+                    relatedModel:Backbone.Self
+                }
+            ]
+        });
+
+        var treeJson = {
+            id:0,
+            value:"0",
+            nodes:[
+                {
+                    id:1,
+                    value:"1",
+                    nodes:[
+                        {
+                            id:2,
+                            value:"2"
+                        }
+                    ]
+                }
+            ]
+        };
+
+        var treeModel = new Node(treeJson);
+        var nodes0 = treeModel.get("nodes");
+        var nodes1 = treeModel.get("nodes[0].nodes");
+
+        ///The response from server side can update treeModel on success
+        treeModel.set(treeJson);
+        equal(nodes0 === treeModel.get("nodes"), true);
+        equal(nodes1 === treeModel.get("nodes[0].nodes"), true);
     });
 
     test("add multiple refs to the same collection", 6, function () {
