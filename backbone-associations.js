@@ -496,7 +496,7 @@
 
         //If we found a relation and it has a mapping function
         if (relation && relation.map) {
-            return relation.map(models)
+            return relation.map.call(this, models, relation.collectionType)
         }
         return models;
     };
