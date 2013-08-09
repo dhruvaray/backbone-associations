@@ -1142,7 +1142,7 @@ $(document).ready(function () {
     });
 
 
-    test("Polymorphic associations + map: Issue#54", 7, function () {
+    test("Polymorphic associations + map: Issue#54", 9, function () {
         var Fruit = Backbone.AssociatedModel.extend();
         var Banana = Fruit.extend();
         var Tomato = Fruit.extend();
@@ -1157,18 +1157,19 @@ $(document).ready(function () {
         fruitStore['Banana'] = [
             new Banana({species:"Robusta", id:3}),
             new Banana({species:"Yallaki", id:4}),
+            new Banana({species:"Genetic Modification", id:5}),
+            new Banana({species:"Organic", id:6})
         ];
         fruitStore['Tomato'] = [
             new Tomato({species:"Cherry", id:3}),
-            new Tomato({species:"Regular", id:4}),
+            new Tomato({species:"Regular", id:4})
         ];
 
 
         //Handles both an array of ids and an id
         var lazy = function (fids, type) {
             fids = _.isArray(fids) ? fids : [fids];
-
-
+            type = type instanceof Backbone.Collection ? type.model : type;
             var store = function (type) {
                 if (type == Banana)
                     return fruitStore['Banana'];
@@ -1221,6 +1222,12 @@ $(document).ready(function () {
         var bananaExplosion = new FruitExplosion({fruitable_type:Banana, fruitable:[3, 4]});
         equal(bananaExplosion.get('fruitable').at(0).get('species') === "Robusta", true);
         equal(bananaExplosion.get('fruitable').at(1).get('species') === "Yallaki", true);
+
+        bananaExplosion.get('fruitable').add([5, 6]);
+
+        equal(bananaExplosion.get('fruitable').at(2).get('species') === "Genetic Modification", true);
+        equal(bananaExplosion.get('fruitable').at(3).get('species') === "Organic", true);
+
 
         var tomatoExplosion = new FruitExplosion({fruitable_type:Tomato, fruitable:[3, 4]});
         equal(tomatoExplosion.get('fruitable').at(0).get('species') === "Cherry", true);

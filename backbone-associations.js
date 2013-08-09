@@ -484,19 +484,22 @@
 
     //Infer the relation from the collection's parents and find the appropriate map for the passed in `models`
     var map2models = function (parents, target, models) {
-        var relation;
+        var relation, surrogate;
         //Iterate over collection's parents
         _.find(parents, function (parent) {
             //Iterate over relations
             relation = _.find(parent.relations, function (rel) {
                 return parent.get(rel.key) === target;
             }, this);
-            if (relation) return true;//break;
+            if (relation) {
+                surrogate = parent;//surrogate for transformation
+                return true;//break;
+            }
         }, this);
 
         //If we found a relation and it has a mapping function
         if (relation && relation.map) {
-            return relation.map(models)
+            return relation.map.call(surrogate, models, target);
         }
         return models;
     };
