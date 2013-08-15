@@ -159,6 +159,9 @@
                     // Merge in `options` specific to this relation.
                     relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
 
+                    if ((!relatedModel) && (!collectionType))
+                        throw new Error('specify either a relatedModel or collectionType');
+
                     if (attributes[relationKey]) {
                         // Get value of attribute with relation key in `val`.
                         val = _.result(attributes, relationKey);
@@ -193,7 +196,11 @@
                                     : val, relationOptions);
                             }
 
-                        } else if (relation.type === Backbone.One && relatedModel) {
+                        } else if (relation.type === Backbone.One) {
+
+                            if (!relatedModel)
+                                throw new Error('specify a relatedModel for Backbone.One type');
+
                             if (val instanceof AssociatedModel) {
                                 data = val;
                                 // Compute whether the context is a new one after this assignment.
@@ -217,7 +224,10 @@
                                 }
                             }
 
+                        } else {
+                            throw new Error('type attribute must be specified and have the values Backbone.One or Backbone.Many');
                         }
+
 
                         attributes[relationKey] = data;
                         relationValue = data;

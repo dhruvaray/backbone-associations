@@ -365,6 +365,60 @@ $(document).ready(function () {
         equal(emp.get("works_for").get('number'), -1, "number has default value");
     });
 
+    test("invalid relations", 3, function () {
+        var em1 = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type1:Backbone.One, //no type specified
+                    key:'parent',
+                    relatedModel:'Node'
+                }
+            ]
+        });
+
+        try {
+            var emi1 = new em1;
+            emi1.set('parent', {id:1});
+        } catch (e) {
+            equal(e.message === "type attribute must be specified and have the values Backbone.One or Backbone.Many", true)
+        }
+
+        var em2 = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.Oxne, //wrong value of type
+                    key:'parent',
+                    relatedModel:'Node'
+                }
+            ]
+        });
+
+        try {
+            var em2i = new em2;
+            em2i.set('parent', {id:1});
+        } catch (e) {
+            equal(e.message === "type attribute must be specified and have the values Backbone.One or Backbone.Many", true)
+        }
+
+        var em3 = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'parent',
+                    collectionType:em2//no RelatedModel specified
+                }
+            ]
+        });
+
+        try {
+            var em3i = new em3;
+            em3i.set('parent', {id:1});
+        } catch (e) {
+            equal(e.message === "specify a relatedModel for Backbone.One type", true)
+        }
+
+    });
+
     test("escape", 1, function () {
         emp.get('works_for').get("locations").at(0).set({'add1':'<a>New Address</a>'});
         equal(_.escape(emp.get('works_for').get("locations").at(0).get("add1")), '&lt;a&gt;New Address&lt;&#x2F;a&gt;', "City should be in HTML-escaped version");
@@ -1077,6 +1131,21 @@ $(document).ready(function () {
 
         var Models = MyApp.Models;
 
+        Models.ChildMinder = Backbone.AssociatedModel.extend({
+
+            toJSON:function () {
+                return {
+                    id:this.get('id'),
+                    type:this.get('type'),
+                    record:{id:this.get('record').get('id')}
+                }
+            }
+        });
+
+        Models.ChildrenMinders = Backbone.Collection.extend({
+            model:Models.ChildMinder
+        });
+
         Models.Record = Backbone.AssociatedModel.extend({
             relations:[
                 {
@@ -1100,28 +1169,14 @@ $(document).ready(function () {
             }
         });
 
-        Models.ChildMinder = Backbone.AssociatedModel.extend({
-            relations:[
-                {
-                    type:Backbone.One,
-                    key:'record',
-                    relatedModel:Models.Record
-                }
-            ],
-
-            toJSON:function () {
-                return {
-                    id:this.get('id'),
-                    type:this.get('type'),
-                    record:{id:this.get('record').get('id')}
-                }
+        Models.ChildMinder.relations = [];
+        Models.ChildMinder.relations.push(
+            {
+                type:Backbone.One,
+                key:'record',
+                relatedModel:Models.Record
             }
-        });
-
-        Models.ChildrenMinders = Backbone.Collection.extend({
-            model:Models.ChildMinder
-        });
-
+        );
 
         var provinceRecord = new Models.Record({id:2, name:'test1'});
         MyApp.Context.provinceRecords.push(provinceRecord);
