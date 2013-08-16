@@ -344,7 +344,9 @@
 
             //Only fire for change. Not change:attribute
             if ("change" === eventType && this.get(eventPath) != args[2]) {
-                this.trigger.apply(this, ["nested-change", eventPath, args[1]]);
+                var ncargs = ["nested-change", eventPath, args[1]];
+                args[2] && ncargs.push(args[2]); //args[2] will be options if present
+                this.trigger.apply(this, ncargs);
             }
 
             // Remove `eventPath` from `_proxyCalls`,

@@ -802,7 +802,7 @@ $(document).ready(function () {
         emp.get('works_for.controls[0].locations').sort();
     });
 
-    test("child `nested-change`", 5, function () {
+    test("child `nested-change`", 9, function () {
         emp.get('works_for').get('locations').on('change', function () {
             ok(true, "Regular backbone change event from collections...");
         });
@@ -813,6 +813,8 @@ $(document).ready(function () {
                 ok(true, "Fired emp.works_for change:controls[0].locations[0]...");
             if (arguments[0] == "locations[0]")
                 ok(true, "Fired emp.works_for change:locations[0]...");
+            equal(arguments[2].dummy, true);
+
         });
 
         emp.on('nested-change', function () {
@@ -820,9 +822,12 @@ $(document).ready(function () {
                 ok(true, "Fired emp change:works_for.controls[0].locations[0]...");
             if (arguments[0] == "works_for.locations[0]")
                 ok(true, "Fired emp change:works_for.locations[0]...");
+
+            equal(arguments[2].dummy, true);
+
         });
 
-        emp.get('works_for').get("locations").at(0).set('zip', 94403);
+        emp.get('works_for').get("locations").at(0).set('zip', 94403, {dummy:true});
     });
 
     test("Set closure scope correctly - while setting BB Collection & Model instances directly", 5, function () {
