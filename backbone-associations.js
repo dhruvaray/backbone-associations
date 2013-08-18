@@ -386,8 +386,8 @@
 
         // Process all pending events after the entire object graph has been updated
         _processPendingEvents:function () {
-            if (!this.visited) {
-                this.visited = true;
+            if (!this.eventsVisited) {
+                this.eventsVisited = true;
 
                 this._deferEvents = false;
 
@@ -404,7 +404,7 @@
                     val && val._processPendingEvents();
                 }, this);
 
-                delete this.visited;
+                delete this.eventsVisited;
             }
         },
 
