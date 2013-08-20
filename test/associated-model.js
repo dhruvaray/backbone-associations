@@ -2179,6 +2179,18 @@ $(document).ready(function () {
         }
     });
 
+    test("Call toJSON in cycles -  Issue#58", 1, function () {
+
+        node1.set({parent:node3, children:[node2]});
+
+        node1.on('add:children', function () {
+            var node12Json = "{\"name\":\"n1\",\"parent\":{\"name\":\"n3\"},\"children\":[{\"name\":\"n2\"},{\"name\":\"n3\"}]}";
+            equal(JSON.stringify(node1.toJSON()), node12Json);
+        });
+
+        node1.set({parent:node3, children:[node2, node3]});
+    });
+
     test("set,trigger", 13, function () {
         node1.on("change:parent", function () {
             node1.trigger("nestedevent", arguments);
