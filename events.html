@@ -2,10 +2,12 @@
 <html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="utf-8">
-    <title>Backbone-Associations</title>
+    <title>Backbone-Associations - Events</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
+    <meta name="description" content="Support associations/relations in Backbone.js">
     <meta name="author" content="Dhruva Ray">
+    <meta name="keywords"
+          content="Backbone, relational, associations, association, nested, associated, model, cyclic graph, qualified event paths, relational, relations">
 
 
     <link href="./assets/css/bootstrap.css" rel="stylesheet">
@@ -30,10 +32,17 @@
     </style>
     <link href="./assets/css/bootstrap-responsive.css" rel="stylesheet">
     <script>
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o),
+                    m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
 
         ga('create', 'UA-41921363-1', 'dhruvaray.github.io');
         ga('send', 'pageview');
@@ -482,7 +491,9 @@ emp.on("destroy:works_for.controls[*].locations", function(){
     <h4>Intelli-update : Create or update objects based on idAttribute value</h4>
     <hr/>
     <div class="well well-large">
-        From v0.5.0, Backbone-associations will use the <a href="http://backbonejs.org/#Model-idAttribute">idAttribute</a> value to determine whether to update a nested object or to create a new one. The example below should make this clear.
+        From v0.5.0, Backbone-associations will use the <a
+            href="http://backbonejs.org/#Model-idAttribute">idAttribute</a> value to determine whether to update a
+        nested object or to create a new one. The example below should make this clear.
 
     <pre class="prettyprint">
 var dept = new Department({
@@ -507,14 +518,18 @@ emp.set('works_for', {id:3, name:"A new department name"});
 
 //emp.get('works_for') !== dept;
     </pre>
-        <small>Note : Earlier versions of Backbone-associations used to blindly create new instances; causing previously bound event handlers to not fire. This resulted in additional application complexity. This problem has now been rectified in v0.5.0+</small>
+        <small>Note : Earlier versions of Backbone-associations used to blindly create new instances; causing previously
+            bound event handlers to not fire. This resulted in additional application complexity. This problem has now
+            been rectified in v0.5.0+
+        </small>
     </div>
 </section>
 <section id="e-cycle">
     <h4>Self References a.k.a Cycles</h4>
     <hr/>
     <div class="well well-large">
-        Backbone-associations supports cyclic graphs. Consequently, it allows relatedModels to point to themselves.  This could be useful in composition scenarios - where the composed object is itself the container.<br/><br/>
+        Backbone-associations supports cyclic graphs. Consequently, it allows relatedModels to point to themselves. This
+        could be useful in composition scenarios - where the composed object is itself the container.<br/><br/>
         The example below shows how to specify self-references during model definition.
     <pre class="prettyprint">
 Employee = Backbone.AssociatedModel.extend({
@@ -537,7 +552,8 @@ Employee = Backbone.AssociatedModel.extend({
 var owner = new Employee({'fname':'Jack', 'lname':'Welch'});
 owner.set({'manager':owner});
         </pre>
-        Since Backbone-associations API are cycle aware, eventing will not loop indefinitely. Ditto for toJSON, clone APIs. The next example demonstrates eventing with self-references.
+        Since Backbone-associations API are cycle aware, eventing will not loop indefinitely. Ditto for toJSON, clone
+        APIs. The next example demonstrates eventing with self-references.
     <pre class="prettyprint">
 var owner = new Employee({'fname':'Jack', 'lname':'Welch'});
 
