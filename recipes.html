@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Backbone-Associations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Dhruva Ray">
+
+
+    <link href="./assets/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+
+        section {
+            padding-top: 40px;
+        }
+
+        section > .page-header,
+        section > .lead {
+            color: #5a5a5a;
+        }
+
+        section > ul li {
+            margin-bottom: 5px;
+        }
+    </style>
+    <link href="./assets/css/bootstrap-responsive.css" rel="stylesheet">
+    <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-41921363-1', 'dhruvaray.github.io');
+        ga('send', 'pageview');
+
+    </script>
+
+</head>
+
+<body data-target=".bs-docs-sidebar" data-spy="scroll">
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="brand" href="index.html">Backbone Associations</a>
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li><a href="./index.html">Home</a></li>
+                    <li><a href="./getting-started.html">Get Started</a></li>
+                    <li><a href="./specify-associations.html">Specify Associations</a></li>
+                    <li><a href="./events.html">Events</a></li>
+                    <li><a href="./tutorial.html">Tutorials</a></li>
+                    <li class="active"><a href="./recipes.html" class="active">Recipes</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- Example row of columns -->
+    <div class="row-fluid">
+        <div class="span3">
+            <div class="well sidebar-nav bs-docs-sidebar affix">
+                <ul class="nav nav-list bs-docs-sidenav">
+                    <li class="nav-header">Recipes</li>
+                    <li class="active"><a href="#tut-savefetch">Incremental Save/Fetch</a></li>
+                    <li><a href="#tut-map">Use a reference store</a></li>
+                    <li><a href="#tut-pa">Polymorphic Associations</a></li>
+                    <li><a href="#tut-ccgp">Grand Parent listens!</a></li>
+                    <li><a href="#tut-amd">AMD</a></li>
+                    <li><a href="#tut-da">Deep Attributes</a></li>
+                    <li class="nav-header">Contributions</li>
+                    <li><a href="#tut-contrib">Submit</a></li>
+
+                </ul>
+            </div>
+        </div>
+        <div class="span9">
+            <section id="tut-savefetch">
+                <h4>Incremental Save/Fetch </h4>
+                <hr/>
+                This example demonstrates how to incrementally load and save object graphs. This is important because rarely, there would be a need to fetch (or save) a entire object hierarchy from the server.
+                <div class="well well-large">
+                    <script src="https://gist.github.com/jdkanani/5822296.js"></script>
+                </div>
+            </section>
+            <section id="tut-map">
+                <h4>Use a reference store</h4>
+                <hr/>
+                Use a local reference store to transform type (or id) info to AssociatedModel's
+                <div class="well well-large">
+                    <script src="https://gist.github.com/dhruvaray/5791711.js"></script>
+                </div>
+            </section>
+            <section id="tut-pa">
+                <h4>Polymorphic Associations</h4>
+                <hr/>
+                Simulate Polymorphic associations with Backbone Associations.
+                Uses Backbone Associations <span class="label label-info">v0.5.1+</span><br/>
+                <div class="well well-large">
+                    <script src="https://gist.github.com/dhruvaray/5988996.js"></script>
+                </div>
+            </section>
+            <section id="tut-ccgp">
+                <h4>Demonstrates how a grandparent can listen in to changes in a (nested) collection</h4>
+                <hr/>
+                In this example, an Account (Grand-parent) is notified of changes in the shopping cart (grand-children)
+                <div class="well well-large">
+                    <script src="https://gist.github.com/dhruvaray/5791783.js"></script>
+                </div>
+            </section>
+            <section id="tut-amd">
+                <h4>Using Backbone-Associations as an AMD module</h4>
+                <hr/>
+                <div class="well well-large">
+                    <script src="https://gist.github.com/jdkanani/5256463.js"></script>
+                </div>
+            </section>
+            <section id="tut-da">
+                <h4>Deep Attributes</h4>
+                <hr/>
+                A utility method to convert any type (Associated Model, Collection or even primitive types) into a json representation. Handle cycles too.
+                <div class="well well-large">
+                    <script src="https://gist.github.com/dhruvaray/5899350.js"></script>
+                </div>
+            </section>
+            <section id="tut-contrib">
+                <h4>Contributions</h4>
+                <hr/>
+                Please create an issue in <a href="https://github.com/dhruvaray/backbone-associations/issues">issue
+                tracking system</a> mentioning your gist url. Interesting contributions will find an entry on this page.
+            </section>
+
+        </div>
+
+    </div>
+
+
+</div>
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="http:////ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?skin=sunburst"></script>
+<script src="./assets/js/bootstrap.js"></script>
+<script src="./assets/js/ba.js"></script>
+
+
+</body>
+</html>
