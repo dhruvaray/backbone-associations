@@ -425,7 +425,8 @@
 
         // The JSON representation of the model.
         toJSON:function (options) {
-            var json, aJson;
+            var json = {}, aJson;
+            json[this.idAttribute] = this.id;
             if (!this.visited) {
                 this.visited = true;
                 // Get json representation from `BackboneModel.toJSON`.

@@ -429,7 +429,7 @@ $(document).ready(function () {
         });
         var owner = new Owner;
         try {
-            var aHouse = new House({owner:owner});
+            new House({owner:owner});
         } catch (e) {
             equal(e.message === "specify an AssociatedModel for Backbone.One type", true)
         }
@@ -1154,14 +1154,6 @@ $(document).ready(function () {
         var Models = MyApp.Models;
 
         Models.ChildMinder = Backbone.AssociatedModel.extend({
-
-            toJSON:function () {
-                return {
-                    id:this.get('id'),
-                    type:this.get('type'),
-                    record:{id:this.get('record').get('id')}
-                }
-            }
         });
 
         Models.ChildrenMinders = Backbone.Collection.extend({
@@ -1186,7 +1178,6 @@ $(document).ready(function () {
                     // Let's assume that - after success update, server sends model's json object
                     response = model.toJSON();
                 }
-                options.merge = false;
                 return options.success.call(this, response);
             }
         });
@@ -1809,6 +1800,8 @@ $(document).ready(function () {
 
     test("Self-Reference `toJSON`", function () {
         var emp2 = new Employee({'fname':'emp2'});
+        emp2.idAttribute = "emp_id";
+        emp2.set('emp_id', 1);
         emp2.set({'manager':emp2});
         var rawJson = {
             "works_for":{
@@ -1820,9 +1813,10 @@ $(document).ready(function () {
             "dependents":[],
             "sex":"M",
             "age":0,
+            "emp_id":1,
             "fname":"emp2",
             "lname":"",
-            "manager":undefined
+            "manager":{emp_id:1}
         };
         deepEqual(emp2.toJSON(), rawJson, "emp2.toJSON() is identical as rawJson");
     });
@@ -2191,8 +2185,11 @@ $(document).ready(function () {
     module("Cyclic Graph", {
         setup:function () {
             node1 = new Node({name:'n1'});
+            node1.id = "n1";
             node2 = new Node({name:'n2'});
+            node2.id = "n2";
             node3 = new Node({name:'n3'});
+            node3.id = "n3";
 
         }
     });
@@ -2268,20 +2265,26 @@ $(document).ready(function () {
                     "children":[
                         {
                             "name":"n2",
-                            "children":[],
-                            "parent":undefined
+                            "children":[
+                                {"id":"n1"}
+                            ],
+                            "parent":{"id":"n3"}
                         }
                     ],
-                    "parent":undefined
+                    "parent":{"id":"n1"}
                 }
             ],
             "parent":{
                 "name":"n2",
-                "children":[],
+                "children":[
+                    {"id":"n1"}
+                ],
                 "parent":{
                     "name":"n3",
-                    "children":[],
-                    "parent":undefined
+                    "children":[
+                        {"id":"n2"}
+                    ],
+                    "parent":{"id":"n1"}
                 }
             }
         };
