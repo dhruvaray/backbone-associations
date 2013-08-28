@@ -365,7 +365,7 @@ $(document).ready(function () {
         equal(emp.get("works_for").get('number'), -1, "number has default value");
     });
 
-    test("invalid relations", 3, function () {
+    test("invalid relations", 4, function () {
         var em1 = Backbone.AssociatedModel.extend({
             relations:[
                 {
@@ -415,6 +415,23 @@ $(document).ready(function () {
             em3i.set('parent', {id:1});
         } catch (e) {
             equal(e.message === "specify a relatedModel for Backbone.One type", true)
+        }
+
+        var Owner = Backbone.Model.extend();
+        var House = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'owner',
+                    relatedModel:Owner
+                }
+            ]
+        });
+        var owner = new Owner;
+        try {
+            var aHouse = new House({owner:owner});
+        } catch (e) {
+            equal(e.message === "specify an AssociatedModel for Backbone.One type", true)
         }
 
     });
@@ -1303,7 +1320,7 @@ $(document).ready(function () {
                 {
                     type:Backbone.One,
                     key:'product',
-                    relatedModel:Backbone.AssociatedModel
+                    relatedModel:Backbone.AssociatedModel.extend()
                 }
             ],
             initialize:function () {
@@ -1359,7 +1376,7 @@ $(document).ready(function () {
 
     test("Issue  #35", 4, function () {
 
-        var FieldInputType = Backbone.Model.extend({
+        var FieldInputType = Backbone.AssociatedModel.extend({
             defaults:{
                 id:"-1",
                 type:"",
@@ -2176,6 +2193,7 @@ $(document).ready(function () {
             node1 = new Node({name:'n1'});
             node2 = new Node({name:'n2'});
             node3 = new Node({name:'n3'});
+
         }
     });
 

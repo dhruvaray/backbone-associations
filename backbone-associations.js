@@ -201,6 +201,9 @@
                             if (!relatedModel)
                                 throw new Error('specify a relatedModel for Backbone.One type');
 
+                            if (!(relatedModel.prototype instanceof Backbone.AssociatedModel))
+                                throw new Error('specify an AssociatedModel for Backbone.One type');
+
                             if (val instanceof AssociatedModel) {
                                 data = val;
                                 // Compute whether the context is a new one after this assignment.
