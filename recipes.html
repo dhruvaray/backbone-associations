@@ -87,7 +87,8 @@
                     <li class="nav-header">Recipes</li>
                     <li class="active"><a href="#tut-savefetch">Incremental Save/Fetch</a></li>
                     <li><a href="#tut-rev">Explicit Reverse Associations</a></li>
-                    <li><a href="#tut-map">Use a reference store</a></li>
+                    <li><a href="#tut-map">Use a reference store - I </a></li>
+                    <li><a href="#tut-map2">Use a reference store - II </a></li>
                     <li><a href="#tut-pa">Polymorphic Associations</a></li>
                     <li><a href="#tut-ccgp">Grand Parent listens!</a></li>
                     <li><a href="#tut-amd">AMD</a></li>
@@ -117,12 +118,21 @@
                 </div>
             </section>
             <section id="tut-map">
-                <h4>Use a reference store</h4>
+                <h4>Use a reference store - I </h4>
                 <hr/>
                 Use a local reference store to transform type (or id) info to AssociatedModel's
                 <div class="well well-large">
                     <script src="https://gist.github.com/dhruvaray/5791711.js"></script>
                 </div>
+            </section>
+            <section id="tut-map2">
+                <h4>Use a reference store - II </h4>
+                <hr/>
+                In v0.5.2+, the map API is augmented to pass in a type parameter. The type parameter contains the target model (or collection) type which the passed-in id (or ids) will get eventually transformed to. Additionally, the map function is invoked with the specific model instance as context (versus a global function in v0.5.1)
+                <div class="well well-large" >
+                    <script src="https://gist.github.com/dhruvaray/6411141.js"></script>
+                </div>
+
             </section>
             <section id="tut-pa">
                 <h4>Polymorphic Associations</h4>

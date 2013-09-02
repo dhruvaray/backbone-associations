@@ -178,6 +178,8 @@
             <dd>
                 Specify a transformation function to convert the value before it is assigned to the key on the
                 relatedModel.
+                <p><span class="label label-info">Note</span>
+                In v0.5.2+, the map API is augmented to pass in a type parameter. The type parameter contains the target model (or collection) type which the passed-in id (or ids) will be eventually transformed to. Additionally, the map function is now invoked with the specific model instance as context (versus a global function in v0.5.1)
             </dd>
         </dl>
 
@@ -395,6 +397,9 @@ var email = new Field({name:'Primary Email', type:'email'});
 phone.get('type').get('validations') //regex to validate phone #s
 email.get('type').get('validations'), //regex to validate email
 </pre>
+        <span class="label label-info">Note : v0.5.2+</span><br/>
+        From v0.5.2+, the map function is passed the current (AssociatedModel) instance as a context and an additional type parameter which specifies the type of the model to transform the ids to. For a detailed example, refer to this <a href="./recipes.html#tut-map2">recipe</a>
+
     </div>
 </section>
 
