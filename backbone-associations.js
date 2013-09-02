@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.5.1
+//  Backbone-associations.js 0.5.2
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -44,7 +44,7 @@
     collectionEvents = ["reset", "sort"];
 
     Backbone.Associations = {
-        VERSION:"0.5.1"
+        VERSION:"0.5.2"
     };
 
     // Backbone.AssociatedModel
