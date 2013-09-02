@@ -4,8 +4,8 @@
 * Bug fix : Propagate user defined options for nested-change events.
 * Bug fix : In a cycle scenario, a call to toJSON inside an event handler would not create the right JSON.
 * Increase error handling so that users will not trip up when they mis-type or enter wrong values during relation defintions.
-* The map function is now called with a specific AssociatedModel instance (as context). It takes in an additional paramter - which specifies the type of the relatedModel or Collection type. Could be useful in scnearios when you want to generalize the map function across relation types.
-* For cycle scenarios, the toJSON method serializes with {id:<value>} when it detects a cycle. This is a good default. Users can over-ride if found necessary.
+* The map function is now called with a specific AssociatedModel instance (as context). It takes in an additional paramter - which specifies the type of the relatedModel or Collection type. Could be useful in scnearios when you want to generalize the map function across relation types. See this [recipe](http://dhruvaray.github.io/backbone-associations/recipes.html#tut-map2).
+* For cycle scenarios, the toJSON method serializes with {id:value} when it detects a cycle. This is a good default. Users can over-ride if necessary. See this [recipe](http://dhruvaray.github.io/backbone-associations/recipes.html#tut-rev).
 
 ### Version 0.5.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.0...v0.5.1)
 
