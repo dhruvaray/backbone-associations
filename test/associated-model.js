@@ -365,7 +365,7 @@ $(document).ready(function () {
         equal(emp.get("works_for").get('number'), -1, "number has default value");
     });
 
-    test("invalid relations", 3, function () {
+    test("invalid relations", 4, function () {
         var em1 = Backbone.AssociatedModel.extend({
             relations:[
                 {
@@ -415,6 +415,23 @@ $(document).ready(function () {
             em3i.set('parent', {id:1});
         } catch (e) {
             equal(e.message === "specify a relatedModel for Backbone.One type", true)
+        }
+
+        var Owner = Backbone.Model.extend();
+        var House = Backbone.AssociatedModel.extend({
+            relations:[
+                {
+                    type:Backbone.One,
+                    key:'owner',
+                    relatedModel:Owner
+                }
+            ]
+        });
+        var owner = new Owner;
+        try {
+            new House({owner:owner});
+        } catch (e) {
+            equal(e.message === "specify an AssociatedModel for Backbone.One type", true)
         }
 
     });
@@ -1137,14 +1154,6 @@ $(document).ready(function () {
         var Models = MyApp.Models;
 
         Models.ChildMinder = Backbone.AssociatedModel.extend({
-
-            toJSON:function () {
-                return {
-                    id:this.get('id'),
-                    type:this.get('type'),
-                    record:{id:this.get('record').get('id')}
-                }
-            }
         });
 
         Models.ChildrenMinders = Backbone.Collection.extend({
@@ -1169,7 +1178,6 @@ $(document).ready(function () {
                     // Let's assume that - after success update, server sends model's json object
                     response = model.toJSON();
                 }
-                options.merge = false;
                 return options.success.call(this, response);
             }
         });
@@ -1303,7 +1311,7 @@ $(document).ready(function () {
                 {
                     type:Backbone.One,
                     key:'product',
-                    relatedModel:Backbone.AssociatedModel
+                    relatedModel:Backbone.AssociatedModel.extend()
                 }
             ],
             initialize:function () {
@@ -1359,7 +1367,7 @@ $(document).ready(function () {
 
     test("Issue  #35", 4, function () {
 
-        var FieldInputType = Backbone.Model.extend({
+        var FieldInputType = Backbone.AssociatedModel.extend({
             defaults:{
                 id:"-1",
                 type:"",
@@ -1792,6 +1800,8 @@ $(document).ready(function () {
 
     test("Self-Reference `toJSON`", function () {
         var emp2 = new Employee({'fname':'emp2'});
+        emp2.idAttribute = "emp_id";
+        emp2.set('emp_id', 1);
         emp2.set({'manager':emp2});
         var rawJson = {
             "works_for":{
@@ -1803,9 +1813,10 @@ $(document).ready(function () {
             "dependents":[],
             "sex":"M",
             "age":0,
+            "emp_id":1,
             "fname":"emp2",
             "lname":"",
-            "manager":undefined
+            "manager":{emp_id:1}
         };
         deepEqual(emp2.toJSON(), rawJson, "emp2.toJSON() is identical as rawJson");
     });
@@ -2174,8 +2185,12 @@ $(document).ready(function () {
     module("Cyclic Graph", {
         setup:function () {
             node1 = new Node({name:'n1'});
+            node1.id = "n1";
             node2 = new Node({name:'n2'});
+            node2.id = "n2";
             node3 = new Node({name:'n3'});
+            node3.id = "n3";
+
         }
     });
 
@@ -2250,20 +2265,26 @@ $(document).ready(function () {
                     "children":[
                         {
                             "name":"n2",
-                            "children":[],
-                            "parent":undefined
+                            "children":[
+                                {"id":"n1"}
+                            ],
+                            "parent":{"id":"n3"}
                         }
                     ],
-                    "parent":undefined
+                    "parent":{"id":"n1"}
                 }
             ],
             "parent":{
                 "name":"n2",
-                "children":[],
+                "children":[
+                    {"id":"n1"}
+                ],
                 "parent":{
                     "name":"n3",
-                    "children":[],
-                    "parent":undefined
+                    "children":[
+                        {"id":"n2"}
+                    ],
+                    "parent":{"id":"n1"}
                 }
             }
         };
