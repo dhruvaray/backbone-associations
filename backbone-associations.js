@@ -22,12 +22,13 @@
         CollectionProto, defaultEvents, AssociatedModel, pathChecker,
         collectionEvents;
 
-    if (typeof window === 'undefined') {
+    if (typeof exports !== 'undefined') {
         _ = require('underscore');
         Backbone = require('backbone');
-        if (typeof exports !== 'undefined') {
-            exports = module.exports = Backbone;
+        if (typeof module !== 'undefined' && module.exports) {
+            module.exports = Backbone;
         }
+        exports = Backbone;
     } else {
         _ = root._;
         Backbone = root.Backbone;
