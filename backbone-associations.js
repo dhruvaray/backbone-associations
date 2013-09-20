@@ -177,24 +177,26 @@
                                 throw new Error('collectionType must inherit from Backbone.Collection');
                             }
 
-                            if (val instanceof BackboneCollection && !currVal) {
-                                data = val;
-                                // Set current context as new context
-                                newCtx = true;
-                            } else {
-                                // Create a new collection
-                                if (!currVal) {
-                                    data = collectionType ? new collectionType() : this._createCollection(relatedModel);
-                                } else {
-                                    data = currVal;
-                                    // Setting this flag will prevent events from firing immediately. That way clients
-                                    // will not get events until the entire object graph is updated.
-                                    data._deferEvents = true;
-                                }
+                            if (currVal) {
+                                // Setting this flag will prevent events from firing immediately. That way clients
+                                // will not get events until the entire object graph is updated.
+                                currVal._deferEvents = true;
+
                                 // Use Backbone.Collection's `reset` or smart `set` method
-                                data[relationOptions.reset ? 'reset' : 'set'](val instanceof BackboneCollection
-                                    ? val.models
-                                    : val, relationOptions);
+                                currVal[relationOptions.reset ? 'reset' : 'set'](
+                                    val instanceof BackboneCollection ? val.models : val, relationOptions);
+
+                                data = currVal;
+
+                            } else {
+                                newCtx = true;
+
+                                if (val instanceof BackboneCollection) {
+                                    data = val;
+                                } else {
+                                    data = collectionType ? new collectionType() : this._createCollection(relatedModel);
+                                    data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
+                                }
                             }
 
                         } else if (relation.type === Backbone.One) {
@@ -205,27 +207,17 @@
                             if (!(relatedModel.prototype instanceof Backbone.AssociatedModel))
                                 throw new Error('specify an AssociatedModel for Backbone.One type');
 
-                            if (val instanceof AssociatedModel) {
-                                data = val;
-                                // Compute whether the context is a new one after this assignment.
-                                newCtx = (currVal !== val);
+                            data = val instanceof AssociatedModel ? val : new relatedModel(val, relationOptions);
+                            //Is the passed in data for the same key?
+                            if (currVal && data[idKey] && currVal[idKey] === data[idKey]) {
+                                // Setting this flag will prevent events from firing immediately. That way clients
+                                // will not get events until the entire object graph is updated.
+                                currVal._deferEvents = true;
+                                // Perform the traditional `set` operation
+                                currVal._set(val instanceof AssociatedModel ? val.attributes : val, relationOptions);
+                                data = currVal;
                             } else {
-                                //Create a new model
-                                if (!currVal) {
-                                    data = new relatedModel(val, relationOptions);
-                                } else {
-                                    //Is the passed in data for the same key?
-                                    if (currVal && val[idKey] && currVal.get(idKey) === val[idKey]) {
-                                        // Setting this flag will prevent events from firing immediately. That way clients
-                                        // will not get events until the entire object graph is updated.
-                                        currVal._deferEvents = true;
-                                        // Perform the traditional `set` operation
-                                        currVal._set(val, relationOptions);
-                                        data = currVal;
-                                    } else {
-                                        data = new relatedModel(val, relationOptions);
-                                    }
-                                }
+                                newCtx = true;
                             }
 
                         } else {

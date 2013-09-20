@@ -1540,6 +1540,52 @@ $(document).ready(function () {
 
     });
 
+    test("Issue#67 : Nested set shouldn't destroy references", 2, function () {
+
+        var Team = Backbone.Collection.extend({
+                model:Employee
+            }),
+            json1 = [
+                {
+                    id:'e1',
+                    fname:"John",
+                    manager:{
+                        id:'m1',
+                        fname:'Mikeeee'
+                    }
+                },
+                {
+                    id:'e2',
+                    fname:"Edgar"
+                }
+            ],
+            json2 = [
+                {
+                    id:'e1',
+                    fname:"John",
+                    manager:{
+                        id:'m1',
+                        fname:'Mike'
+                    }
+                },
+                {
+                    id:'e2',
+                    fname:"Edgar"
+                }
+            ];
+
+        var team = new Team(json1);
+        var employee1 = team.at(0);
+        var manager1 = employee1.get('manager');
+
+        team.set(json2);
+
+        equal(employee1.get('manager.fname'), 'Mike');
+
+        equal(manager1.get('fname'), 'Mike');
+
+    });
+
     test("Issue #31 nested collection", 2, function () {
         var Node = Backbone.AssociatedModel.extend({
             defaults:{
