@@ -20,7 +20,7 @@
     // Exported for the browser and CommonJS.
     var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
         CollectionProto, defaultEvents, AssociatedModel, pathChecker,
-        collectionEvents;
+        collectionEvents, delimiters, pathSeparator;
 
     if (typeof exports !== 'undefined') {
         _ = require('underscore');
@@ -38,7 +38,6 @@
     BackboneCollection = Backbone.Collection;
     ModelProto = BackboneModel.prototype;
     CollectionProto = BackboneCollection.prototype;
-    pathChecker = /[\.\[\]]+/g;
 
     // Built-in Backbone `events`.
     defaultEvents = ["change", "add", "remove", "reset", "sort", "destroy"];
@@ -48,6 +47,23 @@
         VERSION:"0.5.2"
     };
 
+    // Define `SEPERATOR` property to Backbone.Associations
+    Object.defineProperty(Backbone.Associations, 'SEPARATOR', {
+        enumerable: true,
+        get: function(){
+            return pathSeparator;
+        },
+        set: function(value){
+            if (!_.isString(value) || _.size(value) < 1) {
+                value = ".";
+            }
+            // set private properties
+            pathSeparator = value;
+            pathChecker = new RegExp("[\\" + pathSeparator + "\\[\\]]+", "g");
+            delimiters = new RegExp("[^\\" + pathSeparator + "\\[\\]]+", "g");
+        }
+    });
+
     // Backbone.AssociatedModel
     // --------------
 
@@ -55,6 +71,8 @@
     Backbone.Associations.Many = Backbone.Many = "Many";
     Backbone.Associations.One = Backbone.One = "One";
     Backbone.Associations.Self = Backbone.Self = "Self";
+    // Set default separator
+    Backbone.Associations.SEPARATOR = ".";
     // Define `AssociatedModel` (Extends Backbone.Model).
     AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({
         // Define relations with Associated Model.
@@ -311,7 +329,7 @@
 
             // Manipulate `eventPath`.
             eventPath = relationKey + ((indexEventObject !== -1 && (eventType === "change" || eventPath)) ?
-                "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
+                "[" + indexEventObject + "]" : "") + (eventPath ? pathSeparator + eventPath : "");
 
             // Short circuit collection * events
             if (/\[\*\]/g.test(eventPath)) return this;
@@ -477,8 +495,6 @@
         }
     });
 
-    var delimiters = /[^\.\[\]]+/g;
-
     // Tokenize the fully qualified event path
     var getPathArray = function (path) {
         if (path === '') return [''];
@@ -486,8 +502,8 @@
     };
 
     var map2Scope = function (path) {
-        return _.reduce(path.split('.'), function (memo, elem) {
-            return memo[elem]
+        return _.reduce(path.split(pathSeparator), function (memo, elem) {
+            return memo[elem];
         }, root);
     };
 
