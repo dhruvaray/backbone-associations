@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.5.2
+//  Backbone-associations.js 0.5.3
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -20,14 +20,15 @@
     // Exported for the browser and CommonJS.
     var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
         CollectionProto, defaultEvents, AssociatedModel, pathChecker,
-        collectionEvents;
+        collectionEvents, delimiters, pathSeparator;
 
-    if (typeof window === 'undefined') {
+    if (typeof exports !== 'undefined') {
         _ = require('underscore');
         Backbone = require('backbone');
-        if (typeof exports !== 'undefined') {
-            exports = module.exports = Backbone;
+        if (typeof module !== 'undefined' && module.exports) {
+            module.exports = Backbone;
         }
+        exports = Backbone;
     } else {
         _ = root._;
         Backbone = root.Backbone;
@@ -37,15 +38,31 @@
     BackboneCollection = Backbone.Collection;
     ModelProto = BackboneModel.prototype;
     CollectionProto = BackboneCollection.prototype;
-    pathChecker = /[\.\[\]]+/g;
 
     // Built-in Backbone `events`.
     defaultEvents = ["change", "add", "remove", "reset", "sort", "destroy"];
     collectionEvents = ["reset", "sort"];
 
     Backbone.Associations = {
-        VERSION:"0.5.2"
+        VERSION:"0.5.3"
     };
+
+    // Define `SEPERATOR` property to Backbone.Associations
+    Object.defineProperty(Backbone.Associations, 'SEPARATOR', {
+        enumerable: true,
+        get: function(){
+            return pathSeparator;
+        },
+        set: function(value){
+            if (!_.isString(value) || _.size(value) < 1) {
+                value = ".";
+            }
+            // set private properties
+            pathSeparator = value;
+            pathChecker = new RegExp("[\\" + pathSeparator + "\\[\\]]+", "g");
+            delimiters = new RegExp("[^\\" + pathSeparator + "\\[\\]]+", "g");
+        }
+    });
 
     // Backbone.AssociatedModel
     // --------------
@@ -54,6 +71,8 @@
     Backbone.Associations.Many = Backbone.Many = "Many";
     Backbone.Associations.One = Backbone.One = "One";
     Backbone.Associations.Self = Backbone.Self = "Self";
+    // Set default separator
+    Backbone.Associations.SEPARATOR = ".";
     // Define `AssociatedModel` (Extends Backbone.Model).
     AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({
         // Define relations with Associated Model.
@@ -176,24 +195,26 @@
                                 throw new Error('collectionType must inherit from Backbone.Collection');
                             }
 
-                            if (val instanceof BackboneCollection && !currVal) {
-                                data = val;
-                                // Set current context as new context
-                                newCtx = true;
-                            } else {
-                                // Create a new collection
-                                if (!currVal) {
-                                    data = collectionType ? new collectionType() : this._createCollection(relatedModel);
-                                } else {
-                                    data = currVal;
-                                    // Setting this flag will prevent events from firing immediately. That way clients
-                                    // will not get events until the entire object graph is updated.
-                                    data._deferEvents = true;
-                                }
+                            if (currVal) {
+                                // Setting this flag will prevent events from firing immediately. That way clients
+                                // will not get events until the entire object graph is updated.
+                                currVal._deferEvents = true;
+
                                 // Use Backbone.Collection's `reset` or smart `set` method
-                                data[relationOptions.reset ? 'reset' : 'set'](val instanceof BackboneCollection
-                                    ? val.models
-                                    : val, relationOptions);
+                                currVal[relationOptions.reset ? 'reset' : 'set'](
+                                    val instanceof BackboneCollection ? val.models : val, relationOptions);
+
+                                data = currVal;
+
+                            } else {
+                                newCtx = true;
+
+                                if (val instanceof BackboneCollection) {
+                                    data = val;
+                                } else {
+                                    data = collectionType ? new collectionType() : this._createCollection(relatedModel);
+                                    data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
+                                }
                             }
 
                         } else if (relation.type === Backbone.One) {
@@ -204,27 +225,17 @@
                             if (!(relatedModel.prototype instanceof Backbone.AssociatedModel))
                                 throw new Error('specify an AssociatedModel for Backbone.One type');
 
-                            if (val instanceof AssociatedModel) {
-                                data = val;
-                                // Compute whether the context is a new one after this assignment.
-                                newCtx = (currVal !== val);
+                            data = val instanceof AssociatedModel ? val : new relatedModel(val, relationOptions);
+                            //Is the passed in data for the same key?
+                            if (currVal && data[idKey] && currVal[idKey] === data[idKey]) {
+                                // Setting this flag will prevent events from firing immediately. That way clients
+                                // will not get events until the entire object graph is updated.
+                                currVal._deferEvents = true;
+                                // Perform the traditional `set` operation
+                                currVal._set(val instanceof AssociatedModel ? val.attributes : val, relationOptions);
+                                data = currVal;
                             } else {
-                                //Create a new model
-                                if (!currVal) {
-                                    data = new relatedModel(val, relationOptions);
-                                } else {
-                                    //Is the passed in data for the same key?
-                                    if (currVal && val[idKey] && currVal.get(idKey) === val[idKey]) {
-                                        // Setting this flag will prevent events from firing immediately. That way clients
-                                        // will not get events until the entire object graph is updated.
-                                        currVal._deferEvents = true;
-                                        // Perform the traditional `set` operation
-                                        currVal._set(val, relationOptions);
-                                        data = currVal;
-                                    } else {
-                                        data = new relatedModel(val, relationOptions);
-                                    }
-                                }
+                                newCtx = true;
                             }
 
                         } else {
@@ -318,7 +329,7 @@
 
             // Manipulate `eventPath`.
             eventPath = relationKey + ((indexEventObject !== -1 && (eventType === "change" || eventPath)) ?
-                "[" + indexEventObject + "]" : "") + (eventPath ? "." + eventPath : "");
+                "[" + indexEventObject + "]" : "") + (eventPath ? pathSeparator + eventPath : "");
 
             // Short circuit collection * events
             if (/\[\*\]/g.test(eventPath)) return this;
@@ -484,8 +495,6 @@
         }
     });
 
-    var delimiters = /[^\.\[\]]+/g;
-
     // Tokenize the fully qualified event path
     var getPathArray = function (path) {
         if (path === '') return [''];
@@ -493,8 +502,8 @@
     };
 
     var map2Scope = function (path) {
-        return _.reduce(path.split('.'), function (memo, elem) {
-            return memo[elem]
+        return _.reduce(path.split(pathSeparator), function (memo, elem) {
+            return memo[elem];
         }, root);
     };
 

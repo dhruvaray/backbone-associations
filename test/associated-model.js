@@ -279,6 +279,50 @@ $(document).ready(function () {
         ok(Backbone.Associations.VERSION, "Backbone.Associations.VERSION exists");
     });
 
+    test("SEPARATOR", 13, function () {
+        // Change separator to `~`
+        Backbone.Associations.SEPARATOR = "~";
+        equal(Backbone.Associations.SEPARATOR, "~", "Backbone.Associations.SEPERATOR should be `~`");
+        equal(emp.get('dependents[0]~fname'), emp.get('dependents').at(0).get('fname'));
+        equal(emp.get('works_for~controls[0]~locations[0]~zip'), 94404);
+
+        emp.once('change:works_for~controls[0]~locations[0]', function () {
+            ok(true, "Fired emp change:works_for~controls[0]~locations[0]...");
+        });
+
+        emp.once('change:works_for~controls[*]~locations[*]', function () {
+            ok(true, "Fired emp change:works_for~controls[*]~locations[*]...");
+        });
+
+        emp.once('change:works_for~controls[*]~locations[*]~zip', function () {
+            ok(true, "Fired emp change:works_for~controls[*]~locations[*]~zip...");
+        });
+
+        emp.get('works_for').get("locations").at(0).set('zip', 94403); // 3
+
+        // Change separator to `->`
+        Backbone.Associations.SEPARATOR = "->";
+        equal(Backbone.Associations.SEPARATOR, "->", "Backbone.Associations.SEPERATOR should be `->`");
+        emp.get('works_for').on('change:locations[*]', function () {
+            ok(true, "Fired emp.works_for change:locations[*]...");
+        });
+
+        emp.get('works_for').on('change:locations[0]->zip', function () {
+            ok(true, "Fired emp.works_for change:locations[0].zip...");
+        });
+
+        emp.get('works_for').on('change:controls[0]->locations[0]->zip', function () {
+            ok(true, "Fired emp.works_for change:controls[0]->locations[0]->zip...");
+        });
+        emp.get('works_for').get("locations").at(0).set('zip', 94405);
+        equal(emp.get('works_for->controls[0]->locations[0]->zip'), 94405);
+        equal(emp.get('dependents[0]->fname'), emp.get('dependents').at(0).get('fname'));
+
+        // Change separator to `.`
+        Backbone.Associations.SEPARATOR = ".";
+        equal(Backbone.Associations.SEPARATOR, ".", "Backbone.Associations.SEPERATOR should be `.`");
+    });
+
     test("primitive attribute set operation", 2, function () {
         emp.set({'age':22});
         equal(emp.get("age"), 22, "emp's should be 22 years");
@@ -1537,6 +1581,52 @@ $(document).ready(function () {
 
         //Should not trigger event in m2.get('model1').on("change", callback) as we have a diff model1 instance
         m2.set({id:1, model1:{id:3, name:"Name3"}, version:"m2.1"});
+
+    });
+
+    test("Issue#67 : Nested set shouldn't destroy references", 2, function () {
+
+        var Team = Backbone.Collection.extend({
+                model:Employee
+            }),
+            json1 = [
+                {
+                    id:'e1',
+                    fname:"John",
+                    manager:{
+                        id:'m1',
+                        fname:'Mikeeee'
+                    }
+                },
+                {
+                    id:'e2',
+                    fname:"Edgar"
+                }
+            ],
+            json2 = [
+                {
+                    id:'e1',
+                    fname:"John",
+                    manager:{
+                        id:'m1',
+                        fname:'Mike'
+                    }
+                },
+                {
+                    id:'e2',
+                    fname:"Edgar"
+                }
+            ];
+
+        var team = new Team(json1);
+        var employee1 = team.at(0);
+        var manager1 = employee1.get('manager');
+
+        team.set(json2);
+
+        equal(employee1.get('manager.fname'), 'Mike');
+
+        equal(manager1.get('fname'), 'Mike');
 
     });
 
