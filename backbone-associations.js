@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.5.2
+//  Backbone-associations.js 0.5.3
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
