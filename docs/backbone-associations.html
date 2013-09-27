@@ -2,392 +2,389 @@
 
 <html>
 <head>
-    <title>backbone-associations.js</title>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta name="viewport"
-          content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
-    <link rel="stylesheet" media="all" href="docco.css"/>
+  <title>backbone-associations.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
 </head>
 <body>
-<div id="container">
-<div id="background"></div>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>backbone-associations.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p> Backbone-associations.js 0.5.3</p>
+<p> (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
+ Backbone-associations may be freely distributed under the MIT license.
+ For all details and documentation:
+ <a href="https://github.com/dhruvaray/backbone-associations/">https://github.com/dhruvaray/backbone-associations/</a></p>
 
-<ul class="sections">
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h2">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <h2>Initial Setup</h2>
 
-<li id="title">
-    <div class="annotation">
-        <h1>backbone-associations.js</h1>
-    </div>
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>(<span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+    <span class="string">"use strict"</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Save a reference to the global object (<code>window</code> in the browser, <code>exports</code>
+on the server).</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">var</span> root = <span class="keyword">this</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>The top-level namespace. All public Backbone classes and modules will be attached to this.
+Exported for the browser and CommonJS.</p>
 
-<li id="section-1">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-1">&#182;</a>
-        </div>
-        <p> Backbone-associations.js 0.5.2</p>
-
-        <p> (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
-            Backbone-associations may be freely distributed under the MIT license.
-            For all details and documentation:
-            <a href="https://github.com/dhruvaray/backbone-associations/">https://github.com/dhruvaray/backbone-associations/</a>
-        </p>
-
-    </div>
-
-</li>
-
-
-<li id="section-2">
-    <div class="annotation">
-
-        <div class="pilwrap for-h2">
-            <a class="pilcrow" href="#section-2">&#182;</a>
-        </div>
-        <h2>Initial Setup</h2>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>(<span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
-    <span class="string">"use strict"</span>;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-3">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-3">&#182;</a>
-        </div>
-        <p>Save a reference to the global object (<code>window</code> in the browser, <code>exports</code>
-            on the server).</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>    <span class="keyword">var</span> root = <span class="keyword">this</span>;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-4">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-4">&#182;</a>
-        </div>
-        <p>The top-level namespace. All public Backbone classes and modules will be attached to this.
-            Exported for the browser and CommonJS.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>    <span class="keyword">var</span> _, Backbone, BackboneModel, BackboneCollection, ModelProto,
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">var</span> _, Backbone, BackboneModel, BackboneCollection, ModelProto,
         CollectionProto, defaultEvents, AssociatedModel, pathChecker,
-        collectionEvents;
+        collectionEvents, delimiters, pathSeparator;
 
-    <span class="keyword">if</span> (<span class="keyword">typeof</span> window === <span
-                    class="string">'undefined'</span>) {
+    <span class="keyword">if</span> (<span class="keyword">typeof</span> exports !== <span class="string">'undefined'</span>) {
         _ = require(<span class="string">'underscore'</span>);
         Backbone = require(<span class="string">'backbone'</span>);
-        <span class="keyword">if</span> (<span class="keyword">typeof</span> exports !== <span class="string">'undefined'</span>) {
-            exports = module.exports = Backbone;
+        <span class="keyword">if</span> (<span class="keyword">typeof</span> module !== <span class="string">'undefined'</span> &amp;&amp; module.exports) {
+            module.exports = Backbone;
         }
+        exports = Backbone;
     } <span class="keyword">else</span> {
         _ = root._;
         Backbone = root.Backbone;
-    }</pre>
-        </div>
-    </div>
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Create local reference <code>Model</code> prototype.</p>
 
-</li>
-
-
-<li id="section-5">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-5">&#182;</a>
-        </div>
-        <p>Create local reference <code>Model</code> prototype.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>    BackboneModel = Backbone.Model;
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    BackboneModel = Backbone.Model;
     BackboneCollection = Backbone.Collection;
     ModelProto = BackboneModel.prototype;
-    CollectionProto = BackboneCollection.prototype;
-    pathChecker = <span class="regexp">/[\.\[\]]+/g</span>;</pre>
-        </div>
-    </div>
+    CollectionProto = BackboneCollection.prototype;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Built-in Backbone <code>events</code>.</p>
 
-</li>
-
-
-<li id="section-6">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-6">&#182;</a>
-        </div>
-        <p>Built-in Backbone <code>events</code>.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>    defaultEvents = [<span class="string">"change"</span>, <span class="string">"add"</span>, <span
-                class="string">"remove"</span>, <span class="string">"reset"</span>, <span class="string">"sort"</span>, <span
-                class="string">"destroy"</span>];
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    defaultEvents = [<span class="string">"change"</span>, <span class="string">"add"</span>, <span class="string">"remove"</span>, <span class="string">"reset"</span>, <span class="string">"sort"</span>, <span class="string">"destroy"</span>];
     collectionEvents = [<span class="string">"reset"</span>, <span class="string">"sort"</span>];
 
     Backbone.Associations = {
-        VERSION:<span class="string">"0.5.2"</span>
-    };</pre>
-        </div>
-    </div>
+        VERSION:<span class="string">"0.5.3"</span>
+    };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>Define <code>SEPERATOR</code> property to Backbone.Associations</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    Object.defineProperty(Backbone.Associations, <span class="string">'SEPARATOR'</span>, {
+        enumerable: <span class="literal">true</span>,
+        get: <span class="keyword">function</span>(){
+            <span class="keyword">return</span> pathSeparator;
+        },
+        set: <span class="keyword">function</span>(value){
+            <span class="keyword">if</span> (!_.isString(value) || _.size(value) &lt; <span class="number">1</span>) {
+                value = <span class="string">"."</span>;
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>set private properties</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            pathSeparator = value;
+            pathChecker = <span class="keyword">new</span> RegExp(<span class="string">"[\\"</span> + pathSeparator + <span class="string">"\\[\\]]+"</span>, <span class="string">"g"</span>);
+            delimiters = <span class="keyword">new</span> RegExp(<span class="string">"[^\\"</span> + pathSeparator + <span class="string">"\\[\\]]+"</span>, <span class="string">"g"</span>);
+        }
+    });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h2">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <h2>Backbone.AssociatedModel</h2>
 
-<li id="section-7">
-    <div class="annotation">
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>Add <code>Many</code> and <code>One</code> relations to Backbone Object.</p>
 
-        <div class="pilwrap for-h2">
-            <a class="pilcrow" href="#section-7">&#182;</a>
-        </div>
-        <h2>Backbone.AssociatedModel</h2>
-
-    </div>
-
-</li>
-
-
-<li id="section-8">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-8">&#182;</a>
-        </div>
-        <p>Add <code>Many</code> and <code>One</code> relations to Backbone Object.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>    Backbone.Associations.Many = Backbone.Many = <span class="string">"Many"</span>;
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    Backbone.Associations.Many = Backbone.Many = <span class="string">"Many"</span>;
     Backbone.Associations.One = Backbone.One = <span class="string">"One"</span>;
-    Backbone.Associations.Self = Backbone.Self = <span class="string">"Self"</span>;</pre>
-        </div>
-    </div>
+    Backbone.Associations.Self = Backbone.Self = <span class="string">"Self"</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Set default separator</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    Backbone.Associations.SEPARATOR = <span class="string">"."</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Define <code>AssociatedModel</code> (Extends Backbone.Model).</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Define relations with Associated Model.</p>
 
-<li id="section-9">
-    <div class="annotation">
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        relations:<span class="literal">undefined</span>,</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Define <code>Model</code> property which can keep track of already fired <code>events</code>,
+and prevent redundant event to be triggered in case of cyclic model graphs.</p>
 
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-9">&#182;</a>
-        </div>
-        <p>Define <code>AssociatedModel</code> (Extends Backbone.Model).</p>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        _proxyCalls:<span class="literal">undefined</span>,</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>Get the value of an attribute.</p>
 
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>    AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-10">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-10">&#182;</a>
-        </div>
-        <p>Define relations with Associated Model.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>        relations:<span class="literal">undefined</span>,</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-11">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-11">&#182;</a>
-        </div>
-        <p>Define <code>Model</code> property which can keep track of already fired <code>events</code>,
-            and prevent redundant event to be triggered in case of cyclic model graphs.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>        _proxyCalls:<span class="literal">undefined</span>,</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-12">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-12">&#182;</a>
-        </div>
-        <p>Get the value of an attribute.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        get:<span class="function"><span class="keyword">function</span> <span
-                class="params">(attr)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        get:<span class="function"><span class="keyword">function</span> <span class="params">(attr)</span> {</span>
             <span class="keyword">var</span> obj = ModelProto.get.call(<span class="keyword">this</span>, attr);
-            <span class="keyword">return</span> obj ? obj : <span class="keyword">this</span>._getAttr.apply(<span
-                    class="keyword">this</span>, arguments);
-        },</pre>
-        </div>
-    </div>
+            <span class="keyword">return</span> obj ? obj : <span class="keyword">this</span>._getAttr.apply(<span class="keyword">this</span>, arguments);
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>Set a hash of model attributes on the Backbone Model.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        set:<span class="function"><span class="keyword">function</span> <span class="params">(key, value, options)</span> {</span>
+            <span class="keyword">var</span> attributes, result;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>Duplicate backbone&#39;s behavior to allow separate key/value parameters,
+instead of a single &#39;attributes&#39; object.</p>
 
-
-<li id="section-13">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-13">&#182;</a>
-        </div>
-        <p>Set a hash of model attributes on the Backbone Model.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        set:<span class="function"><span class="keyword">function</span> <span
-                class="params">(key, value, options)</span> {</span>
-            <span class="keyword">var</span> attributes, result;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-14">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-14">&#182;</a>
-        </div>
-        <p>Duplicate backbone&#39;s behavior to allow separate key/value parameters,
-            instead of a single &#39;attributes&#39; object.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">if</span> (_.isObject(key) || key == <span
-                class="literal">null</span>) {
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (_.isObject(key) || key == <span class="literal">null</span>) {
                 attributes = key;
                 options = value;
             } <span class="keyword">else</span> {
                 attributes = {};
                 attributes[key] = value;
             }
-            result = <span class="keyword">this</span>._set(attributes, options);</pre>
-        </div>
-    </div>
+            result = <span class="keyword">this</span>._set(attributes, options);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>Trigger events which have been blocked until the entire object graph is updated.</p>
 
-</li>
-
-
-<li id="section-15">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-15">&#182;</a>
-        </div>
-        <p>Trigger events which have been blocked until the entire object graph is updated.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">this</span>._processPendingEvents();
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">this</span>._processPendingEvents();
             <span class="keyword">return</span> result;
 
-        },</pre>
-        </div>
-    </div>
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>Works with an attribute hash and options + fully qualified paths</p>
 
-</li>
-
-
-<li id="section-16">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-16">&#182;</a>
-        </div>
-        <p>Works with an attribute hash and options + fully qualified paths</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        _set:<span class="function"><span class="keyword">function</span> <span
-                class="params">(attributes, options)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        _set:<span class="function"><span class="keyword">function</span> <span class="params">(attributes, options)</span> {</span>
             <span class="keyword">var</span> attr, modelMap, modelId, obj, result = <span class="keyword">this</span>;
-            <span class="keyword">if</span> (!attributes) <span class="keyword">return</span> <span
-                    class="keyword">this</span>;
-            <span class="keyword">for</span> (attr <span class="keyword">in</span> attributes) {</pre>
-        </div>
-    </div>
+            <span class="keyword">if</span> (!attributes) <span class="keyword">return</span> <span class="keyword">this</span>;
+            <span class="keyword">for</span> (attr <span class="keyword">in</span> attributes) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>Create a map for each unique object whose attributes we want to set</p>
 
-</li>
-
-
-<li id="section-17">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-17">&#182;</a>
-        </div>
-        <p>Create a map for each unique object whose attributes we want to set</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                modelMap || (modelMap = {});
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                modelMap || (modelMap = {});
                 <span class="keyword">if</span> (attr.match(pathChecker)) {
                     <span class="keyword">var</span> pathTokens = getPathArray(attr), initials = _.initial(pathTokens),
                         last = pathTokens[pathTokens.length - <span class="number">1</span>],
                         parentModel = <span class="keyword">this</span>.get(initials);
                     <span class="keyword">if</span> (parentModel <span class="keyword">instanceof</span> AssociatedModel) {
-                        obj = modelMap[parentModel.cid] || (modelMap[parentModel.cid] = {<span
-                    class="string">'model'</span>:parentModel, <span class="string">'data'</span>:{}});
+                        obj = modelMap[parentModel.cid] || (modelMap[parentModel.cid] = {<span class="string">'model'</span>:parentModel, <span class="string">'data'</span>:{}});
                         obj.data[last] = attributes[attr];
                     }
                 } <span class="keyword">else</span> {
-                    obj = modelMap[<span class="keyword">this</span>.cid] || (modelMap[<span class="keyword">this</span>.cid] = {<span
-                    class="string">'model'</span>:<span class="keyword">this</span>, <span class="string">'data'</span>:{}});
+                    obj = modelMap[<span class="keyword">this</span>.cid] || (modelMap[<span class="keyword">this</span>.cid] = {<span class="string">'model'</span>:<span class="keyword">this</span>, <span class="string">'data'</span>:{}});
                     obj.data[attr] = attributes[attr];
                 }
             }
@@ -395,8 +392,7 @@
             <span class="keyword">if</span> (modelMap) {
                 <span class="keyword">for</span> (modelId <span class="keyword">in</span> modelMap) {
                     obj = modelMap[modelId];
-                    <span class="keyword">this</span>._setAttr.call(obj.model, obj.data, options) || (result = <span
-                    class="literal">false</span>);
+                    <span class="keyword">this</span>._setAttr.call(obj.model, obj.data, options) || (result = <span class="literal">false</span>);
 
                 }
             } <span class="keyword">else</span> {
@@ -404,578 +400,412 @@
             }
             <span class="keyword">return</span> result;
 
-        },</pre>
-        </div>
-    </div>
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>Set a hash of model attributes on the object,
+fire Backbone <code>event</code> with options.
+It maintains relations between models during the set operation.
+It also bubbles up child events to the parent.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        _setAttr:<span class="function"><span class="keyword">function</span> <span class="params">(attributes, options)</span> {</span>
+            <span class="keyword">var</span> attr;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>Extract attributes and options.</p>
 
-
-<li id="section-18">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-18">&#182;</a>
-        </div>
-        <p>Set a hash of model attributes on the object,
-            fire Backbone <code>event</code> with options.
-            It maintains relations between models during the set operation.
-            It also bubbles up child events to the parent.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        _setAttr:<span class="function"><span class="keyword">function</span> <span
-                class="params">(attributes, options)</span> {</span>
-            <span class="keyword">var</span> attr;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-19">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-19">&#182;</a>
-        </div>
-        <p>Extract attributes and options.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            options || (options = {});
-            <span class="keyword">if</span> (options.unset) <span class="keyword">for</span> (attr <span
-                    class="keyword">in</span> attributes) attributes[attr] = <span class="keyword">void</span> <span
-                    class="number">0</span>;
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            options || (options = {});
+            <span class="keyword">if</span> (options.unset) <span class="keyword">for</span> (attr <span class="keyword">in</span> attributes) attributes[attr] = <span class="keyword">void</span> <span class="number">0</span>;
             <span class="keyword">this</span>.parents = <span class="keyword">this</span>.parents || [];
 
-            <span class="keyword">if</span> (<span class="keyword">this</span>.relations) {</pre>
-        </div>
-    </div>
+            <span class="keyword">if</span> (<span class="keyword">this</span>.relations) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>Iterate over <code>this.relations</code> and <code>set</code> model and collection values
+if <code>relations</code> are available.</p>
 
-</li>
-
-
-<li id="section-20">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-20">&#182;</a>
-        </div>
-        <p>Iterate over <code>this.relations</code> and <code>set</code> model and collection values
-            if <code>relations</code> are available.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                _.each(<span class="keyword">this</span>.relations, <span
-                class="function"><span class="keyword">function</span> <span class="params">(relation)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                _.each(<span class="keyword">this</span>.relations, <span class="function"><span class="keyword">function</span> <span class="params">(relation)</span> {</span>
                     <span class="keyword">var</span> relationKey = relation.key,
                         relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
                         map = relation.map,
                         currVal = <span class="keyword">this</span>.attributes[relationKey],
                         idKey = currVal &amp;&amp; currVal.idAttribute,
-                        val, relationOptions, data, relationValue, newCtx = <span class="literal">false</span>;</pre>
-        </div>
-    </div>
+                        val, relationOptions, data, relationValue, newCtx = <span class="literal">false</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>Call function if relatedModel is implemented as a function</p>
 
-</li>
-
-
-<li id="section-21">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-21">&#182;</a>
-        </div>
-        <p>Call function if relatedModel is implemented as a function</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                    <span class="keyword">if</span> (relatedModel &amp;&amp; !(relatedModel.prototype <span
-                class="keyword">instanceof</span> BackboneModel))
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                    <span class="keyword">if</span> (relatedModel &amp;&amp; !(relatedModel.prototype <span class="keyword">instanceof</span> BackboneModel))
                         relatedModel = _.isFunction(relatedModel) ?
                             relatedModel.call(<span class="keyword">this</span>, relation, attributes) :
-                            relatedModel;</pre>
-        </div>
-    </div>
+                            relatedModel;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>Get class if relation and map is stored as a string.</p>
 
-</li>
-
-
-<li id="section-22">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-22">&#182;</a>
-        </div>
-        <p>Get class if relation and map is stored as a string.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                    <span class="keyword">if</span> (relatedModel &amp;&amp; _.isString(relatedModel)) {
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                    <span class="keyword">if</span> (relatedModel &amp;&amp; _.isString(relatedModel)) {
                         relatedModel = (relatedModel === Backbone.Self) ? <span class="keyword">this</span>.constructor : map2Scope(relatedModel);
                     }
                     collectionType &amp;&amp; _.isString(collectionType) &amp;&amp; (collectionType = map2Scope(collectionType));
-                    map &amp;&amp; _.isString(map) &amp;&amp; (map = map2Scope(map));</pre>
-        </div>
-    </div>
+                    map &amp;&amp; _.isString(map) &amp;&amp; (map = map2Scope(map));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>Merge in <code>options</code> specific to this relation.</p>
 
-</li>
-
-
-<li id="section-23">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-23">&#182;</a>
-        </div>
-        <p>Merge in <code>options</code> specific to this relation.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                    relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                    relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
 
                     <span class="keyword">if</span> ((!relatedModel) &amp;&amp; (!collectionType))
                         <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">'specify either a relatedModel or collectionType'</span>);
 
-                    <span class="keyword">if</span> (attributes[relationKey]) {</pre>
-        </div>
-    </div>
+                    <span class="keyword">if</span> (attributes[relationKey]) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>Get value of attribute with relation key in <code>val</code>.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                        val = _.result(attributes, relationKey);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>Map <code>val</code> if a transformation function is provided.</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                        val = map ? map.call(<span class="keyword">this</span>, val, collectionType ? collectionType : relatedModel) : val;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>If <code>relation.type</code> is <code>Backbone.Many</code>,
+Create <code>Backbone.Collection</code> with passed data and perform Backbone <code>set</code>.</p>
 
-<li id="section-24">
-    <div class="annotation">
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                        <span class="keyword">if</span> (relation.type === Backbone.Many) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p><code>collectionType</code> of defined <code>relation</code> should be instance of <code>Backbone.Collection</code>.</p>
 
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-24">&#182;</a>
-        </div>
-        <p>Get value of attribute with relation key in <code>val</code>.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>                        val = _.result(attributes, relationKey);</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-25">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-25">&#182;</a>
-        </div>
-        <p>Map <code>val</code> if a transformation function is provided.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>                        val = map ? map.call(<span class="keyword">this</span>, val, collectionType ? collectionType : relatedModel) : val;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-26">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-26">&#182;</a>
-        </div>
-        <p>If <code>relation.type</code> is <code>Backbone.Many</code>,
-            Create <code>Backbone.Collection</code> with passed data and perform Backbone <code>set</code>.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>                        <span class="keyword">if</span> (relation.type === Backbone.Many) {</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-27">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-27">&#182;</a>
-        </div>
-        <p><code>collectionType</code> of defined <code>relation</code> should be instance of
-            <code>Backbone.Collection</code>.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                            <span class="keyword">if</span> (collectionType &amp;&amp; !collectionType.prototype <span
-                class="keyword">instanceof</span> BackboneCollection) {
-                                <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span
-                    class="string">'collectionType must inherit from Backbone.Collection'</span>);
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                            <span class="keyword">if</span> (collectionType &amp;&amp; !collectionType.prototype <span class="keyword">instanceof</span> BackboneCollection) {
+                                <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">'collectionType must inherit from Backbone.Collection'</span>);
                             }
 
-                            <span class="keyword">if</span> (val <span class="keyword">instanceof</span> BackboneCollection &amp;&amp; !currVal) {
-                                data = val;</pre>
-        </div>
-    </div>
+                            <span class="keyword">if</span> (currVal) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>Setting this flag will prevent events from firing immediately. That way clients
+will not get events until the entire object graph is updated.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                                currVal._deferEvents = <span class="literal">true</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>Use Backbone.Collection&#39;s <code>reset</code> or smart <code>set</code> method</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                                currVal[relationOptions.reset ? <span class="string">'reset'</span> : <span class="string">'set'</span>](
+                                    val <span class="keyword">instanceof</span> BackboneCollection ? val.models : val, relationOptions);
 
-<li id="section-28">
-    <div class="annotation">
+                                data = currVal;
 
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-28">&#182;</a>
-        </div>
-        <p>Set current context as new context</p>
+                            } <span class="keyword">else</span> {
+                                newCtx = <span class="literal">true</span>;
 
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                                newCtx = <span class="literal">true</span>;
-                            } <span class="keyword">else</span> {</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-29">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-29">&#182;</a>
-        </div>
-        <p>Create a new collection</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                                <span class="keyword">if</span> (!currVal) {
-                                    data = collectionType ? <span class="keyword">new</span> collectionType() : <span
-                    class="keyword">this</span>._createCollection(relatedModel);
+                                <span class="keyword">if</span> (val <span class="keyword">instanceof</span> BackboneCollection) {
+                                    data = val;
                                 } <span class="keyword">else</span> {
-                                    data = currVal;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-30">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-30">&#182;</a>
-        </div>
-        <p>Setting this flag will prevent events from firing immediately. That way clients
-            will not get events until the entire object graph is updated.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                                    data._deferEvents = <span
-                class="literal">true</span>;
-                                }</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-31">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-31">&#182;</a>
-        </div>
-        <p>Use Backbone.Collection&#39;s <code>reset</code> or smart <code>set</code> method</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                                data[relationOptions.reset ? <span class="string">'reset'</span> : <span
-                class="string">'set'</span>](val <span class="keyword">instanceof</span> BackboneCollection
-                                    ? val.models
-                                    : val, relationOptions);
+                                    data = collectionType ? <span class="keyword">new</span> collectionType() : <span class="keyword">this</span>._createCollection(relatedModel);
+                                    data[relationOptions.reset ? <span class="string">'reset'</span> : <span class="string">'set'</span>](val, relationOptions);
+                                }
                             }
 
                         } <span class="keyword">else</span> <span class="keyword">if</span> (relation.type === Backbone.One) {
 
                             <span class="keyword">if</span> (!relatedModel)
-                                <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span
-                    class="string">'specify a relatedModel for Backbone.One type'</span>);
+                                <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">'specify a relatedModel for Backbone.One type'</span>);
 
-                            <span class="keyword">if</span> (!(relatedModel.prototype <span
-                    class="keyword">instanceof</span> Backbone.AssociatedModel))
-                                <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span
-                    class="string">'specify an AssociatedModel for Backbone.One type'</span>);
+                            <span class="keyword">if</span> (!(relatedModel.prototype <span class="keyword">instanceof</span> Backbone.AssociatedModel))
+                                <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">'specify an AssociatedModel for Backbone.One type'</span>);
 
-                            <span class="keyword">if</span> (val <span class="keyword">instanceof</span> AssociatedModel) {
-                                data = val;</pre>
-        </div>
-    </div>
+                            data = val <span class="keyword">instanceof</span> AssociatedModel ? val : <span class="keyword">new</span> relatedModel(val, relationOptions);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>Is the passed in data for the same key?</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                            <span class="keyword">if</span> (currVal &amp;&amp; data[idKey] &amp;&amp; currVal[idKey] === data[idKey]) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>Setting this flag will prevent events from firing immediately. That way clients
+will not get events until the entire object graph is updated.</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                                currVal._deferEvents = <span class="literal">true</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>Perform the traditional <code>set</code> operation</p>
 
-<li id="section-32">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-32">&#182;</a>
-        </div>
-        <p>Compute whether the context is a new one after this assignment.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                                newCtx = (currVal !== val);
-                            } <span class="keyword">else</span> {</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-33">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-33">&#182;</a>
-        </div>
-        <p>Create a new model</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                                <span class="keyword">if</span> (!currVal) {
-                                    data = <span class="keyword">new</span> relatedModel(val, relationOptions);
-                                } <span class="keyword">else</span> {</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-34">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-34">&#182;</a>
-        </div>
-        <p>Is the passed in data for the same key?</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>                                    <span class="keyword">if</span> (currVal &amp;&amp; val[idKey] &amp;&amp; currVal.get(idKey) === val[idKey]) {</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-35">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-35">&#182;</a>
-        </div>
-        <p>Setting this flag will prevent events from firing immediately. That way clients
-            will not get events until the entire object graph is updated.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>                                        currVal._deferEvents = <span class="literal">true</span>;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-36">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-36">&#182;</a>
-        </div>
-        <p>Perform the traditional <code>set</code> operation</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                                        currVal._set(val, relationOptions);
-                                        data = currVal;
-                                    } <span class="keyword">else</span> {
-                                        data = <span class="keyword">new</span> relatedModel(val, relationOptions);
-                                    }
-                                }
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                                currVal._set(val <span class="keyword">instanceof</span> AssociatedModel ? val.attributes : val, relationOptions);
+                                data = currVal;
+                            } <span class="keyword">else</span> {
+                                newCtx = <span class="literal">true</span>;
                             }
 
                         } <span class="keyword">else</span> {
-                            <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span
-                    class="string">'type attribute must be specified and have the values Backbone.One or Backbone.Many'</span>);
+                            <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">'type attribute must be specified and have the values Backbone.One or Backbone.Many'</span>);
                         }
 
 
                         attributes[relationKey] = data;
-                        relationValue = data;</pre>
-        </div>
-    </div>
+                        relationValue = data;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>Add proxy events to respective parents.
+Only add callback if not defined or new Ctx has been identified.</p>
 
-</li>
-
-
-<li id="section-37">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-37">&#182;</a>
-        </div>
-        <p>Add proxy events to respective parents.
-            Only add callback if not defined or new Ctx has been identified.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                        <span class="keyword">if</span> (newCtx || (relationValue &amp;&amp; !relationValue._proxyCallback)) {
-                            relationValue._proxyCallback = <span class="function"><span class="keyword">function</span> <span
-                    class="params">()</span> {</span>
-                                <span class="keyword">return</span> <span class="keyword">this</span>._bubbleEvent.call(<span
-                    class="keyword">this</span>, relationKey, relationValue, arguments);
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                        <span class="keyword">if</span> (newCtx || (relationValue &amp;&amp; !relationValue._proxyCallback)) {
+                            relationValue._proxyCallback = <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+                                <span class="keyword">return</span> <span class="keyword">this</span>._bubbleEvent.call(<span class="keyword">this</span>, relationKey, relationValue, arguments);
                             };
-                            relationValue.on(<span class="string">"all"</span>, relationValue._proxyCallback, <span
-                    class="keyword">this</span>);
+                            relationValue.on(<span class="string">"all"</span>, relationValue._proxyCallback, <span class="keyword">this</span>);
                         }
 
-                    }</pre>
-        </div>
-    </div>
+                    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>Distinguish between the value of undefined versus a set no-op</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                    <span class="keyword">if</span> (attributes.hasOwnProperty(relationKey)) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <p>Maintain reverse pointers - a.k.a parents</p>
 
-
-<li id="section-38">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-38">&#182;</a>
-        </div>
-        <p>Distinguish between the value of undefined versus a set no-op</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>                    <span class="keyword">if</span> (attributes.hasOwnProperty(relationKey)) {</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-39">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-39">&#182;</a>
-        </div>
-        <p>Maintain reverse pointers - a.k.a parents</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                        <span class="keyword">var</span> updated = attributes[relationKey];
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                        <span class="keyword">var</span> updated = attributes[relationKey];
                         <span class="keyword">var</span> original = <span class="keyword">this</span>.attributes[relationKey];
                         <span class="keyword">if</span> (updated) {
                             updated.parents = updated.parents || [];
-                            (_.indexOf(updated.parents, <span class="keyword">this</span>) == -<span
-                    class="number">1</span>) &amp;&amp; updated.parents.push(<span class="keyword">this</span>);
-                        } <span class="keyword">else</span> <span class="keyword">if</span> (original &amp;&amp; original.parents.length &gt; <span
-                    class="number">0</span>) { <span class="comment">// New value is undefined</span>
-                            original.parents = _.difference(original.parents, [<span
-                    class="keyword">this</span>]);</pre>
-        </div>
-    </div>
+                            (_.indexOf(updated.parents, <span class="keyword">this</span>) == -<span class="number">1</span>) &amp;&amp; updated.parents.push(<span class="keyword">this</span>);
+                        } <span class="keyword">else</span> <span class="keyword">if</span> (original &amp;&amp; original.parents.length &gt; <span class="number">0</span>) { <span class="comment">// New value is undefined</span>
+                            original.parents = _.difference(original.parents, [<span class="keyword">this</span>]);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <p>Don&#39;t bubble to this parent anymore</p>
 
-</li>
-
-
-<li id="section-40">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-40">&#182;</a>
-        </div>
-        <p>Don&#39;t bubble to this parent anymore</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                            original._proxyCallback &amp;&amp; original.off(<span
-                class="string">"all"</span>, original._proxyCallback, <span class="keyword">this</span>);
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                            original._proxyCallback &amp;&amp; original.off(<span class="string">"all"</span>, original._proxyCallback, <span class="keyword">this</span>);
                         }
                     }
                 }, <span class="keyword">this</span>);
-            }</pre>
-        </div>
-    </div>
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>Return results for <code>BackboneModel.set</code>.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">return</span>  ModelProto.set.call(<span class="keyword">this</span>, attributes, options);
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>Bubble-up event to <code>parent</code> Model</p>
 
-
-<li id="section-41">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-41">&#182;</a>
-        </div>
-        <p>Return results for <code>BackboneModel.set</code>.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">return</span>  ModelProto.set.call(<span
-                class="keyword">this</span>, attributes, options);
-        },</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-42">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-42">&#182;</a>
-        </div>
-        <p>Bubble-up event to <code>parent</code> Model</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        _bubbleEvent:<span class="function"><span
-                class="keyword">function</span> <span class="params">(relationKey, relationValue, eventArguments)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        _bubbleEvent:<span class="function"><span class="keyword">function</span> <span class="params">(relationKey, relationValue, eventArguments)</span> {</span>
             <span class="keyword">var</span> args = eventArguments,
                 opt = args[<span class="number">0</span>].split(<span class="string">":"</span>),
                 eventType = opt[<span class="number">0</span>],
@@ -987,86 +817,71 @@
                 cargs,
                 eventPath,
                 basecolEventPath,
-                isDefaultEvent = _.indexOf(defaultEvents, eventType) !== -<span class="number">1</span>;</pre>
-        </div>
-    </div>
+                isDefaultEvent = _.indexOf(defaultEvents, eventType) !== -<span class="number">1</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>Short circuit the listen in to the nested-graph event</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (catch_all) <span class="keyword">return</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>Change the event name to a fully qualified path.</p>
 
-
-<li id="section-43">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-43">&#182;</a>
-        </div>
-        <p>Short circuit the listen in to the nested-graph event</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>            <span class="keyword">if</span> (catch_all) <span class="keyword">return</span>;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-44">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-44">&#182;</a>
-        </div>
-        <p>Change the event name to a fully qualified path.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            _.size(opt) &gt; <span class="number">1</span> &amp;&amp; (eventPath = opt[<span
-                class="number">1</span>]);
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            _.size(opt) &gt; <span class="number">1</span> &amp;&amp; (eventPath = opt[<span class="number">1</span>]);
 
             <span class="keyword">if</span> (_.indexOf(collectionEvents, eventType) !== -<span class="number">1</span>) {
                 colObject = eventObject;
-            }</pre>
-        </div>
-    </div>
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+              <p>Find the specific object in the collection which has changed.</p>
 
-</li>
-
-
-<li id="section-45">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-45">&#182;</a>
-        </div>
-        <p>Find the specific object in the collection which has changed.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">if</span> (relationValue <span class="keyword">instanceof</span> BackboneCollection &amp;&amp; isDefaultEvent &amp;&amp; eventObject) {
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (relationValue <span class="keyword">instanceof</span> BackboneCollection &amp;&amp; isDefaultEvent &amp;&amp; eventObject) {
                 <span class="keyword">var</span> pathTokens = getPathArray(eventPath),
                     initialTokens = _.initial(pathTokens), colModel;
 
-                colModel = relationValue.find(<span class="function"><span class="keyword">function</span> <span
-                    class="params">(model)</span> {</span>
-                    <span class="keyword">if</span> (eventObject === model) <span class="keyword">return</span> <span
-                    class="literal">true</span>;
+                colModel = relationValue.find(<span class="function"><span class="keyword">function</span> <span class="params">(model)</span> {</span>
+                    <span class="keyword">if</span> (eventObject === model) <span class="keyword">return</span> <span class="literal">true</span>;
                     <span class="keyword">if</span> (!model) <span class="keyword">return</span> <span class="literal">false</span>;
                     <span class="keyword">var</span> changedModel = model.get(initialTokens);
 
-                    <span class="keyword">if</span> ((changedModel <span class="keyword">instanceof</span> AssociatedModel || changedModel <span
-                    class="keyword">instanceof</span> BackboneCollection)
+                    <span class="keyword">if</span> ((changedModel <span class="keyword">instanceof</span> AssociatedModel || changedModel <span class="keyword">instanceof</span> BackboneCollection)
                         &amp;&amp; eventObject === changedModel)
                         <span class="keyword">return</span> <span class="literal">true</span>;
 
                     changedModel = model.get(pathTokens);
 
-                    <span class="keyword">if</span> ((changedModel <span class="keyword">instanceof</span> AssociatedModel || changedModel <span
-                    class="keyword">instanceof</span> BackboneCollection)
+                    <span class="keyword">if</span> ((changedModel <span class="keyword">instanceof</span> AssociatedModel || changedModel <span class="keyword">instanceof</span> BackboneCollection)
                         &amp;&amp; eventObject === changedModel)
                         <span class="keyword">return</span> <span class="literal">true</span>;
 
@@ -1075,474 +890,384 @@
                         <span class="keyword">return</span> <span class="literal">true</span>;
                 });
                 colModel &amp;&amp; (indexEventObject = relationValue.indexOf(colModel));
-            }</pre>
-        </div>
-    </div>
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>Manipulate <code>eventPath</code>.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            eventPath = relationKey + ((indexEventObject !== -<span class="number">1</span> &amp;&amp; (eventType === <span class="string">"change"</span> || eventPath)) ?
+                <span class="string">"["</span> + indexEventObject + <span class="string">"]"</span> : <span class="string">""</span>) + (eventPath ? pathSeparator + eventPath : <span class="string">""</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p>Short circuit collection * events</p>
 
-
-<li id="section-46">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-46">&#182;</a>
-        </div>
-        <p>Manipulate <code>eventPath</code>.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            eventPath = relationKey + ((indexEventObject !== -<span
-                class="number">1</span> &amp;&amp; (eventType === <span class="string">"change"</span> || eventPath)) ?
-                <span class="string">"["</span> + indexEventObject + <span class="string">"]"</span> : <span
-                    class="string">""</span>) + (eventPath ? <span class="string">"."</span> + eventPath : <span
-                    class="string">""</span>);</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-47">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-47">&#182;</a>
-        </div>
-        <p>Short circuit collection * events</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">if</span> (<span class="regexp">/\[\*\]/g</span>.test(eventPath)) <span
-                class="keyword">return</span> <span class="keyword">this</span>;
-            basecolEventPath = eventPath.replace(<span class="regexp">/\[\d+\]/g</span>, <span
-                    class="string">'[*]'</span>);
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (<span class="regexp">/\[\*\]/g</span>.test(eventPath)) <span class="keyword">return</span> <span class="keyword">this</span>;
+            basecolEventPath = eventPath.replace(<span class="regexp">/\[\d+\]/g</span>, <span class="string">'[*]'</span>);
 
             cargs = [];
             cargs.push.apply(cargs, args);
-            cargs[<span class="number">0</span>] = eventType + <span class="string">":"</span> + eventPath;</pre>
-        </div>
-    </div>
+            cargs[<span class="number">0</span>] = eventType + <span class="string">":"</span> + eventPath;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>If event has been already triggered as result of same source <code>eventPath</code>,
+no need to re-trigger event to prevent cycle.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            _proxyCalls = relationValue._proxyCalls = (_proxyCalls || {});
+            <span class="keyword">if</span> (<span class="keyword">this</span>._isEventAvailable.call(<span class="keyword">this</span>, _proxyCalls, eventPath)) <span class="keyword">return</span> <span class="keyword">this</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>Add <code>eventPath</code> in <code>_proxyCalls</code> to keep track of already triggered <code>event</code>.</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            _proxyCalls[eventPath] = <span class="literal">true</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-49">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-49">&#182;</a>
+              </div>
+              <p>Set up previous attributes correctly.</p>
 
-<li id="section-48">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-48">&#182;</a>
-        </div>
-        <p>If event has been already triggered as result of same source <code>eventPath</code>,
-            no need to re-trigger event to prevent cycle.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            _proxyCalls = relationValue._proxyCalls = (_proxyCalls || {});
-            <span class="keyword">if</span> (<span class="keyword">this</span>._isEventAvailable.call(<span
-                    class="keyword">this</span>, _proxyCalls, eventPath)) <span class="keyword">return</span> <span
-                    class="keyword">this</span>;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-49">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-49">&#182;</a>
-        </div>
-        <p>Add <code>eventPath</code> in <code>_proxyCalls</code> to keep track of already triggered <code>event</code>.
-        </p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>            _proxyCalls[eventPath] = <span class="literal">true</span>;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-50">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-50">&#182;</a>
-        </div>
-        <p>Set up previous attributes correctly.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">if</span> (<span class="string">"change"</span> === eventType) {
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (<span class="string">"change"</span> === eventType) {
                 <span class="keyword">this</span>._previousAttributes[relationKey] = relationValue._previousAttributes;
                 <span class="keyword">this</span>.changed[relationKey] = relationValue;
-            }</pre>
-        </div>
-    </div>
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              <p>Bubble up event to parent <code>model</code> with new changed arguments.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">this</span>.trigger.apply(<span class="keyword">this</span>, cargs);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <p>Only fire for change. Not change:attribute</p>
 
-
-<li id="section-51">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-51">&#182;</a>
-        </div>
-        <p>Bubble up event to parent <code>model</code> with new changed arguments.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>            <span class="keyword">this</span>.trigger.apply(<span class="keyword">this</span>, cargs);</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-52">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-52">&#182;</a>
-        </div>
-        <p>Only fire for change. Not change:attribute</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">if</span> (<span class="string">"change"</span> === eventType &amp;&amp; <span
-                class="keyword">this</span>.get(eventPath) != args[<span class="number">2</span>]) {
-                <span class="keyword">var</span> ncargs = [<span class="string">"nested-change"</span>, eventPath, args[<span
-                    class="number">1</span>]];
-                args[<span class="number">2</span>] &amp;&amp; ncargs.push(args[<span class="number">2</span>]); <span
-                    class="comment">//args[2] will be options if present</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (<span class="string">"change"</span> === eventType &amp;&amp; <span class="keyword">this</span>.get(eventPath) != args[<span class="number">2</span>]) {
+                <span class="keyword">var</span> ncargs = [<span class="string">"nested-change"</span>, eventPath, args[<span class="number">1</span>]];
+                args[<span class="number">2</span>] &amp;&amp; ncargs.push(args[<span class="number">2</span>]); <span class="comment">//args[2] will be options if present</span>
                 <span class="keyword">this</span>.trigger.apply(<span class="keyword">this</span>, ncargs);
-            }</pre>
-        </div>
-    </div>
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-52">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p>Remove <code>eventPath</code> from <code>_proxyCalls</code>,
+if <code>eventPath</code> and <code>_proxyCalls</code> are available,
+which allow event to be triggered on for next operation of <code>set</code>.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (_proxyCalls &amp;&amp; eventPath) <span class="keyword">delete</span> _proxyCalls[eventPath];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <p>Create a collection modified event with wild-card</p>
 
-
-<li id="section-53">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-53">&#182;</a>
-        </div>
-        <p>Remove <code>eventPath</code> from <code>_proxyCalls</code>,
-            if <code>eventPath</code> and <code>_proxyCalls</code> are available,
-            which allow event to be triggered on for next operation of <code>set</code>.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>            <span class="keyword">if</span> (_proxyCalls &amp;&amp; eventPath) <span class="keyword">delete</span> _proxyCalls[eventPath];</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-54">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-54">&#182;</a>
-        </div>
-        <p>Create a collection modified event with wild-card</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">if</span> (eventPath !== basecolEventPath) {
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (eventPath !== basecolEventPath) {
                 cargs[<span class="number">0</span>] = eventType + <span class="string">":"</span> + basecolEventPath;
                 <span class="keyword">this</span>.trigger.apply(<span class="keyword">this</span>, cargs);
             }
 
             <span class="keyword">return</span> <span class="keyword">this</span>;
-        },</pre>
-        </div>
-    </div>
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
+              </div>
+              <p>Has event been fired from this source. Used to prevent event recursion in cyclic graphs</p>
 
-</li>
-
-
-<li id="section-55">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-55">&#182;</a>
-        </div>
-        <p>Has event been fired from this source. Used to prevent event recursion in cyclic graphs</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        _isEventAvailable:<span class="function"><span
-                class="keyword">function</span> <span class="params">(_proxyCalls, path)</span> {</span>
-            <span class="keyword">return</span> _.find(_proxyCalls, <span class="function"><span class="keyword">function</span> <span
-                    class="params">(value, eventKey)</span> {</span>
-                <span class="keyword">return</span> path.indexOf(eventKey, path.length - eventKey.length) !== -<span
-                    class="number">1</span>;
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        _isEventAvailable:<span class="function"><span class="keyword">function</span> <span class="params">(_proxyCalls, path)</span> {</span>
+            <span class="keyword">return</span> _.find(_proxyCalls, <span class="function"><span class="keyword">function</span> <span class="params">(value, eventKey)</span> {</span>
+                <span class="keyword">return</span> path.indexOf(eventKey, path.length - eventKey.length) !== -<span class="number">1</span>;
             });
-        },</pre>
-        </div>
-    </div>
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-55">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-55">&#182;</a>
+              </div>
+              <p>Returns New <code>collection</code> of type <code>relation.relatedModel</code>.</p>
 
-</li>
-
-
-<li id="section-56">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-56">&#182;</a>
-        </div>
-        <p>Returns New <code>collection</code> of type <code>relation.relatedModel</code>.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        _createCollection:<span class="function"><span
-                class="keyword">function</span> <span class="params">(type)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        _createCollection:<span class="function"><span class="keyword">function</span> <span class="params">(type)</span> {</span>
             <span class="keyword">var</span> collection, relatedModel = type;
-            _.isString(relatedModel) &amp;&amp; (relatedModel = map2Scope(relatedModel));</pre>
-        </div>
-    </div>
+            _.isString(relatedModel) &amp;&amp; (relatedModel = map2Scope(relatedModel));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-56">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-56">&#182;</a>
+              </div>
+              <p>Creates new <code>Backbone.Collection</code> and defines model class.</p>
 
-</li>
-
-
-<li id="section-57">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-57">&#182;</a>
-        </div>
-        <p>Creates new <code>Backbone.Collection</code> and defines model class.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">if</span> (relatedModel &amp;&amp; relatedModel.prototype <span
-                class="keyword">instanceof</span> AssociatedModel) {
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (relatedModel &amp;&amp; relatedModel.prototype <span class="keyword">instanceof</span> AssociatedModel) {
                 collection = <span class="keyword">new</span> BackboneCollection();
                 collection.model = relatedModel;
             } <span class="keyword">else</span> {
                 <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">'type must inherit from Backbone.AssociatedModel'</span>);
             }
             <span class="keyword">return</span> collection;
-        },</pre>
-        </div>
-    </div>
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-57">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-57">&#182;</a>
+              </div>
+              <p>Process all pending events after the entire object graph has been updated</p>
 
-</li>
-
-
-<li id="section-58">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-58">&#182;</a>
-        </div>
-        <p>Process all pending events after the entire object graph has been updated</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        _processPendingEvents:<span class="function"><span
-                class="keyword">function</span> <span class="params">()</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        _processPendingEvents:<span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
             <span class="keyword">if</span> (!<span class="keyword">this</span>._processedEvents) {
                 <span class="keyword">this</span>._processedEvents = <span class="literal">true</span>;
 
-                <span class="keyword">this</span>._deferEvents = <span class="literal">false</span>;</pre>
-        </div>
-    </div>
+                <span class="keyword">this</span>._deferEvents = <span class="literal">false</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-58">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-58">&#182;</a>
+              </div>
+              <p>Trigger all pending events</p>
 
-</li>
-
-
-<li id="section-59">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-59">&#182;</a>
-        </div>
-        <p>Trigger all pending events</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                _.each(<span class="keyword">this</span>._pendingEvents, <span
-                class="function"><span class="keyword">function</span> <span class="params">(e)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                _.each(<span class="keyword">this</span>._pendingEvents, <span class="function"><span class="keyword">function</span> <span class="params">(e)</span> {</span>
                     e.c.trigger.apply(e.c, e.a);
                 });
 
-                <span class="keyword">this</span>._pendingEvents = [];</pre>
-        </div>
-    </div>
+                <span class="keyword">this</span>._pendingEvents = [];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-59">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-59">&#182;</a>
+              </div>
+              <p>Traverse down the object graph and call process pending events on sub-trees</p>
 
-</li>
-
-
-<li id="section-60">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-60">&#182;</a>
-        </div>
-        <p>Traverse down the object graph and call process pending events on sub-trees</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                _.each(<span class="keyword">this</span>.relations, <span
-                class="function"><span class="keyword">function</span> <span class="params">(relation)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                _.each(<span class="keyword">this</span>.relations, <span class="function"><span class="keyword">function</span> <span class="params">(relation)</span> {</span>
                     <span class="keyword">var</span> val = <span class="keyword">this</span>.attributes[relation.key];
                     val &amp;&amp; val._processPendingEvents();
                 }, <span class="keyword">this</span>);
 
                 <span class="keyword">delete</span> <span class="keyword">this</span>._processedEvents;
             }
-        },</pre>
-        </div>
-    </div>
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-60">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-60">&#182;</a>
+              </div>
+              <p>Override trigger to defer events in the object graph.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        trigger:<span class="function"><span class="keyword">function</span> <span class="params">(name)</span> {</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-61">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-61">&#182;</a>
+              </div>
+              <p>Defer event processing</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (<span class="keyword">this</span>._deferEvents) {
+                <span class="keyword">this</span>._pendingEvents = <span class="keyword">this</span>._pendingEvents || [];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-62">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-62">&#182;</a>
+              </div>
+              <p>Maintain a queue of pending events to trigger after the entire object graph is updated.</p>
 
-<li id="section-61">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-61">&#182;</a>
-        </div>
-        <p>Override trigger to defer events in the object graph.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>        trigger:<span class="function"><span class="keyword">function</span> <span class="params">(name)</span> {</span></pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-62">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-62">&#182;</a>
-        </div>
-        <p>Defer event processing</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">if</span> (<span class="keyword">this</span>._deferEvents) {
-                <span class="keyword">this</span>._pendingEvents = <span class="keyword">this</span>._pendingEvents || [];</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-63">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-63">&#182;</a>
-        </div>
-        <p>Maintain a queue of pending events to trigger after the entire object graph is updated.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                <span class="keyword">this</span>._pendingEvents.push({c:<span
-                class="keyword">this</span>, a:arguments});
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="keyword">this</span>._pendingEvents.push({c:<span class="keyword">this</span>, a:arguments});
             } <span class="keyword">else</span> {
                 ModelProto.trigger.apply(<span class="keyword">this</span>, arguments);
             }
-        },</pre>
-        </div>
-    </div>
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-63">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-63">&#182;</a>
+              </div>
+              <p>The JSON representation of the model.</p>
 
-</li>
-
-
-<li id="section-64">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-64">&#182;</a>
-        </div>
-        <p>The JSON representation of the model.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        toJSON:<span class="function"><span class="keyword">function</span> <span
-                class="params">(options)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        toJSON:<span class="function"><span class="keyword">function</span> <span class="params">(options)</span> {</span>
             <span class="keyword">var</span> json = {}, aJson;
             json[<span class="keyword">this</span>.idAttribute] = <span class="keyword">this</span>.id;
             <span class="keyword">if</span> (!<span class="keyword">this</span>.visited) {
-                <span class="keyword">this</span>.visited = <span class="literal">true</span>;</pre>
-        </div>
-    </div>
+                <span class="keyword">this</span>.visited = <span class="literal">true</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-64">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-64">&#182;</a>
+              </div>
+              <p>Get json representation from <code>BackboneModel.toJSON</code>.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                json = ModelProto.toJSON.apply(<span class="keyword">this</span>, arguments);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-65">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-65">&#182;</a>
+              </div>
+              <p>If <code>this.relations</code> is defined, iterate through each <code>relation</code>
+and added it&#39;s json representation to parents&#39; json representation.</p>
 
-
-<li id="section-65">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-65">&#182;</a>
-        </div>
-        <p>Get json representation from <code>BackboneModel.toJSON</code>.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>                json = ModelProto.toJSON.apply(<span class="keyword">this</span>, arguments);</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-66">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-66">&#182;</a>
-        </div>
-        <p>If <code>this.relations</code> is defined, iterate through each <code>relation</code>
-            and added it&#39;s json representation to parents&#39; json representation.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                <span class="keyword">if</span> (<span class="keyword">this</span>.relations) {
-                    _.each(<span class="keyword">this</span>.relations, <span class="function"><span class="keyword">function</span> <span
-                    class="params">(relation)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="keyword">if</span> (<span class="keyword">this</span>.relations) {
+                    _.each(<span class="keyword">this</span>.relations, <span class="function"><span class="keyword">function</span> <span class="params">(relation)</span> {</span>
                         <span class="keyword">var</span> attr = <span class="keyword">this</span>.attributes[relation.key];
                         <span class="keyword">if</span> (attr) {
                             aJson = attr.toJSON(options);
@@ -1553,393 +1278,315 @@
                 <span class="keyword">delete</span> <span class="keyword">this</span>.visited;
             }
             <span class="keyword">return</span> json;
-        },</pre>
-        </div>
-    </div>
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-66">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-66">&#182;</a>
+              </div>
+              <p>Create a new model with identical attributes to this one.</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        clone:<span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+            <span class="keyword">return</span> <span class="keyword">new</span> <span class="keyword">this</span>.constructor(<span class="keyword">this</span>.toJSON());
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-67">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-67">&#182;</a>
+              </div>
+              <p>Call this if you want to set an <code>AssociatedModel</code> to a falsy value like undefined/null directly.
+Not calling this will leak memory and have wrong parents.
+See test case &quot;parent relations&quot;</p>
 
-
-<li id="section-67">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-67">&#182;</a>
-        </div>
-        <p>Create a new model with identical attributes to this one.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        clone:<span class="function"><span class="keyword">function</span> <span
-                class="params">()</span> {</span>
-            <span class="keyword">return</span> <span class="keyword">new</span> <span class="keyword">this</span>.constructor(<span
-                    class="keyword">this</span>.toJSON());
-        },</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-68">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-68">&#182;</a>
-        </div>
-        <p>Call this if you want to set an <code>AssociatedModel</code> to a falsy value like undefined/null directly.
-            Not calling this will leak memory and have wrong parents.
-            See test case &quot;parent relations&quot;</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        cleanup:<span class="function"><span class="keyword">function</span> <span
-                class="params">()</span> {</span>
-            _.each(<span class="keyword">this</span>.relations, <span class="function"><span
-                    class="keyword">function</span> <span class="params">(relation)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        cleanup:<span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+            _.each(<span class="keyword">this</span>.relations, <span class="function"><span class="keyword">function</span> <span class="params">(relation)</span> {</span>
                 <span class="keyword">var</span> val = <span class="keyword">this</span>.attributes[relation.key];
                 val &amp;&amp; (val.parents = _.difference(val.parents, [<span class="keyword">this</span>]));
             }, <span class="keyword">this</span>);
             <span class="keyword">this</span>.off();
-        },</pre>
-        </div>
-    </div>
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-68">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-68">&#182;</a>
+              </div>
+              <p>Navigate the path to the leaf object in the path to query for the attribute value</p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        _getAttr:<span class="function"><span class="keyword">function</span> <span class="params">(path)</span> {</span>
 
+            <span class="keyword">var</span> result = <span class="keyword">this</span>,</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-69">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-69">&#182;</a>
+              </div>
+              <p>Tokenize the path</p>
 
-<li id="section-69">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-69">&#182;</a>
-        </div>
-        <p>Navigate the path to the leaf object in the path to query for the attribute value</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        _getAttr:<span class="function"><span class="keyword">function</span> <span
-                class="params">(path)</span> {</span>
-
-            <span class="keyword">var</span> result = <span class="keyword">this</span>,</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-70">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-70">&#182;</a>
-        </div>
-        <p>Tokenize the path</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                attrs = getPathArray(path),
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                attrs = getPathArray(path),
                 key,
                 i;
             <span class="keyword">if</span> (_.size(attrs) &lt; <span class="number">1</span>) <span class="keyword">return</span>;
             <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; attrs.length; i++) {
                 key = attrs[i];
-                <span class="keyword">if</span> (!result) <span class="keyword">break</span>;</pre>
-        </div>
-    </div>
+                <span class="keyword">if</span> (!result) <span class="keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-70">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-70">&#182;</a>
+              </div>
+              <p>Navigate the path to get to the result</p>
 
-</li>
-
-
-<li id="section-71">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-71">&#182;</a>
-        </div>
-        <p>Navigate the path to get to the result</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                result = result <span class="keyword">instanceof</span> BackboneCollection
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                result = result <span class="keyword">instanceof</span> BackboneCollection
                     ? (isNaN(key) ? <span class="literal">undefined</span> : result.at(key))
                     : result.attributes[key];
             }
             <span class="keyword">return</span> result;
         }
-    });
+    });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-71">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-71">&#182;</a>
+              </div>
+              <p>Tokenize the fully qualified event path</p>
 
-    <span class="keyword">var</span> delimiters = <span class="regexp">/[^\.\[\]]+/g</span>;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-72">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-72">&#182;</a>
-        </div>
-        <p>Tokenize the fully qualified event path</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>    <span class="keyword">var</span> getPathArray = <span class="function"><span
-                class="keyword">function</span> <span class="params">(path)</span> {</span>
-        <span class="keyword">if</span> (path === <span class="string">''</span>) <span
-                    class="keyword">return</span> [<span class="string">''</span>];
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">var</span> getPathArray = <span class="function"><span class="keyword">function</span> <span class="params">(path)</span> {</span>
+        <span class="keyword">if</span> (path === <span class="string">''</span>) <span class="keyword">return</span> [<span class="string">''</span>];
         <span class="keyword">return</span> _.isString(path) ? (path.match(delimiters)) : path || [];
     };
 
-    <span class="keyword">var</span> map2Scope = <span class="function"><span class="keyword">function</span> <span
-                    class="params">(path)</span> {</span>
-        <span class="keyword">return</span> _.reduce(path.split(<span class="string">'.'</span>), <span
-                    class="function"><span class="keyword">function</span> <span
-                    class="params">(memo, elem)</span> {</span>
-            <span class="keyword">return</span> memo[elem]
+    <span class="keyword">var</span> map2Scope = <span class="function"><span class="keyword">function</span> <span class="params">(path)</span> {</span>
+        <span class="keyword">return</span> _.reduce(path.split(pathSeparator), <span class="function"><span class="keyword">function</span> <span class="params">(memo, elem)</span> {</span>
+            <span class="keyword">return</span> memo[elem];
         }, root);
-    };</pre>
-        </div>
-    </div>
+    };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-72">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-72">&#182;</a>
+              </div>
+              <p>Infer the relation from the collection&#39;s parents and find the appropriate map for the passed in <code>models</code></p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">var</span> map2models = <span class="function"><span class="keyword">function</span> <span class="params">(parents, target, models)</span> {</span>
+        <span class="keyword">var</span> relation, surrogate;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-73">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-73">&#182;</a>
+              </div>
+              <p>Iterate over collection&#39;s parents</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        _.find(parents, <span class="function"><span class="keyword">function</span> <span class="params">(parent)</span> {</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-74">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-74">&#182;</a>
+              </div>
+              <p>Iterate over relations</p>
 
-<li id="section-73">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-73">&#182;</a>
-        </div>
-        <p>Infer the relation from the collection&#39;s parents and find the appropriate map for the passed in <code>models</code>
-        </p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>    <span class="keyword">var</span> map2models = <span class="function"><span
-                class="keyword">function</span> <span class="params">(parents, target, models)</span> {</span>
-        <span class="keyword">var</span> relation, surrogate;</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-74">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-74">&#182;</a>
-        </div>
-        <p>Iterate over collection&#39;s parents</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>        _.find(parents, <span class="function"><span class="keyword">function</span> <span
-                    class="params">(parent)</span> {</span></pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-75">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-75">&#182;</a>
-        </div>
-        <p>Iterate over relations</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            relation = _.find(parent.relations, <span class="function"><span
-                class="keyword">function</span> <span class="params">(rel)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            relation = _.find(parent.relations, <span class="function"><span class="keyword">function</span> <span class="params">(rel)</span> {</span>
                 <span class="keyword">return</span> parent.get(rel.key) === target;
             }, <span class="keyword">this</span>);
             <span class="keyword">if</span> (relation) {
                 surrogate = parent;<span class="comment">//surrogate for transformation</span>
-                <span class="keyword">return</span> <span class="literal">true</span>;<span
-                    class="comment">//break;</span>
+                <span class="keyword">return</span> <span class="literal">true</span>;<span class="comment">//break;</span>
             }
-        }, <span class="keyword">this</span>);</pre>
-        </div>
-    </div>
+        }, <span class="keyword">this</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-75">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-75">&#182;</a>
+              </div>
+              <p>If we found a relation and it has a mapping function</p>
 
-</li>
-
-
-<li id="section-76">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-76">&#182;</a>
-        </div>
-        <p>If we found a relation and it has a mapping function</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>        <span class="keyword">if</span> (relation &amp;&amp; relation.map) {
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="keyword">if</span> (relation &amp;&amp; relation.map) {
             <span class="keyword">return</span> relation.map.call(surrogate, models, target);
         }
         <span class="keyword">return</span> models;
     };
 
-    <span class="keyword">var</span> proxies = {};</pre>
-        </div>
-    </div>
+    <span class="keyword">var</span> proxies = {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-76">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-76">&#182;</a>
+              </div>
+              <p>Proxy Backbone collection methods</p>
 
-</li>
-
-
-<li id="section-77">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-77">&#182;</a>
-        </div>
-        <p>Proxy Backbone collection methods</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>    _.each([<span class="string">'set'</span>, <span class="string">'remove'</span>, <span
-                class="string">'reset'</span>], <span class="function"><span class="keyword">function</span> <span
-                class="params">(method)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    _.each([<span class="string">'set'</span>, <span class="string">'remove'</span>, <span class="string">'reset'</span>], <span class="function"><span class="keyword">function</span> <span class="params">(method)</span> {</span>
         proxies[method] = BackboneCollection.prototype[method];
 
-        CollectionProto[method] = <span class="function"><span class="keyword">function</span> <span class="params">(models, options)</span> {</span></pre>
-        </div>
-    </div>
+        CollectionProto[method] = <span class="function"><span class="keyword">function</span> <span class="params">(models, options)</span> {</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-77">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-77">&#182;</a>
+              </div>
+              <p>Short-circuit if this collection doesn&#39;t hold <code>AssociatedModels</code></p>
 
-</li>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">if</span> (<span class="keyword">this</span>.model.prototype <span class="keyword">instanceof</span> AssociatedModel &amp;&amp; <span class="keyword">this</span>.parents) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-78">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-78">&#182;</a>
+              </div>
+              <p>Find a map function if available and perform a transformation</p>
 
-
-<li id="section-78">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-78">&#182;</a>
-        </div>
-        <p>Short-circuit if this collection doesn&#39;t hold <code>AssociatedModels</code></p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'>
-            <pre>            <span class="keyword">if</span> (<span class="keyword">this</span>.model.prototype <span
-                    class="keyword">instanceof</span> AssociatedModel &amp;&amp; <span class="keyword">this</span>.parents) {</pre>
-        </div>
-    </div>
-
-</li>
-
-
-<li id="section-79">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-79">&#182;</a>
-        </div>
-        <p>Find a map function if available and perform a transformation</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>                arguments[<span class="number">0</span>] = map2models(<span
-                class="keyword">this</span>.parents, <span class="keyword">this</span>, models);
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                arguments[<span class="number">0</span>] = map2models(<span class="keyword">this</span>.parents, <span class="keyword">this</span>, models);
             }
             <span class="keyword">return</span> proxies[method].apply(<span class="keyword">this</span>, arguments);
         }
-    });</pre>
-        </div>
-    </div>
+    });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-79">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-79">&#182;</a>
+              </div>
+              <p>Override trigger to defer events in the object graph.</p>
 
-</li>
-
-
-<li id="section-80">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-80">&#182;</a>
-        </div>
-        <p>Override trigger to defer events in the object graph.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>    proxies[<span class="string">'trigger'</span>] = CollectionProto[<span
-                class="string">'trigger'</span>];
-    CollectionProto[<span class="string">'trigger'</span>] = <span class="function"><span
-                    class="keyword">function</span> <span class="params">(name)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    proxies[<span class="string">'trigger'</span>] = CollectionProto[<span class="string">'trigger'</span>];
+    CollectionProto[<span class="string">'trigger'</span>] = <span class="function"><span class="keyword">function</span> <span class="params">(name)</span> {</span>
         <span class="keyword">if</span> (<span class="keyword">this</span>._deferEvents) {
-            <span class="keyword">this</span>._pendingEvents = <span
-                    class="keyword">this</span>._pendingEvents || [];</pre>
-        </div>
-    </div>
+            <span class="keyword">this</span>._pendingEvents = <span class="keyword">this</span>._pendingEvents || [];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-80">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-80">&#182;</a>
+              </div>
+              <p>Maintain a queue of pending events to trigger after the entire object graph is updated.</p>
 
-</li>
-
-
-<li id="section-81">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-81">&#182;</a>
-        </div>
-        <p>Maintain a queue of pending events to trigger after the entire object graph is updated.</p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>            <span class="keyword">this</span>._pendingEvents.push({c:<span
-                class="keyword">this</span>, a:arguments});
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="keyword">this</span>._pendingEvents.push({c:<span class="keyword">this</span>, a:arguments});
         } <span class="keyword">else</span> {
             proxies[<span class="string">'trigger'</span>].apply(<span class="keyword">this</span>, arguments);
         }
-    };</pre>
-        </div>
-    </div>
+    };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-81">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-81">&#182;</a>
+              </div>
+              <p>Attach process pending event functionality on collections as well. Re-use from <code>AssociatedModel</code></p>
 
-</li>
-
-
-<li id="section-82">
-    <div class="annotation">
-
-        <div class="pilwrap ">
-            <a class="pilcrow" href="#section-82">&#182;</a>
-        </div>
-        <p>Attach process pending event functionality on collections as well. Re-use from <code>AssociatedModel</code>
-        </p>
-
-    </div>
-
-    <div class="content">
-        <div class='highlight'><pre>    CollectionProto._processPendingEvents = AssociatedModel.prototype._processPendingEvents;
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    CollectionProto._processPendingEvents = AssociatedModel.prototype._processPendingEvents;
 
 
-}).call(<span class="keyword">this</span>);</pre>
-        </div>
-    </div>
-
-</li>
-
-</ul>
-</div>
+}).call(<span class="keyword">this</span>);</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
 </body>
 </html>
