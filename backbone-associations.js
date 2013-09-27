@@ -44,7 +44,7 @@
     collectionEvents = ["reset", "sort"];
 
     Backbone.Associations = {
-        VERSION:"0.5.2"
+        VERSION:"0.5.3"
     };
 
     // Define `SEPERATOR` property to Backbone.Associations

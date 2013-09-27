@@ -1,3 +1,9 @@
+### Version 0.5.3 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.2...v0.5.3)
+
+* Enhancement (Issue #68) : Allow users to change path separator globally. This will allow attributes with a period('.') in their name.
+* Bug Fix #67 : Preserve object references.
+* Bug Fix #66 : Browserify compatibility.
+
 ### Version 0.5.2 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.1...v0.5.2)
 
 * Bug fix : Nested collections re-use references.
