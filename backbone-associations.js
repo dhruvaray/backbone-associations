@@ -389,7 +389,7 @@
             var collection, relatedModel = type;
             _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
             // Creates new `Backbone.Collection` and defines model class.
-            if (relatedModel && relatedModel.prototype instanceof AssociatedModel) {
+            if (relatedModel && (relatedModel.prototype instanceof AssociatedModel) || _.isFunction(relatedModel)) {
                 collection = new BackboneCollection();
                 collection.model = relatedModel;
             } else {
