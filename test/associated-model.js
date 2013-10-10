@@ -102,7 +102,7 @@ $(document).ready(function () {
         urlRoot:'/department'
     });
 
-    var Dependent = Backbone.AssociatedModel.extend({
+    Dependent = Backbone.AssociatedModel.extend({
         validate:function (attr) {
             return (attr.sex && attr.sex != "M" && attr.sex != "F") ? "invalid sex value" : undefined;
         },
@@ -1254,6 +1254,52 @@ $(document).ready(function () {
     });
 
 
+    test("Polymorphic collection models: Issue#73", 2, function () {
+        var Club = Backbone.AssociatedModel.extend({
+            relations:[{
+                type:Backbone.Many,
+                key:'members',
+                relatedModel:function (relation, attributes) {
+                    return function (attrs, options) {
+                        if (_.isArray(attrs.dependents)) {
+                            return new Employee(attrs);
+                        }
+
+                        return new Dependent(attrs);
+                    }
+                }
+            }],
+            defaults:{
+                name:"",
+                members:[]
+            },
+            urlRoot:'/club'
+        });
+
+        var club = new Club({
+            name:"Club X"
+        });
+
+        club.set({
+            members: [{
+                fname: "John",
+                lname: "Smith",
+                age: 21,
+                sex: "M",
+                dependents: [child1, child2]
+            }, {
+                fname: "Edgar",
+                lname: "Smith",
+                sex: "M",
+                relationship: "P"
+            }]
+        });
+
+        equal(club.get('members[0]') instanceof Employee, true);
+        equal(club.get('members[1]') instanceof Dependent, true);
+    });
+
+
     test("Polymorphic associations + map: Issue#54", 9, function () {
         var Fruit = Backbone.AssociatedModel.extend();
         var Banana = Fruit.extend();
@@ -1531,7 +1577,7 @@ $(document).ready(function () {
         var ci1 = new CartItem({qty:5});
         var ci2 = new CartItem({qty:7});
         c.set('items', [ci1, ci2]); // change:cart.items => 1
-        equal(a.get('cart').getCartQty(), 12); // => 1        
+        equal(a.get('cart').getCartQty(), 12); // => 1
 
         a.once('add:cart.items', function () {
             ok(true, "Fired add:cart.items");
