@@ -53,12 +53,15 @@ $(document).ready(function () {
         }
 
         ids = _.isArray(ids) ? ids.slice() : [ids];
-        return _.map(ids, function (id) {
+        var result = [];
+        _.each(ids, function (id) {
+            if (!id) return;
             var mapped = _.find(locations.models, function (m) {
                 if (m.get('id') == id) return m;
             });
-            return mapped ? mapped : id;
+            result.push(mapped || id);
         });
+        return result;
     };
 
     var Project = Backbone.AssociatedModel.extend({
@@ -461,7 +464,7 @@ $(document).ready(function () {
             equal(e.message === "specify a relatedModel for Backbone.One type", true)
         }
 
-        var Owner = Backbone.Model.extend();
+        var Owner = Backbone.OriginalModel.extend();
         var House = Backbone.AssociatedModel.extend({
             relations:[
                 {
@@ -1450,8 +1453,8 @@ $(document).ready(function () {
 
         emp.get('works_for').get('locations').set([3, 7]);
         ok(emp.get('works_for').get('locations').length == 2);
-        ok(emp.get('works_for').get('locations').at(0).get("id") == 7);
-        ok(emp.get('works_for').get('locations').at(1).get("id") == 3);
+        ok(emp.get('works_for').get('locations').at(0).get("id") == 3);
+        ok(emp.get('works_for').get('locations').at(1).get("id") == 7);
 
     });
 
@@ -2007,7 +2010,7 @@ $(document).ready(function () {
     });
 
     test("save", 1, function () {
-        emp = new Backbone.Model();
+        emp = new Backbone.AssociatedModel();
         emp.sync = function (method, model, options) {
             options.success.call(this, null, options);
         };
