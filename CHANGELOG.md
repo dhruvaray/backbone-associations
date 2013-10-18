@@ -1,3 +1,9 @@
+Edge version
+
+* Supports Backbone v1.1.0
+* Allows for polymorphic models in 1:M relations
+* IE 8 compatibility fix - Issue #77
+
 ### Version 0.5.3 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.2...v0.5.3)
 
 * Enhancement (Issue #68) : Allow users to change path separator globally. This will allow attributes with a period('.') in their name.
