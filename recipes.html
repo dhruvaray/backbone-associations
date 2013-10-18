@@ -91,12 +91,15 @@
                 <ul class="nav nav-list bs-docs-sidenav">
                     <li class="nav-header">Recipes</li>
                     <li class="active"><a href="#tut-savefetch">Incremental Save/Fetch</a></li>
-                    <li><a href="#tut-rev">Explicit Reverse Associations</a></li>
+                    <li><a href="#tut-rev">Reverse Associations</a></li>
+                    <li><a href="#tut-rev2">Reverse Associations - AMD</a></li>
+                    <li><a href="#tut-amd">Self-Reference (AMD)</a></li>
                     <li><a href="#tut-map">Use a reference store - I </a></li>
                     <li><a href="#tut-map2">Use a reference store - II </a></li>
                     <li><a href="#tut-pa">Polymorphic Associations</a></li>
+                    <li><a href="#tut-pm">Polymorphic Models</a></li>
+                    <li><a href="#tut-options">Relation Options</a></li>
                     <li><a href="#tut-ccgp">Grand Parent listens!</a></li>
-                    <li><a href="#tut-amd">AMD</a></li>
                     <li><a href="#tut-da">Deep Attributes</a></li>
                     <li class="nav-header">Contributions</li>
                     <li><a href="#tut-contrib">Submit</a></li>
@@ -115,11 +118,26 @@
                 </div>
             </section>
             <section id="tut-rev">
-                <h4>Explicit Reverse Associations</h4>
+                <h4>Association Cycles</h4>
                 <hr/>
-                This example demonstrates how to setup reverse associations between two AssociatedModels.
+                This example demonstrates how to setup explicit reverse associations between two AssociatedModels.
                 <div class="well well-large">
                     <script src="https://gist.github.com/dhruvaray/6410978.js"></script>
+                </div>
+            </section>
+            <section id="tut-rev2">
+                <h4>Association Cycles (AMD)</h4>
+                <hr/>
+                This example demonstrates how to setup explicit reverse associations between two AssociatedModels in an AMD environment like require.js.
+                <div class="well well-large">
+                    <script src="https://gist.github.com/dhruvaray/6929867.js"></script>
+                </div>
+            </section>
+            <section id="tut-amd">
+                <h4>Using Backbone-Associations as an AMD module</h4>
+                <hr/>
+                <div class="well well-large">
+                    <script src="https://gist.github.com/jdkanani/5256463.js"></script>
                 </div>
             </section>
             <section id="tut-map">
@@ -137,7 +155,6 @@
                 <div class="well well-large" >
                     <script src="https://gist.github.com/dhruvaray/6411141.js"></script>
                 </div>
-
             </section>
             <section id="tut-pa">
                 <h4>Polymorphic Associations</h4>
@@ -149,6 +166,14 @@
                     <script src="https://gist.github.com/dhruvaray/5988996.js"></script>
                 </div>
             </section>
+            <section id="tut-pm">
+                <h4>Polymorphic Models in 1:M relations</h4>
+                <hr/>
+                Use polymorphic models in 1:M relations <span class="label label-info">Edge version</span>
+                <div class="well well-large">
+                    <script src="https://gist.github.com/dhruvaray/7039163.js"></script>
+                </div>
+            </section>
             <section id="tut-ccgp">
                 <h4>Demonstrates how a grandparent can listen in to changes in a (nested) collection</h4>
                 <hr/>
@@ -157,11 +182,12 @@
                     <script src="https://gist.github.com/dhruvaray/5791783.js"></script>
                 </div>
             </section>
-            <section id="tut-amd">
-                <h4>Using Backbone-Associations as an AMD module</h4>
+            <section id="tut-options">
+                <h4>Pass options to a relation</h4>
                 <hr/>
+                This example demonstrate how to leverage options passed in to a relation definition.
                 <div class="well well-large">
-                    <script src="https://gist.github.com/jdkanani/5256463.js"></script>
+                    <script src="https://gist.github.com/dhruvaray/7039272.js"></script>
                 </div>
             </section>
             <section id="tut-da">
