@@ -1,4 +1,4 @@
-Edge version
+### Edge version
 
 * Supports Backbone v1.1.0
 * Allows for polymorphic models in 1:M relations
