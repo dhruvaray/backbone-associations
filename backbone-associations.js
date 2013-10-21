@@ -456,10 +456,13 @@
                 // and added it's json representation to parents' json representation.
                 if (this.relations) {
                     _.each(this.relations, function (relation) {
-                        var attr = this.attributes[relation.key];
+                        var dest_attr,
+                            key = relation.key,
+                            attr = this.attributes[key];
                         if (attr) {
                             aJson = attr.toJSON(options);
-                            json[relation.key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
+                            dest_attr = relation.remoteKey || key;
+                            json[dest_attr] = _.isArray(aJson) ? _.compact(aJson) : aJson;
                         }
                     }, this);
                 }
