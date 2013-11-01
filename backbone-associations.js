@@ -458,7 +458,7 @@
                     _.each(this.relations, function (relation) {
                         var attr = this.attributes[relation.key];
                         if (attr) {
-                            aJson = attr.toJSON(options);
+                            aJson = attr.toJSON ? attr.toJSON(options) : attr;
                             json[relation.key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
                         }
                     }, this);
