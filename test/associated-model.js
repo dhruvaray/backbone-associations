@@ -1192,6 +1192,57 @@ $(document).ready(function () {
         equal(searchResult.get('products').length, 4, "searchResult.products.length should be 4."); //1
     });
 
+    test("IdAttribute: Issue#80", 2, function () {
+
+        var User = Backbone.AssociatedModel.extend({
+            idAttribute: "_id"
+        });
+
+        var Container = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'owner',
+                    relatedModel: User
+                }
+            ],
+            defaults: {
+                users: []
+            }
+        });
+
+        var home = new Container();
+        var u = new User({_id: 1, name: "Chip Lay"});
+        home.set('owner', u);
+        var u1 = new User({_id: 1, name: "Chip Lay"});
+        home.set('owner', u1);
+        equal(home.get('owner') == u, true); //Uses the same id to refer the same object
+
+        User = Backbone.AssociatedModel.extend();
+
+        Container = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'owner',
+                    relatedModel: User
+                }
+            ],
+            defaults: {
+                users: []
+            }
+        });
+
+        home = new Container();
+        u = new User({id: 1, name: "Chip Lay"});
+        home.set('owner', u);
+        u1 = new User({id: 1, name: "Chip Lay"});
+        home.set('owner', u1);
+        equal(home.get('owner') == u, true); //Uses the same id to refer the same object
+
+
+    });
+
     test("Cycle save: Issue#51", 3, function () {
         var MyApp = {
             Models:{},

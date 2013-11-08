@@ -237,7 +237,8 @@
 
                             data = val instanceof AssociatedModel ? val : new relatedModel(val, relationOptions);
                             //Is the passed in data for the same key?
-                            if (currVal && data[idKey] && currVal[idKey] === data[idKey]) {
+                            if (currVal && data.attributes[idKey] &&
+                                currVal.attributes[idKey] === data.attributes[idKey]) {
                                 // Setting this flag will prevent events from firing immediately. That way clients
                                 // will not get events until the entire object graph is updated.
                                 currVal._deferEvents = true;
