@@ -1,8 +1,9 @@
-### Edge version
+### Version 0.5.4 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.3...v0.5.4)
 
 * Supports Backbone v1.1.0
 * Allows for polymorphic models in 1:M relations
 * IE 8 compatibility fix - Issue #77
+* Fix for idAttribute - Issue #80
 
 ### Version 0.5.3 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.2...v0.5.3)
 
