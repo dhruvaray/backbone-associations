@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.5.3
+//  Backbone-associations.js 0.5.4
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -44,25 +44,32 @@
     collectionEvents = ["reset", "sort"];
 
     Backbone.Associations = {
-        VERSION:"0.5.3"
+        VERSION: "0.5.4"
     };
 
-    // Define `SEPERATOR` property to Backbone.Associations
-    Object.defineProperty(Backbone.Associations, 'SEPARATOR', {
-        enumerable: true,
-        get: function(){
-            return pathSeparator;
-        },
-        set: function(value){
-            if (!_.isString(value) || _.size(value) < 1) {
-                value = ".";
-            }
-            // set private properties
-            pathSeparator = value;
-            pathChecker = new RegExp("[\\" + pathSeparator + "\\[\\]]+", "g");
-            delimiters = new RegExp("[^\\" + pathSeparator + "\\[\\]]+", "g");
+    // Define `getter` and `setter` for `separator`
+    var getSeparator = function() {
+        return pathSeparator;
+    };
+    // Define `setSeperator`
+    var setSeparator = function(value) {
+        if (!_.isString(value) || _.size(value) < 1) {
+            value = ".";
         }
-    });
+        // set private properties
+        pathSeparator = value;
+        pathChecker = new RegExp("[\\" + pathSeparator + "\\[\\]]+", "g");
+        delimiters = new RegExp("[^\\" + pathSeparator + "\\[\\]]+", "g");
+    };
+
+    try {
+        // Define `SEPERATOR` property to Backbone.Associations
+        Object.defineProperty(Backbone.Associations, 'SEPARATOR', {
+            enumerable: true,
+            get: getSeparator,
+            set: setSeparator
+        });
+    } catch (e) {}
 
     // Backbone.AssociatedModel
     // --------------
@@ -73,6 +80,9 @@
     Backbone.Associations.Self = Backbone.Self = "Self";
     // Set default separator
     Backbone.Associations.SEPARATOR = ".";
+    Backbone.Associations.getSeparator = getSeparator;
+    Backbone.Associations.setSeparator = setSeparator;
+    setSeparator();
     // Define `AssociatedModel` (Extends Backbone.Model).
     AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({
         // Define relations with Associated Model.
@@ -227,7 +237,8 @@
 
                             data = val instanceof AssociatedModel ? val : new relatedModel(val, relationOptions);
                             //Is the passed in data for the same key?
-                            if (currVal && data[idKey] && currVal[idKey] === data[idKey]) {
+                            if (currVal && data.attributes[idKey] &&
+                                currVal.attributes[idKey] === data.attributes[idKey]) {
                                 // Setting this flag will prevent events from firing immediately. That way clients
                                 // will not get events until the entire object graph is updated.
                                 currVal._deferEvents = true;
@@ -389,7 +400,7 @@
             var collection, relatedModel = type;
             _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
             // Creates new `Backbone.Collection` and defines model class.
-            if (relatedModel && relatedModel.prototype instanceof AssociatedModel) {
+            if (relatedModel && (relatedModel.prototype instanceof AssociatedModel) || _.isFunction(relatedModel)) {
                 collection = new BackboneCollection();
                 collection.model = relatedModel;
             } else {
@@ -448,7 +459,7 @@
                     _.each(this.relations, function (relation) {
                         var attr = this.attributes[relation.key];
                         if (attr) {
-                            aJson = attr.toJSON(options);
+                            aJson = attr.toJSON ? attr.toJSON(options) : attr;
                             json[relation.key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
                         }
                     }, this);

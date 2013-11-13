@@ -53,12 +53,15 @@ $(document).ready(function () {
         }
 
         ids = _.isArray(ids) ? ids.slice() : [ids];
-        return _.map(ids, function (id) {
+        var result = [];
+        _.each(ids, function (id) {
+            if (!id) return;
             var mapped = _.find(locations.models, function (m) {
                 if (m.get('id') == id) return m;
             });
-            return mapped ? mapped : id;
+            result.push(mapped || id);
         });
+        return result;
     };
 
     var Project = Backbone.AssociatedModel.extend({
@@ -102,7 +105,7 @@ $(document).ready(function () {
         urlRoot:'/department'
     });
 
-    var Dependent = Backbone.AssociatedModel.extend({
+    Dependent = Backbone.AssociatedModel.extend({
         validate:function (attr) {
             return (attr.sex && attr.sex != "M" && attr.sex != "F") ? "invalid sex value" : undefined;
         },
@@ -461,7 +464,7 @@ $(document).ready(function () {
             equal(e.message === "specify a relatedModel for Backbone.One type", true)
         }
 
-        var Owner = Backbone.Model.extend();
+        var Owner = Backbone.OriginalModel.extend();
         var House = Backbone.AssociatedModel.extend({
             relations:[
                 {
@@ -1189,6 +1192,57 @@ $(document).ready(function () {
         equal(searchResult.get('products').length, 4, "searchResult.products.length should be 4."); //1
     });
 
+    test("IdAttribute: Issue#80", 2, function () {
+
+        var User = Backbone.AssociatedModel.extend({
+            idAttribute: "_id"
+        });
+
+        var Container = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'owner',
+                    relatedModel: User
+                }
+            ],
+            defaults: {
+                users: []
+            }
+        });
+
+        var home = new Container();
+        var u = new User({_id: 1, name: "Chip Lay"});
+        home.set('owner', u);
+        var u1 = new User({_id: 1, name: "Chip Lay"});
+        home.set('owner', u1);
+        equal(home.get('owner') == u, true); //Uses the same id to refer the same object
+
+        User = Backbone.AssociatedModel.extend();
+
+        Container = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'owner',
+                    relatedModel: User
+                }
+            ],
+            defaults: {
+                users: []
+            }
+        });
+
+        home = new Container();
+        u = new User({id: 1, name: "Chip Lay"});
+        home.set('owner', u);
+        u1 = new User({id: 1, name: "Chip Lay"});
+        home.set('owner', u1);
+        equal(home.get('owner') == u, true); //Uses the same id to refer the same object
+
+
+    });
+
     test("Cycle save: Issue#51", 3, function () {
         var MyApp = {
             Models:{},
@@ -1251,6 +1305,52 @@ $(document).ready(function () {
         equal(provinceRecord.get('childrenMinders') === childrenMinders, true);
         equal(provinceRecord.get('childrenMinders').at(0) === childrenMinders.at(0), true);
 
+    });
+
+
+    test("Polymorphic collection models: Issue#73", 2, function () {
+        var Club = Backbone.AssociatedModel.extend({
+            relations:[{
+                type:Backbone.Many,
+                key:'members',
+                relatedModel:function (relation, attributes) {
+                    return function (attrs, options) {
+                        if (_.isArray(attrs.dependents)) {
+                            return new Employee(attrs);
+                        }
+
+                        return new Dependent(attrs);
+                    }
+                }
+            }],
+            defaults:{
+                name:"",
+                members:[]
+            },
+            urlRoot:'/club'
+        });
+
+        var club = new Club({
+            name:"Club X"
+        });
+
+        club.set({
+            members: [{
+                fname: "John",
+                lname: "Smith",
+                age: 21,
+                sex: "M",
+                dependents: [child1, child2]
+            }, {
+                fname: "Edgar",
+                lname: "Smith",
+                sex: "M",
+                relationship: "P"
+            }]
+        });
+
+        equal(club.get('members[0]') instanceof Employee, true);
+        equal(club.get('members[1]') instanceof Dependent, true);
     });
 
 
@@ -1404,8 +1504,8 @@ $(document).ready(function () {
 
         emp.get('works_for').get('locations').set([3, 7]);
         ok(emp.get('works_for').get('locations').length == 2);
-        ok(emp.get('works_for').get('locations').at(0).get("id") == 7);
-        ok(emp.get('works_for').get('locations').at(1).get("id") == 3);
+        ok(emp.get('works_for').get('locations').at(0).get("id") == 3);
+        ok(emp.get('works_for').get('locations').at(1).get("id") == 7);
 
     });
 
@@ -1531,7 +1631,7 @@ $(document).ready(function () {
         var ci1 = new CartItem({qty:5});
         var ci2 = new CartItem({qty:7});
         c.set('items', [ci1, ci2]); // change:cart.items => 1
-        equal(a.get('cart').getCartQty(), 12); // => 1        
+        equal(a.get('cart').getCartQty(), 12); // => 1
 
         a.once('add:cart.items', function () {
             ok(true, "Fired add:cart.items");
@@ -1961,7 +2061,7 @@ $(document).ready(function () {
     });
 
     test("save", 1, function () {
-        emp = new Backbone.Model();
+        emp = new Backbone.AssociatedModel();
         emp.sync = function (method, model, options) {
             options.success.call(this, null, options);
         };
