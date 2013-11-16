@@ -7,6 +7,12 @@ For features, performance #s, API documentation, tutorials and recipes, please v
 http://dhruvaray.github.io/backbone-associations/
 
 
+### Who uses Backbone-Associations? 
+
+See https://github.com/dhruvaray/backbone-associations/issues/55
+
+We encourage you to add your experiences to this list!
+
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/dhruvaray/backbone-associations/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
