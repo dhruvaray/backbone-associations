@@ -457,11 +457,18 @@
                 // and added it's json representation to parents' json representation.
                 if (this.relations) {
                     _.each(this.relations, function (relation) {
-                        var attr = this.attributes[relation.key];
-                        if (attr) {
-                            aJson = attr.toJSON ? attr.toJSON(options) : attr;
-                            json[relation.key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
-                        }
+                        var key = relation.key,
+                            remoteKey = relation.remoteKey,
+                            attr = this.attributes[key];
+
+                        aJson = attr && attr.toJSON ? attr.toJSON(options) : attr;
+
+                        // Remove default Backbone Serialization.
+                        delete json[key];
+
+                        //Assign to remoteKey if specified. Otherwise use the default key.
+                        json[remoteKey || key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
+
                     }, this);
                 }
                 delete this.visited;
