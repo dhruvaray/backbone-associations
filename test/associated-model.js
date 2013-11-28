@@ -1243,9 +1243,31 @@ $(document).ready(function () {
 
     });
 
-    test("Remote Key: Issue#78", 8, function () {
+    test("Remote Key: Issue#78", 11, function () {
 
-        var User = Backbone.AssociatedModel.extend();
+        var Location = Backbone.AssociatedModel.extend({});
+
+        var Job = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'location',
+                    transient: true,
+                    relatedModel: Location
+                }
+            ]
+        });
+
+        var User = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'job',
+                    remoteKey: 'job_attributes',
+                    relatedModel: Job
+                }
+            ]
+        });
 
         var MultiContainer = Backbone.AssociatedModel.extend({
             relations: [
@@ -1259,7 +1281,7 @@ $(document).ready(function () {
         });
 
         var home = new MultiContainer();
-        var u = new User({name: "Chip Lay"});
+        var u = new User({name: "Chip Lay", job: new Job({name: 'dream_job', location: new Location({name: 'loc1'})})});
         var u1 = new User({name: "John Sr"});
         home.set('owner', [u,u1]);
         equal(home.toJSON()['owner_attributes'].length,2);
@@ -1279,6 +1301,9 @@ $(document).ready(function () {
         var home2 = new UniContainer();
         home2.set('owner', u);
         equal(home2.toJSON()['owner_attributes']['name'],'Chip Lay');
+        equal(home2.toJSON()['owner_attributes']['job'], undefined);
+        equal(home2.toJSON()['owner_attributes']['job_attributes']['name'], 'dream_job');
+        equal(home2.toJSON()['owner_attributes']['job_attributes']['location'], undefined);
         equal(home2.toJSON()['owner'],undefined);
 
 
