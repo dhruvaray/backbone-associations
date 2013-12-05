@@ -1252,7 +1252,7 @@ $(document).ready(function () {
                 {
                     type: Backbone.One,
                     key: 'location',
-                    transient: true,
+                    isTransient: true,
                     relatedModel: Location
                 }
             ]
