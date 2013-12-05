@@ -316,25 +316,31 @@
                 var pathTokens = getPathArray(eventPath),
                     initialTokens = _.initial(pathTokens), colModel;
 
-                colModel = relationValue.find(function (model) {
-                    if (eventObject === model) return true;
-                    if (!model) return false;
-                    var changedModel = model.get(initialTokens);
+                if (eventObject.id) {
+                  var gottenModel = relationValue.get(eventObject.id);
+                  if (eventObject === gottenModel) colModel = gottenModel;
+                }
+                if (!colModel) {
+                  colModel = relationValue.find(function (model) {
+                      if (eventObject === model) return true;
+                      if (!model) return false;
+                      var changedModel = model.get(initialTokens);
 
-                    if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
-                        && eventObject === changedModel)
-                        return true;
+                      if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
+                          && eventObject === changedModel)
+                          return true;
 
-                    changedModel = model.get(pathTokens);
+                      changedModel = model.get(pathTokens);
 
-                    if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
-                        && eventObject === changedModel)
-                        return true;
+                      if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
+                          && eventObject === changedModel)
+                          return true;
 
-                    if (changedModel instanceof BackboneCollection && colObject
-                        && colObject === changedModel)
-                        return true;
-                });
+                      if (changedModel instanceof BackboneCollection && colObject
+                          && colObject === changedModel)
+                          return true;
+                  });
+                }
                 colModel && (indexEventObject = relationValue.indexOf(colModel));
             }
 
