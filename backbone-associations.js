@@ -247,12 +247,14 @@
                             //Is the passed in data for the same key?
                             if (currVal && data.attributes[idKey] &&
                                 currVal.attributes[idKey] === data.attributes[idKey]) {
-                                // Setting this flag will prevent events from firing immediately. That way clients
-                                // will not get events until the entire object graph is updated.
-                                currVal._deferEvents = true;
-                                // Perform the traditional `set` operation
-                                currVal._set(val instanceof AssociatedModel ? val.attributes : val, relationOptions);
-                                data = currVal;
+                                if (currVal != data) {
+                                    // Setting this flag will prevent events from firing immediately. That way clients
+                                    // will not get events until the entire object graph is updated.
+                                    currVal._deferEvents = true;
+                                    // Perform the traditional `set` operation
+                                    currVal._set(val instanceof AssociatedModel ? val.attributes : val, relationOptions);
+                                    data = currVal;
+                                }
                             } else {
                                 newCtx = true;
                             }
