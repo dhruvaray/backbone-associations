@@ -452,15 +452,15 @@
                             attr = this.attributes[key],
                             serialize = !relation.isTransient;
 
-                        aJson = attr && attr.toJSON ? attr.toJSON(options) : attr;
-
                         // Remove default Backbone serialization for associations.
                         delete json[key];
 
                         //Assign to remoteKey if specified. Otherwise use the default key.
                         //Only for non-transient relationships
-                        if (serialize)
+                        if (serialize) {
+                            aJson = attr && attr.toJSON ? attr.toJSON(options) : attr;
                             json[remoteKey || key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
+                        }
 
                     }, this);
                 }
