@@ -46,6 +46,7 @@
     Backbone.Associations = {
         VERSION: "0.5.4"
     };
+    var eventSplitter = /\s+/;
 
     // Define `getter` and `setter` for `separator`
     var getSeparator = function() {
@@ -124,6 +125,39 @@
 
         },
 
+        on: function(name, callback, context) {
+            if (name && typeof name !== 'object' && !eventSplitter.test(name)) {
+                var s = name.split(":"),
+                    type =  s[0],
+                    path = s[1];
+                if (path && (_.indexOf(defaultEvents, type) !== -1 || _.indexOf(collectionEvents, type) !== -1)) {
+                    var pathTokens = getPathArray(path),
+                        target = this.get(pathTokens),
+                        isAttr = false;
+                    if (!(target instanceof BackboneModel) && !(target instanceof BackboneCollection)) {
+                        target = this.get(_.initial(pathTokens));
+                        isAttr = true;
+                    }
+                    if (target) {
+                        var e = target._revent || (target._revent = []);
+                        e.push({
+                            src: this,
+                            name: name,
+                            path: path,
+                            type: type,
+                            tokens: pathTokens,
+                            target: target,
+                            isAttr: isAttr,
+                            callback: callback,
+                            context: context,
+                            ctx: context || this
+                        });
+                    }
+                }
+            }
+            return ModelProto.on.apply(this, arguments);
+        },
+
         // Works with an attribute hash and options + fully qualified paths
         _set:function (attributes, options) {
             var attr, modelMap, modelId, obj, result = this;
@@ -149,7 +183,6 @@
                 for (modelId in modelMap) {
                     obj = modelMap[modelId];
                     this._setAttr.call(obj.model, obj.data, options) || (result = false);
-
                 }
             } else {
                 result = this._setAttr.call(this, attributes, options);
@@ -267,12 +300,11 @@
 
                         // Add proxy events to respective parents.
                         // Only add callback if not defined or new Ctx has been identified.
-                        if (newCtx || (relationValue && !relationValue._proxyCallback)) {
-                            relationValue._proxyCallback = function () {
-                                return Backbone.Associations.EVENTS_BUBBLE &&
-                                    this._bubbleEvent.call(this, relationKey, relationValue, arguments);
+                        if (newCtx || (this && !this._proxyCallback)) {
+                            this._proxyCallback = function () {
+                                this._trigger.call(this, relationKey, relationValue, arguments);
                             };
-                            relationValue.on("all", relationValue._proxyCallback, this);
+                            this.on("all", this._proxyCallback, this);
                         }
 
                     }
@@ -295,94 +327,17 @@
             // Return results for `BackboneModel.set`.
             return  ModelProto.set.call(this, attributes, options);
         },
-        // Bubble-up event to `parent` Model
-        _bubbleEvent:function (relationKey, relationValue, eventArguments) {
-            var args = eventArguments,
-                opt = args[0].split(":"),
-                eventType = opt[0],
-                catch_all = args[0] == "nested-change",
-                eventObject = args[1],
-                indexEventObject = -1,
-                _proxyCalls = relationValue._proxyCalls,
-                cargs,
-                eventPath = opt[1],
-                basecolEventPath;
 
-
-            //Short circuit the listen in to the nested-graph event
-            if (catch_all) return;
-
-            var isDefaultEvent = _.indexOf(defaultEvents, eventType) !== -1;
-
-            // Find the specific object in the collection which has changed.
-            var source = sources.pop() || eventObject;
-            if (relationValue instanceof BackboneCollection && isDefaultEvent) {
-                indexEventObject = relationValue.indexOf(source);
-                sources.push(relationValue.parents[0]);
-            } else {
-                sources.push(relationValue);
+        _trigger: function(rKey, rValue, eArgs) {
+            if (!eArgs[0].match(pathChecker) && this._revent) {
+                var s = eArgs[0].split(":"),
+                    isAttr = !!s[1];
+                _.each(this._revent, function(obj){
+                    if (obj.isAttr ^ isAttr) return;
+                    eArgs[0] = obj.name;
+                    obj.src.trigger.apply(obj.src, eArgs);
+                }, this);
             }
-
-            // Manipulate `eventPath`.
-            eventPath = relationKey + ((indexEventObject !== -1 && (eventType === "change" || eventPath)) ?
-                "[" + indexEventObject + "]" : "") + (eventPath ? pathSeparator + eventPath : "");
-
-            // Short circuit collection * events
-
-            if (Backbone.Associations.EVENTS_WILDCARD) {
-                if (/\[\*\]/g.test(eventPath)) return this;
-                basecolEventPath = eventPath.replace(/\[\d+\]/g, '[*]');
-            }
-
-            cargs = [];
-            cargs.push.apply(cargs, args);
-            cargs[0] = eventType + ":" + eventPath;
-
-            // If event has been already triggered as result of same source `eventPath`,
-            // no need to re-trigger event to prevent cycle.
-            _proxyCalls = relationValue._proxyCalls = (_proxyCalls || {});
-            if (this._isEventAvailable.call(this, _proxyCalls, eventPath)) return this;
-
-            // Add `eventPath` in `_proxyCalls` to keep track of already triggered `event`.
-            _proxyCalls[eventPath] = true;
-
-
-            // Set up previous attributes correctly.
-            if ("change" === eventType) {
-                this._previousAttributes[relationKey] = relationValue._previousAttributes;
-                this.changed[relationKey] = relationValue;
-            }
-
-            // Bubble up event to parent `model` with new changed arguments.
-            this.trigger.apply(this, cargs);
-
-            //Only fire for change. Not change:attribute
-            if (Backbone.Associations.EVENTS_NC && "change" === eventType && this.get(eventPath) != args[2]) {
-                var ncargs = ["nested-change", eventPath, args[1]];
-                args[2] && ncargs.push(args[2]); //args[2] will be options if present
-                this.trigger.apply(this, ncargs);
-            }
-
-            // Remove `eventPath` from `_proxyCalls`,
-            // if `eventPath` and `_proxyCalls` are available,
-            // which allow event to be triggered on for next operation of `set`.
-            if (_proxyCalls && eventPath) delete _proxyCalls[eventPath];
-
-            // Create a collection modified event with wild-card
-            if (Backbone.Associations.EVENTS_WILDCARD && eventPath !== basecolEventPath) {
-                cargs[0] = eventType + ":" + basecolEventPath;
-                this.trigger.apply(this, cargs);
-            }
-            sources.pop();
-
-            return this;
-        },
-
-        // Has event been fired from this source. Used to prevent event recursion in cyclic graphs
-        _isEventAvailable:function (_proxyCalls, path) {
-            return _.find(_proxyCalls, function (value, eventKey) {
-                return path.indexOf(eventKey, path.length - eventKey.length) !== -1;
-            });
         },
 
         // Returns New `collection` of type `relation.relatedModel`.
@@ -566,6 +521,7 @@
             proxies['trigger'].apply(this, arguments);
         }
     };
+
 
     // Attach process pending event functionality on collections as well. Re-use from `AssociatedModel`
     CollectionProto._processPendingEvents = AssociatedModel.prototype._processPendingEvents;
