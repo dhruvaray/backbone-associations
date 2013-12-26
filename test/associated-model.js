@@ -18,6 +18,8 @@ $(document).ready(function () {
         , node1, node2, node3
         , parent1
         , project1, project2
+        , mother0, mother1, son0, son1, teacher
+        , allEvents, expectedEvents
         ;
 
     var Location = Backbone.AssociatedModel.extend({
@@ -185,6 +187,53 @@ $(document).ready(function () {
         }
     });
 
+    //
+    // Child (Son), Parent (Mother), and Teacher models for the reverse relation tests
+    //
+    Son = Backbone.AssociatedModel.extend({
+        defaults: {
+            name:""
+        },
+        initialize: function() {
+            this.set('initialized', true);
+        }
+    });
+
+    Mother = Backbone.AssociatedModel.extend({
+        relations:[ {
+            type:Backbone.Many,
+            key:"sons",
+            relatedModel:Son,
+            reverseKey:"mother"
+        } ],
+        defaults: {
+            name:"",
+            sons: []
+        },
+        initialize: function() {
+            this.set('initialized', true);
+        },
+        sonNames: function() {
+            return this.get('sons').pluck("name").join(",");
+        }
+    });
+
+    Teacher = Backbone.AssociatedModel.extend({
+        relations:[ {
+            type:Backbone.Many,
+            key:"students",
+            relatedModel:Son,
+            reverseKey:"teacher"
+        } ],
+        defaults: {
+            name:"",
+            students: []
+        },
+        studentNames: function() {
+            return this.get('students').pluck("name").join(",");
+        }
+    });
+
     module("Backbone.AssociatedModel", {
         setup:function () {
             emp = new Employee({
@@ -271,6 +320,43 @@ $(document).ready(function () {
 
             emp.set({"works_for":dept1});
             emp.set({"dependents":[child1, parent1]});
+
+
+            // setup for reverse relation tests
+            mother0 = new Mother({
+                name: "mother0",
+                sons: [
+                    { name: "son0" },
+                    { name: "son1" },
+                ],
+            });
+            son0 = mother0.get('sons').at(0);
+            son1 = mother0.get('sons').at(1);
+            mother1 = new Mother({name: "mother1"});
+            teacher = new Teacher({
+                name: "teacher",
+                students: [ son0, son1 ]
+            });
+            allEvents= {
+                mother0: [],
+                mother0Sons: [],
+                mother1: [],
+                mother1Sons: [],
+                son0: [],
+                son1: [],
+                teacher: [],
+                teacherStudents: []
+            };
+            expectedEvents = JSON.parse(JSON.stringify(allEvents));
+            addEvent = function(source, args) { allEvents[source].push(args[0]) ; allEvents[source].sort() };
+            mother0.on("all", function() { addEvent("mother0", arguments); });
+            mother0.get('sons').on("all", function() { addEvent("mother0Sons", arguments); });
+            mother1.on("all", function() { addEvent("mother1", arguments); });
+            mother1.get('sons').on("all", function() { addEvent("mother1Sons", arguments); });
+            son0.on("all", function() { addEvent("son0", arguments); });
+            son1.on("all", function() { addEvent("son1", arguments); });
+            teacher.on("all", function() { addEvent("teacher", arguments); });
+            teacher.get('students').on("all", function() { addEvent("teacherStudents", arguments); });
         }
     });
 
@@ -892,6 +978,435 @@ $(document).ready(function () {
         });
 
         emp.get('works_for').get("locations").at(0).set('zip', 94403, {dummy:true});
+    });
+
+    //
+    // reverse relation assertions that test for atomicity: on any event
+    // callback, all relations should be in place
+    //
+    var assert_son1_in_mother1 = function() {
+        equal(son1.get('mother.name'), "mother1",   "son1 mother");
+        equal(mother0.sonNames(),      "son0",      "mother0 sons");
+        equal(mother1.sonNames(),      "son1",      "mother1 sons");
+        equal(teacher.studentNames(),  "son0,son1", "teacher students");
+    };
+
+    var assert_son1_orphan = function() {
+        equal(son1.get('mother'),     null,        "son1 mother");
+        equal(mother0.sonNames(),     "son0",      "mother0 sons");
+        equal(mother1.sonNames(),     "",          "mother1 sons");
+        equal(teacher.studentNames(), "son0,son1", "teacher students");
+    };
+
+    var assert_son1_destroyed = function() {
+        equal(son1.get('mother'),     null,   "son1 mother");
+        equal(mother0.sonNames(),     "son0", "mother0 sons");
+        equal(mother1.sonNames(),     "",     "mother1 sons");
+        equal(teacher.studentNames(), "son0", "teacher students");
+    };
+
+    //
+    // reverse relation assertions that test change event for previous &
+    // new value
+    //
+    var assert_change_son1_mother0_to_mother1 = function(model,value) {
+        equal(model.get('name'),                   "son1",    "model that changed");
+        equal(value.get('name'),                   "mother1", "value that changed");
+        equal(son1.previous('mother').get('name'), "mother0", "son1 previous mother");
+        equal(son1.get('mother.name'),             "mother1", "son1 new mother");
+    };
+
+    var assert_change_son1_mother0_to_nothing = function(model,value) {
+        equal(model.get('name'),                   "son1",    "model that changed");
+        equal(value,                               null,      "value that changed");
+        equal(son1.previous('mother').get('name'), "mother0", "son1 previous mother");
+        equal(son1.get('mother'),                  null,      "son1 new mother");
+    };
+
+    //
+    // reverse relation tests
+    //
+
+    test("reverse relation setup", 4, function() {
+        equal(son0.get('mother.name'), "mother0");
+        equal(son1.get('mother.name'), "mother0");
+        equal(mother0.sonNames(), "son0,son1");
+        equal(teacher.studentNames(), "son0,son1");
+    });
+
+    test("reverse relation duplicate key", 1, function() {
+        var Experience = Backbone.AssociatedModel.extend({
+            relations:[ {
+                type:Backbone.Many,
+                key:"fools",
+                relatedModel:Son,
+                reverseKey:"teacher"
+            } ],
+            defaults: {
+                name:"",
+                fools: []
+            },
+        });
+        throws(function() { new Experience(); }, /teacher/);
+    });
+
+    test("reverse relation model construction", 29, function() {
+
+        // reverse relations should not be added until after construction (including
+        // initialization)
+        var assert_initialized_newSon_in_mother1_and_teacher = function() {
+            equal(mother1.get('sons[0].name'),  "newSon",          "newSon (in mother1)");
+            equal(teacher.get('students[2].name'), "newSon",           "newSon (in teacher)");
+
+            var newSon = mother1.get('sons[0]');
+            equal(newSon.get('initialized'),   true,               "newSon initialized");
+            equal(mother1.sonNames(),          "newSon",           "mother1 sons");
+            equal(teacher.studentNames(),      "son0,son1,newSon", "teacher students");
+            equal(newSon.get('mother.name'),   "mother1",          "newSon's mother");
+            equal(newSon.get('teacher.name'),  "teacher",          "newSon's teacher");
+        };
+
+        mother1.on("add:sons",            assert_initialized_newSon_in_mother1_and_teacher);
+        mother1.get('sons').on("add",     assert_initialized_newSon_in_mother1_and_teacher);
+        teacher.on("add:students",        assert_initialized_newSon_in_mother1_and_teacher);
+        teacher.get('students').on("add", assert_initialized_newSon_in_mother1_and_teacher);
+
+        var newSon = new Son({
+            name: "newSon",
+            mother: mother1,
+            teacher: teacher,
+        });
+
+        expectedEvents.mother1 =         ["add:sons"];
+        expectedEvents.mother1Sons =     ["add"];
+        expectedEvents.teacher =         ["add:students"];
+        expectedEvents.teacherStudents = ["add"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
+    test("reverse relation parent construction", 13, function() {
+
+        // reverse relations should not be added until after construction
+        // (including initialization)
+        var assert_son1_in_initialized_newMother = function() {
+            equal(son1.get('mother.name'), "newMother", "son1's new mother");
+            equal(son1.get('mother.initialized'), true, "son1's new mother initialized");
+            equal(mother0.sonNames(), "son0", "mother0's son");
+        }
+
+        son1.on("add", assert_son1_in_initialized_newMother);
+        son1.on("change", assert_son1_in_initialized_newMother);
+        son1.on("remove", assert_son1_in_initialized_newMother);
+        mother0.on("remove:sons", assert_son1_in_initialized_newMother);
+
+        var newMother = new Mother({
+            name: "newMother",
+            sons: [son1]
+        });
+
+        expectedEvents.mother0 = [
+            "change:sons[*]",
+            "change:sons[*].mother",
+            "change:sons[1]",
+            "change:sons[1].mother",
+            "nested-change",
+            "remove:sons"
+        ];
+        expectedEvents.mother0Sons =     ["change", "change:mother", "remove"];
+        expectedEvents.son1 =         ["add", "change", "change:mother", "remove"];
+
+        expectedEvents.teacher = [
+            "change:students[*]",
+            "change:students[*].mother",
+            "change:students[1]",
+            "change:students[1].mother",
+            "nested-change",
+        ];
+        expectedEvents.teacherStudents = ["change", "change:mother"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
+
+    test("reverse relation set mother", 37, function() {
+        son1.on("change:mother",                assert_son1_in_mother1);
+        mother0.on("remove:sons",               assert_son1_in_mother1);
+        mother1.on("add:sons",                  assert_son1_in_mother1);
+        mother0.get('sons').on("remove",        assert_son1_in_mother1);
+        mother1.get('sons').on("add",           assert_son1_in_mother1);
+
+        son1.on("change:mother",                assert_change_son1_mother0_to_mother1);
+        mother0.on("change:sons[1].mother",     assert_change_son1_mother0_to_mother1);
+        mother1.on("change:sons[0].mother",     assert_change_son1_mother0_to_mother1);
+        teacher.on("change:students[1].mother", assert_change_son1_mother0_to_mother1);
+
+        son1.set('mother', mother1);
+
+        expectedEvents.mother0 =        [
+            "change:sons[*]",
+            "change:sons[*].mother",
+            "change:sons[1]",
+            "change:sons[1].mother",
+            "nested-change",
+            "remove:sons"
+        ];
+        expectedEvents.mother0Sons =    ["change", "change:mother", "remove"];
+        expectedEvents.mother1 =        [
+            "add:sons",
+            "change:sons[*]",
+            "change:sons[*].mother",
+            "change:sons[0]",
+            "change:sons[0].mother",
+            "nested-change",
+        ];
+        expectedEvents.mother1Sons =    ["add", "change", "change:mother"];
+        expectedEvents.son1 =           ["add", "change", "change:mother", "remove"];
+        expectedEvents.teacher =        [
+            "change:students[*]",
+            "change:students[*].mother",
+            "change:students[1]",
+            "change:students[1].mother",
+            "nested-change"
+        ];
+        expectedEvents.teacherStudents = ["change", "change:mother"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
+    test("reverse relation add son", 37, function () {
+        son1.on("change:mother",                assert_son1_in_mother1);
+        mother0.on("remove:sons",               assert_son1_in_mother1);
+        mother1.on("add:sons",                  assert_son1_in_mother1);
+        mother0.get('sons').on("remove",        assert_son1_in_mother1);
+        mother1.get('sons').on("add",           assert_son1_in_mother1);
+
+        son1.on("change:mother",                assert_change_son1_mother0_to_mother1);
+        mother0.on("change:sons[1].mother",     assert_change_son1_mother0_to_mother1);
+        mother1.on("change:sons[0].mother",     assert_change_son1_mother0_to_mother1);
+        teacher.on("change:students[1].mother", assert_change_son1_mother0_to_mother1);
+
+        mother1.get('sons').add(son1);
+
+        expectedEvents.mother0 =        [
+            "change:sons[*]",
+            "change:sons[*].mother",
+            "change:sons[1]",
+            "change:sons[1].mother",
+            "nested-change",
+            "remove:sons"
+        ];
+        expectedEvents.mother0Sons =    ["change", "change:mother", "remove"];
+        expectedEvents.mother1 =        [
+            "add:sons",
+            "change:sons[*]",
+            "change:sons[*].mother",
+            "change:sons[0]",
+            "change:sons[0].mother",
+            "nested-change",
+        ];
+        expectedEvents.mother1Sons =    ["add", "change", "change:mother"];
+        expectedEvents.son1 =           ["add", "change", "change:mother", "remove"];
+        expectedEvents.teacher =        [
+            "change:students[*]",
+            "change:students[*].mother",
+            "change:students[1]",
+            "change:students[1].mother",
+            "nested-change"
+        ];
+        expectedEvents.teacherStudents = ["change", "change:mother"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
+    test("reverse relation set sons", 37, function () {
+        son1.on("change:mother",                assert_son1_in_mother1);
+        mother0.on("remove:sons",               assert_son1_in_mother1);
+        mother1.on("add:sons",                  assert_son1_in_mother1);
+        mother0.get('sons').on("remove",        assert_son1_in_mother1);
+        mother1.get('sons').on("add",           assert_son1_in_mother1);
+
+        son1.on("change:mother",                assert_change_son1_mother0_to_mother1);
+        mother0.on("change:sons[1].mother",     assert_change_son1_mother0_to_mother1);
+        mother1.on("change:sons[0].mother",     assert_change_son1_mother0_to_mother1);
+        teacher.on("change:students[1].mother", assert_change_son1_mother0_to_mother1);
+
+        mother1.set("sons", [son1]);
+
+        expectedEvents.mother0 =        [
+            "change:sons[*]",
+            "change:sons[*].mother",
+            "change:sons[1]",
+            "change:sons[1].mother",
+            "nested-change",
+            "remove:sons"
+        ];
+        expectedEvents.mother0Sons =    ["change", "change:mother", "remove"];
+        expectedEvents.mother1 =        [
+            "add:sons",
+            "change:sons[*]",
+            "change:sons[*].mother",
+            "change:sons[0]",
+            "change:sons[0].mother",
+            "nested-change",
+            "sort:sons",
+        ];
+        expectedEvents.mother1Sons =    ["add", "change", "change:mother", "sort"];
+        expectedEvents.son1 =           ["add", "change", "change:mother", "remove"];
+        expectedEvents.teacher =        [
+            "change:students[*]",
+            "change:students[*].mother",
+            "change:students[1]",
+            "change:students[1].mother",
+            "nested-change"
+        ];
+        expectedEvents.teacherStudents = ["change", "change:mother"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
+    test("reverse relation add new", 5, function() {
+
+        mother0.on("change:sons[2].mother", function(model, value) {
+            equal(value, mother0);
+            equal(model.previous('mother'), null);
+            equal(model.get('mother.name'), "mother0");
+        });
+
+        var newSon = mother0.get('sons').add({name: "newSon"});
+
+        equal(newSon.get('mother.name'), "mother0");
+
+        expectedEvents.mother0 =        [
+            "add:sons",
+            "change:sons[*]",
+            "change:sons[*].mother",
+            "change:sons[2]",
+            "change:sons[2].mother",
+            "nested-change",
+        ];
+        expectedEvents.mother0Sons =    ["add", "change", "change:mother"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
+    test("reverse relation unset mother", 25, function () {
+        son1.on("change:mother",         assert_son1_orphan);
+        mother0.on("remove:sons",        assert_son1_orphan);
+        mother0.get('sons').on("remove", assert_son1_orphan);
+
+        son1.on("change:mother",                assert_change_son1_mother0_to_nothing);
+        mother0.on("change:sons[1].mother",     assert_change_son1_mother0_to_nothing);
+        teacher.on("change:students[1].mother", assert_change_son1_mother0_to_nothing);
+
+        son1.set('mother', undefined);
+
+        expectedEvents.mother0 =        [
+            "change:sons[*]",
+            "change:sons[*].mother",
+            "change:sons[1]",
+            "change:sons[1].mother",
+            "remove:sons"
+        ];
+        expectedEvents.mother0Sons =    ["change", "change:mother", "remove"];
+        expectedEvents.son1 =           ["change", "change:mother", "remove"];
+        expectedEvents.teacher =        [
+            "change:students[*]",
+            "change:students[*].mother",
+            "change:students[1]",
+            "change:students[1].mother",
+            "nested-change"
+        ];
+        expectedEvents.teacherStudents = ["change", "change:mother"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
+    test("reverse relation remove son", 25, function () {
+        son1.on("change:mother",                assert_son1_orphan);
+        mother0.on("remove:sons",               assert_son1_orphan);
+        mother0.get('sons').on("remove",        assert_son1_orphan);
+
+        son1.on("change:mother",                assert_change_son1_mother0_to_nothing);
+        mother0.on("change:sons[1].mother",     assert_change_son1_mother0_to_nothing);
+        teacher.on("change:students[1].mother", assert_change_son1_mother0_to_nothing);
+
+        mother0.get('sons').remove(son1);
+
+        expectedEvents.mother0 =        [
+            "change:sons[*]",
+            "change:sons[*].mother",
+            "change:sons[1]",
+            "change:sons[1].mother",
+            "remove:sons"
+        ];
+        expectedEvents.mother0Sons =    ["change", "change:mother", "remove"];
+        expectedEvents.son1 =           ["change", "change:mother", "remove"];
+        expectedEvents.teacher =        [
+            "change:students[*]",
+            "change:students[*].mother",
+            "change:students[1]",
+            "change:students[1].mother",
+            "nested-change"
+        ];
+        expectedEvents.teacherStudents = ["change", "change:mother"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
+    test("reverse relation reset collection", 21, function () {
+        mother0.on("reset:sons",        assert_son1_orphan);
+        mother0.get('sons').on("reset", assert_son1_orphan);
+        son1.on("change:mother",        assert_son1_orphan);
+
+        son1.on("change:mother",                assert_change_son1_mother0_to_nothing);
+        teacher.on("change:students[1].mother", assert_change_son1_mother0_to_nothing);
+
+        mother0.get("sons").reset([son0]);
+
+        expectedEvents.mother0Sons =    ["reset"];
+        expectedEvents.mother0 =        [
+            "reset:sons"
+        ];
+        expectedEvents.mother0Sons =    ["reset"];
+        expectedEvents.son1 =           ["change", "change:mother"];
+        expectedEvents.teacher =        [
+            "change:students[*]",
+            "change:students[*].mother",
+            "change:students[1]",
+            "change:students[1].mother",
+            "nested-change"
+        ];
+        expectedEvents.teacherStudents = ["change", "change:mother"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
+    test("reverse relation destroy son", 33, function () {
+        mother0.on("destroy:sons",            assert_son1_destroyed);
+        mother0.on("remove:sons",             assert_son1_destroyed);
+        teacher.on("remove:students",         assert_son1_destroyed);
+        teacher.on("destroy:students",        assert_son1_destroyed);
+        mother0.get('sons').on("destroy",     assert_son1_destroyed);
+        mother0.get('sons').on("remove",      assert_son1_destroyed);
+        teacher.get('students').on("destroy", assert_son1_destroyed);
+        teacher.get('students').on("remove",  assert_son1_destroyed);
+
+        son1.destroy();
+
+        expectedEvents.mother0 = [
+            "destroy:sons",
+            "remove:sons"
+        ];
+        expectedEvents.mother0Sons =    ["destroy", "remove"];
+        expectedEvents.son1 =           ["destroy", "remove", "remove"];
+        expectedEvents.teacher =        [
+            "destroy:students",
+            "remove:students",
+        ];
+        expectedEvents.teacherStudents = ["destroy", "remove"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
 
     test("Set closure scope correctly - while setting BB Collection & Model instances directly", 5, function () {
