@@ -348,7 +348,7 @@ $(document).ready(function () {
                 teacherStudents: []
             };
             expectedEvents = JSON.parse(JSON.stringify(allEvents));
-            addEvent = function(source, args) { allEvents[source].push(args[0]) ; allEvents[source].sort() };
+            var addEvent = function(source, args) { allEvents[source].push(args[0]) ; allEvents[source].sort() };
             mother0.on("all", function() { addEvent("mother0", arguments); });
             mother0.get('sons').on("all", function() { addEvent("mother0Sons", arguments); });
             mother1.on("all", function() { addEvent("mother1", arguments); });
