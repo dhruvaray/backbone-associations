@@ -78,6 +78,7 @@
     Backbone.Associations.Many = Backbone.Many = "Many";
     Backbone.Associations.One = Backbone.One = "One";
     Backbone.Associations.Self = Backbone.Self = "Self";
+    Backbone.Associations._ManyReverse = Backbone._ManyReverse = "_ManyReverse";
     // Set default separator
     Backbone.Associations.SEPARATOR = ".";
     Backbone.Associations.getSeparator = getSeparator;
@@ -98,6 +99,15 @@
         // and prevent redundant event to be triggered in case of cyclic model graphs.
         _proxyCalls:undefined,
 
+        // When constructing a model, defer processing of reverse
+        // relations until initialization of the model is complete, 
+        // to ensure that relation events are not triggered when the model isn't in a well-defined state.
+        constructor:function () {
+            this._deferReverseRelations = true;
+            var result = AssociatedModel.__super__.constructor.apply(this, arguments);
+            this._processPendingReverseRelations();
+            return result;
+        },
 
         // Get the value of an attribute.
         get:function (attr) {
@@ -179,7 +189,9 @@
                         map = relation.map,
                         currVal = this.attributes[relationKey],
                         idKey = currVal && currVal.idAttribute,
-                        val, relationOptions, data, relationValue, newCtx = false;
+                        val, relationOptions, data, relationValue, newCtx = false,
+                        reverseKey = relation.reverseKey, reverseRelation,
+                        bubbleOK = Backbone.Associations.EVENTS_BUBBLE;
 
                     // Call function if relatedModel is implemented as a function
                     if (relatedModel && !(relatedModel.prototype instanceof BackboneModel))
@@ -213,6 +225,26 @@
                                 throw new Error('collectionType must inherit from Backbone.Collection');
                             }
 
+                            if (reverseKey) {
+                                var relatedProto = relatedModel.prototype;
+                                reverseRelation = {
+                                    type: Backbone._ManyReverse,
+                                    relatedModel: this.constructor,
+                                    key: reverseKey,
+                                    reverseOf: relation,
+                                }
+                                if (!relatedModel) {
+                                    throw new Error('must specify a relatedModel if specifying reverseKey');
+                                }
+                                if (!_.findWhere(relatedProto.relations || [], reverseRelation)) {
+                                    relatedProto.relations || (relatedProto.relations = []);
+                                    if (_.findWhere(relatedProto.relations, {key: reverseKey})) {
+                                        throw new Error('reverseKey "'+reverseKey+'" is the same as an existing key');
+                                    }
+                                    relatedProto.relations.push(reverseRelation);
+                                }
+                            }
+
                             if (currVal) {
                                 // Setting this flag will prevent events from firing immediately. That way clients
                                 // will not get events until the entire object graph is updated.
@@ -229,13 +261,18 @@
 
                                 if (val instanceof BackboneCollection) {
                                     data = val;
+                                    data._reverseRelation = reverseRelation;
+                                    data._reverseModel = this;
                                 } else {
                                     data = collectionType ? new collectionType() : this._createCollection(relatedModel);
+                                    data._reverseRelation = reverseRelation;
+                                    data._reverseModel = this;
+                                    data._deferEvents = true;
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
 
-                        } else if (relation.type === Backbone.One) {
+                        } else if (relation.type === Backbone.One || relation.type == Backbone._ManyReverse) {
 
                             if (!relatedModel)
                                 throw new Error('specify a relatedModel for Backbone.One type');
@@ -255,8 +292,11 @@
                                 data = currVal;
                             } else {
                                 newCtx = true;
+                                if (relation.type === Backbone._ManyReverse) {
+                                    this._updateReverseRelation(relation, data);
+                                    bubbleOK = false; // Suppress circular triggers of the form change:parent.children[0].parent...
+                                }
                             }
-
                         } else {
                             throw new Error('type attribute must be specified and have the values Backbone.One or Backbone.Many');
                         }
@@ -269,7 +309,7 @@
                         // Only add callback if not defined or new Ctx has been identified.
                         if (newCtx || (relationValue && !relationValue._proxyCallback)) {
                             relationValue._proxyCallback = function () {
-                                return Backbone.Associations.EVENTS_BUBBLE &&
+                                return bubbleOK &&
                                     this._bubbleEvent.call(this, relationKey, relationValue, arguments);
                             };
                             relationValue.on("all", relationValue._proxyCallback, this);
@@ -278,9 +318,14 @@
                     }
                     //Distinguish between the value of undefined versus a set no-op
                     if (attributes.hasOwnProperty(relationKey)) {
-                        //Maintain reverse pointers - a.k.a parents
                         var updated = attributes[relationKey];
                         var original = this.attributes[relationKey];
+
+                        if (relation.type == Backbone._ManyReverse && !updated) {
+                            this._updateReverseRelation(relation, undefined);
+                        }
+
+                        //Maintain reverse pointers - a.k.a parents
                         if (updated) {
                             updated.parents = updated.parents || [];
                             (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
@@ -306,7 +351,8 @@
                 _proxyCalls = relationValue._proxyCalls,
                 cargs,
                 eventPath = opt[1],
-                basecolEventPath;
+                basecolEventPath,
+                orphanIndex = this._orphanIndex || {};
 
 
             //Short circuit the listen in to the nested-graph event
@@ -317,7 +363,7 @@
             // Find the specific object in the collection which has changed.
             var source = sources.pop() || eventObject;
             if (relationValue instanceof BackboneCollection && isDefaultEvent) {
-                indexEventObject = relationValue.indexOf(source);
+                indexEventObject = orphanIndex[source.cid] || relationValue.indexOf(source);
                 sources.push(relationValue.parents[0]);
             } else {
                 sources.push(relationValue);
@@ -399,6 +445,149 @@
             return collection;
         },
 
+        // Called when a model updates a reverse key of a Many relation;
+        // removes/adds from appropriate collections.
+        _updateReverseRelation:function(relation, newValue) {
+            if (this._deferReverseRelations) {
+                this._deferReverseRelation("_updateReverseRelation", arguments);
+                return;
+            }
+            this._deferEvents = true;
+            this._reverseSetPending = true;
+
+            var oldValue = this.attributes[relation.key];
+            var collection;
+            if (oldValue && oldValue != newValue && (collection = oldValue.attributes[relation.reverseOf.key])) {
+                collection._deferEvents = true;
+                if (!this._reverseRemovePending) {
+                    this._newReverseModel = newValue;
+                    collection.remove(this);
+                }
+                this._addAssociatedEventSources(collection);
+            }
+            if (newValue && (collection = newValue.attributes[relation.reverseOf.key])) {
+                collection._deferEvents = true;
+                collection.add(this);
+            }
+            delete this._reverseSetPending;
+        },
+
+        // Called when models are removed from a Many relation; sets their
+        // their reverseKeys to null (unless the model is in the midst of
+        // a setting the reverse key to something else).
+        _propagateReverseRemove:function (relation, models, method, options) {
+            if (this._deferReverseRelations) {
+                this._deferReverseRelation("_propagateReverseRemove", arguments);
+                return;
+            }
+
+            var reverseKey = relation.reverseKey;
+            var collection = this.attributes[relation.key];
+            var silent = (options || {}).silent;
+            var attrs = {}
+
+            attrs[reverseKey] = null;
+
+            _.each(models, function(model) {
+                this._orphanIndex || (this._orphanIndex = {})
+                this._orphanIndex[model.cid] = collection.indexOf(model);
+                if (!model._reverseSetPending) {
+                    model._deferEvents = true;
+                    model._reverseRemovePending = true;
+                    model._setAttr(attrs);
+                    delete model._reverseRemovePending;
+                }
+                // trigger explicitly, since by the time
+                // pending events will get processed, the model
+                // will no longer be in this collection
+                if (method === "remove" && !silent) {
+                    collection.trigger(method, model, collection, options);
+                    collection.trigger("change", model, options);
+                    collection.trigger("change:"+reverseKey, model, model._newReverseModel, options);
+                }
+            }, this);
+
+            collection._addAssociatedEventSources(models);
+        },
+
+        // Called when models are removed from a Many relation; sets their
+        // their reverseKeys to the new value.
+        _propagateReverseAdd:function (relation, models) {
+            if (this._deferReverseRelations) {
+                this._deferReverseRelation("_propagateReverseAdd", arguments);
+                return;
+            }
+            var reverseKey = relation.reverseKey;
+            var attrs = {}
+            attrs[reverseKey] = this;
+            _.each(models, function(model) {
+                if (!model._reverseSetPending && model.attributes[reverseKey] != this) {
+                    model._deferEvents = true;
+                    model._setAttr(attrs);
+                }
+            }, this);
+            this.attributes[relation.key]._addAssociatedEventSources(models);
+        },
+
+        _deferReverseRelation: function(method, args) {
+            this._pendingReverseRelations || (this._pendingReverseRelations = []);
+            this._pendingReverseRelations.push({method: method, arguments: args});
+        },
+
+        _processPendingReverseRelations:function () {
+            delete this._deferReverseRelations;
+            if (this._pendingReverseRelations) {
+                this._deferEvents = true;
+                _.each(this._pendingReverseRelations, function(r) {
+                    this[r.method].apply(this, r.arguments);
+                }, this);
+                delete this._pendingReverseRelations;
+                this._processPendingEvents();
+            }
+        },
+
+        // Add more sources of pending events that will need to be
+        // processed. This is for sources whose relationship has been
+        // severed (i.e. model no longer member of collection) and so
+        // wouldn't be found when traversing relationships when processing
+        // the deferred events.
+        _addAssociatedEventSources:function (sources) {
+            this._associatedEventSources || (this._associatedEventSources = []);
+            this._associatedEventSources = this._associatedEventSources.concat(sources);
+        },
+
+        // Call this when intercepting a (non-deferred) "destroy" event, in
+        // order to disconnect reverse relations silently to avoid sending
+        // "change" events.
+        _processDestroyEvent:function (eventArguments) {
+            _.each(this.relations || [], function(relation) {
+                if (relation.type == Backbone._ManyReverse) {
+                    this._deferEvents = true;
+                    var reverseKey = relation.key,
+                        reverseModel = this.attributes[reverseKey],
+                        attrs = {};
+                    if (reverseModel) {
+                        var collection = reverseModel.attributes[relation.reverseOf.key];
+                        collection._deferEvents = true;
+
+                        // disconnect reverse relation, silently to avoid
+                        // change events
+                        this.attributes[reverseKey] = null;
+                        collection.remove(this, {silent: true});
+
+                        // manually trigger "remove" and "destroy" events
+                        this.trigger("remove", this, collection);
+                        collection.trigger("remove destroy", this, collection);
+
+                        this._addAssociatedEventSources(collection);
+                    }
+                }
+            }, this);
+            this._deferEvents = false;
+            ModelProto.trigger.apply(this, eventArguments);
+            this._processPendingEvents();
+        },
+
         // Process all pending events after the entire object graph has been updated
         _processPendingEvents:function () {
             if (!this._processedEvents) {
@@ -419,6 +608,12 @@
                     val && val._processPendingEvents();
                 }, this);
 
+                _.each(this._associatedEventSources, function(model) {
+                    model._processPendingEvents();
+                }, this);
+                this._associatedEventSources = [];
+
+                delete this._orphanIndex;
                 delete this._processedEvents;
             }
         },
@@ -430,6 +625,8 @@
                 this._pendingEvents = this._pendingEvents || [];
                 // Maintain a queue of pending events to trigger after the entire object graph is updated.
                 this._pendingEvents.push({c:this, a:arguments});
+            } else if (name == "destroy") {
+                this._processDestroyEvent(arguments);
             } else {
                 ModelProto.trigger.apply(this, arguments);
             }
@@ -546,12 +743,47 @@
         proxies[method] = BackboneCollection.prototype[method];
 
         CollectionProto[method] = function (models, options) {
+            var reverseRelation = this._reverseRelation;
+            var reverseModel = this._reverseModel;
+            var topLevel;
+
             //Short-circuit if this collection doesn't hold `AssociatedModels`
             if (this.model.prototype instanceof AssociatedModel && this.parents) {
                 //Find a map function if available and perform a transformation
                 arguments[0] = map2models(this.parents, this, models);
             }
-            return proxies[method].apply(this, arguments);
+
+            if (reverseRelation) {
+                var models = [].concat(arguments[0]);
+                topLevel = !this._deferEvents;
+                this._deferEvents = true;
+                _.each(models, function(model) { model._deferEvents = true; });
+                var orphans, silent = (options || {}).silent;
+                switch (method) {
+                    case 'remove':
+                        orphans = models;
+                        break;
+                    case 'reset':
+                        orphans = _.difference(this.models, models);
+                        break;
+                };
+                if (orphans) {
+                    reverseModel._propagateReverseRemove(reverseRelation.reverseOf, orphans, method, options);
+                }
+            }
+
+            var result = proxies[method].apply(this, arguments);
+
+            if (reverseRelation) {
+                if (method != 'remove') {
+                    reverseModel._propagateReverseAdd(reverseRelation.reverseOf, [].concat(result));
+                }
+                if (topLevel) {
+                    this._processPendingEvents();
+                }
+            }
+
+            return result;
         }
     });
 
@@ -569,6 +801,7 @@
 
     // Attach process pending event functionality on collections as well. Re-use from `AssociatedModel`
     CollectionProto._processPendingEvents = AssociatedModel.prototype._processPendingEvents;
+    CollectionProto._addAssociatedEventSources = AssociatedModel.prototype._addAssociatedEventSources;
 
 
 }).call(this);
