@@ -1128,6 +1128,32 @@ $(document).ready(function () {
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
 
+    test("reverse relation construct parent in child", 3, function() {
+        var newSon = new Son({
+            name: "newSon",
+            mother: {
+                name: "newMother"
+            }
+        });
+        var mother = newSon.get('mother');
+        ok(mother instanceof Mother, "created an instance of Mother");
+        equal(mother.get('name'), "newMother");
+        equal(mother.get('sons[0].name'), "newSon");
+    });
+
+    test("reverse relation construct child in parent", 3, function() {
+        var newMother = new Mother({
+            name: "newMother",
+            sons: [{
+                name: "newSon"
+            }]
+        });
+        var son = newMother.get('sons[0]');
+        ok(son instanceof Son, "created an instance of Son");
+        equal(son.get('name'), "newSon");
+        equal(son.get('mother.name'), "newMother");
+    });
+
 
     test("reverse relation set mother", 37, function() {
         son1.on("change:mother",                assert_son1_in_mother1);

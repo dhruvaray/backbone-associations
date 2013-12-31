@@ -272,7 +272,7 @@
                                 }
                             }
 
-                        } else if (relation.type === Backbone.One) {
+                        } else if (relation.type === Backbone.One || relation.type == Backbone._ManyReverse) {
 
                             if (!relatedModel)
                                 throw new Error('specify a relatedModel for Backbone.One type');
@@ -292,17 +292,11 @@
                                 data = currVal;
                             } else {
                                 newCtx = true;
+                                if (relation.type === Backbone._ManyReverse) {
+                                    this._updateReverseRelation(relation, data);
+                                    bubbleOK = false; // Suppress circular triggers of the form change:parent.children[0].parent...
+                                }
                             }
-
-                        } else if (relation.type === Backbone._ManyReverse) {
-
-                            if (currVal != val) {
-                                this._updateReverseRelation(relation, val);
-                            }
-
-                            data = val;
-                            bubbleOK = false; // Suppress circular triggers of the form change:parent.children[0].parent...
-
                         } else {
                             throw new Error('type attribute must be specified and have the values Backbone.One or Backbone.Many');
                         }
