@@ -20,7 +20,7 @@
     // Exported for the browser and CommonJS.
     var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
         CollectionProto, defaultEvents, AssociatedModel, pathChecker,
-        collectionEvents, delimiters, pathSeparator, sources = [];
+        collectionEvents, delimiters, pathSeparator, source;
 
     if (typeof exports !== 'undefined') {
         _ = require('underscore');
@@ -38,10 +38,6 @@
     BackboneCollection = Backbone.Collection;
     ModelProto = BackboneModel.prototype;
     CollectionProto = BackboneCollection.prototype;
-
-    // Built-in Backbone `events`.
-    defaultEvents = ["change", "add", "remove", "reset", "sort", "destroy"];
-    collectionEvents = ["reset", "sort"];
 
     Backbone.Associations = {
         VERSION: "0.5.4"
@@ -301,6 +297,7 @@
                 opt = args[0].split(":"),
                 eventType = opt[0],
                 catch_all = args[0] == "nested-change",
+                isChangeEvent = eventType === "change",
                 eventObject = args[1],
                 indexEventObject = -1,
                 _proxyCalls = relationValue._proxyCalls,
@@ -312,17 +309,15 @@
             //Short circuit the listen in to the nested-graph event
             if (catch_all) return;
 
-            var isDefaultEvent = _.indexOf(defaultEvents, eventType) !== -1;
-
-            // Find the specific object in the collection which has changed.
-            var source = sources.pop() || eventObject;
-            if (relationValue instanceof BackboneCollection && isDefaultEvent) {
-                indexEventObject = relationValue.indexOf(source);
-                sources.push(relationValue.parents[0]);
-            } else {
-                sources.push(relationValue);
+            if (relationValue instanceof BackboneCollection) {
+                // O(n) search :(
+                indexEventObject = relationValue.indexOf(source || eventObject);
             }
 
+            if (this instanceof BackboneModel) {
+                // A quicker way to identify the model which caused an update inside the collection (while bubbling up)
+                source = this;
+            }
             // Manipulate `eventPath`.
             eventPath = relationKey + ((indexEventObject !== -1 && (eventType === "change" || eventPath)) ?
                 "[" + indexEventObject + "]" : "") + (eventPath ? pathSeparator + eventPath : "");
@@ -348,16 +343,17 @@
 
 
             // Set up previous attributes correctly.
-            if ("change" === eventType) {
+            if (isChangeEvent) {
                 this._previousAttributes[relationKey] = relationValue._previousAttributes;
                 this.changed[relationKey] = relationValue;
             }
 
             // Bubble up event to parent `model` with new changed arguments.
+
             this.trigger.apply(this, cargs);
 
             //Only fire for change. Not change:attribute
-            if (Backbone.Associations.EVENTS_NC && "change" === eventType && this.get(eventPath) != args[2]) {
+            if (Backbone.Associations.EVENTS_NC && isChangeEvent && this.get(eventPath) != args[2]) {
                 var ncargs = ["nested-change", eventPath, args[1]];
                 args[2] && ncargs.push(args[2]); //args[2] will be options if present
                 this.trigger.apply(this, ncargs);
@@ -373,7 +369,7 @@
                 cargs[0] = eventType + ":" + basecolEventPath;
                 this.trigger.apply(this, cargs);
             }
-            sources.pop();
+            source = undefined;
 
             return this;
         },
