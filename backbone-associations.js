@@ -183,6 +183,8 @@
                 // Iterate over `this.relations` and `set` model and collection values
                 // if `relations` are available.
                 _.each(this.relations, function (relation) {
+                    relation = this._resolveRelation(relation, attributes);
+
                     var relationKey = relation.key,
                         relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
@@ -190,26 +192,10 @@
                         currVal = this.attributes[relationKey],
                         idKey = currVal && currVal.idAttribute,
                         val, relationOptions, data, relationValue, newCtx = false,
-                        reverseKey = relation.reverseKey, reverseRelation,
                         bubbleOK = Backbone.Associations.EVENTS_BUBBLE;
 
-                    // Call function if relatedModel is implemented as a function
-                    if (relatedModel && !(relatedModel.prototype instanceof BackboneModel))
-                        relatedModel = _.isFunction(relatedModel) ?
-                            relatedModel.call(this, relation, attributes) :
-                            relatedModel;
-
-                    // Get class if relation and map is stored as a string.
-                    if (relatedModel && _.isString(relatedModel)) {
-                        relatedModel = (relatedModel === Backbone.Self) ? this.constructor : map2Scope(relatedModel);
-                    }
-                    collectionType && _.isString(collectionType) && (collectionType = map2Scope(collectionType));
-                    map && _.isString(map) && (map = map2Scope(map));
                     // Merge in `options` specific to this relation.
                     relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
-
-                    if ((!relatedModel) && (!collectionType))
-                        throw new Error('specify either a relatedModel or collectionType');
 
                     if (attributes[relationKey]) {
                         // Get value of attribute with relation key in `val`.
@@ -223,26 +209,6 @@
                             // `collectionType` of defined `relation` should be instance of `Backbone.Collection`.
                             if (collectionType && !collectionType.prototype instanceof BackboneCollection) {
                                 throw new Error('collectionType must inherit from Backbone.Collection');
-                            }
-
-                            if (reverseKey) {
-                                var relatedProto = relatedModel.prototype;
-                                reverseRelation = {
-                                    type: Backbone._ManyReverse,
-                                    relatedModel: this.constructor,
-                                    key: reverseKey,
-                                    reverseOf: relation,
-                                }
-                                if (!relatedModel) {
-                                    throw new Error('must specify a relatedModel if specifying reverseKey');
-                                }
-                                if (!_.findWhere(relatedProto.relations || [], reverseRelation)) {
-                                    relatedProto.relations || (relatedProto.relations = []);
-                                    if (_.findWhere(relatedProto.relations, {key: reverseKey})) {
-                                        throw new Error('reverseKey "'+reverseKey+'" is the same as an existing key');
-                                    }
-                                    relatedProto.relations.push(reverseRelation);
-                                }
                             }
 
                             if (currVal) {
@@ -261,18 +227,18 @@
 
                                 if (val instanceof BackboneCollection) {
                                     data = val;
-                                    data._reverseRelation = reverseRelation;
-                                    data._reverseModel = this;
+                                    data._relation = relation;
+                                    data._relationModel = this;
                                 } else {
                                     data = collectionType ? new collectionType() : this._createCollection(relatedModel);
-                                    data._reverseRelation = reverseRelation;
-                                    data._reverseModel = this;
+                                    data._relation = relation;
+                                    data._relationModel = this;
                                     data._deferEvents = true;
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
 
-                        } else if (relation.type === Backbone.One || relation.type == Backbone._ManyReverse) {
+                        } else if (relation.type === Backbone.One) {
 
                             if (!relatedModel)
                                 throw new Error('specify a relatedModel for Backbone.One type');
@@ -292,10 +258,12 @@
                                 data = currVal;
                             } else {
                                 newCtx = true;
-                                if (relation.type === Backbone._ManyReverse) {
+                                if (relation.reverseKey) {
                                     this._updateReverseRelation(relation, data);
-                                    bubbleOK = false; // Suppress circular triggers of the form change:parent.children[0].parent...
                                 }
+                            }
+                            if (relation.reverseKey) {
+                                bubbleOK = false; // Suppress circular triggers of the form change:parent.children[0].parent...
                             }
                         } else {
                             throw new Error('type attribute must be specified and have the values Backbone.One or Backbone.Many');
@@ -321,7 +289,7 @@
                         var updated = attributes[relationKey];
                         var original = this.attributes[relationKey];
 
-                        if (relation.type == Backbone._ManyReverse && !updated) {
+                        if (relation.type == Backbone.One && relation.reverseKey && !updated) {
                             this._updateReverseRelation(relation, undefined);
                         }
 
@@ -445,6 +413,117 @@
             return collection;
         },
 
+
+        // Resolves the relatedModel, collectionType, and map.  Also
+        // builds and/or verifies reverse relations.  Caches the results to
+        // avoid doing this repeatedly (unless the relatedModel is defined by a function).
+        _resolveRelation:function (relation, attributes, modelType, reverseLookup) {
+            var relationKey = relation.key,
+                relatedModel = relation.relatedModel,
+                collectionType = relation.collectionType,
+                map = relation.map,
+                reverseKey = relation.reverseKey,
+                reverseOfType = function(relationType) {
+                    return relationType == Backbone.Many ? Backbone.One : Backbone.Many;
+                },
+                relationToString = function(modelType, relation) {
+                    var str = "Relation ";
+                    if (modelType.name) str += ' ' + modelType.name;
+                    str += ' type='+relation.type+' key='+relation.key+' reverseKey='+relation.reverseKey;
+                    return str;
+                },
+                relationsAreReverse = function(modela, a, modelb, b) {
+                    return (a.relatedModel === modelb &&
+                           b.relatedModel === modela &&
+                           a.reverseKey == b.key &&
+                           b.reverseKey == a.key &&
+                           a.type == reverseOfType(b.type));
+                };
+
+            if (relation._isResolved) return relation;
+
+            // No need to resolve a relation that won't be used, unless we're looking up a reverse
+            if (!(relationKey in attributes) && !reverseLookup) return relation;
+
+            var result = _.clone(relation);
+            result._isResolved = true
+
+            modelType || (modelType = this.constructor);
+
+            // Call function if relatedModel is implemented as a function
+            if (relatedModel && !(relatedModel.prototype instanceof BackboneModel)) {
+                if (_.isFunction(relatedModel)) {
+                    result._isResolved = false; // can't cache since function may return different values
+                    relatedModel = relatedModel.call(this, relation, attributes);
+                }
+            }
+
+            // Get class if relation and map is stored as a string.
+            if (relatedModel && _.isString(relatedModel)) {
+                relatedModel = (relatedModel === Backbone.Self) ? modelType : map2Scope(relatedModel);
+            }
+            collectionType && _.isString(collectionType) && (collectionType = map2Scope(collectionType));
+            map && _.isString(map) && (map = map2Scope(map));
+
+            _.extend(result, {
+                relatedModel: relatedModel,
+                collectionType: collectionType,
+                map: map
+            });
+
+            if ((!relatedModel) && (!collectionType))
+                throw new Error('specify either a relatedModel or collectionType');
+
+            // Verify validity of existing reverse relation, or construct missing
+            // reverse relation.
+            if (reverseKey && !reverseLookup) {
+                if (!relatedModel) {
+                    throw new Error('must specify a relatedModel if specifying reverseKey');
+                }
+                var relatedProto = relatedModel.prototype,
+                    reverseType = reverseOfType(relation.type),
+                    foundReverse = false;
+
+                _.each(relatedProto.relations || [], function (otherRelation) {
+                    otherRelation = this._resolveRelation(otherRelation, attributes, relatedModel, true);
+                    if (otherRelation.key === reverseKey && !relationsAreReverse(modelType, result, relatedModel, otherRelation)) {
+                        throw new Error("reverseKey of " +
+                                        relationToString(modelType, result) +
+                                        " conflicts with existing key of " +
+                                        relationToString(relatedModel, otherRelation));
+                    }
+                    if (otherRelation.reverseKey === relation.key && otherRelation.relatedModel == modelType) {
+                        if (!relationsAreReverse(modelType, result, relatedModel, otherRelation)) {
+                            throw new Error("Inconsistent reverse relations: "+
+                                            relationToString(modelType, relation) +
+                                            " vs. " +
+                                            relationToString(relatedModel, otherRelation));
+                        }
+                        foundReverse = true;
+                        return false; // lodash optimization
+                    }
+                }, this);
+
+                if (!foundReverse) {
+                    relatedProto.relations || (relatedProto.relations = []);
+                    relatedProto.relations.push({
+                        type: reverseType,
+                        relatedModel: modelType,
+                        key: reverseKey,
+                        reverseKey: relation.key,
+                        _isResolved: true
+                    });
+                }
+            }
+
+            var result = relation._isResolved ? relation : _.clone(relation);
+            return _.extend(result, {
+                relatedModel: relatedModel,
+                collectionType: collectionType,
+                map: map,
+            })
+        },
+
         // Called when a model updates a reverse key of a Many relation;
         // removes/adds from appropriate collections.
         _updateReverseRelation:function(relation, newValue) {
@@ -455,17 +534,26 @@
             this._deferEvents = true;
             this._reverseSetPending = true;
 
+            var reverseKey = relation.reverseKey;
             var oldValue = this.attributes[relation.key];
             var collection;
-            if (oldValue && oldValue != newValue && (collection = oldValue.attributes[relation.reverseOf.key])) {
+            if (oldValue && oldValue != newValue && (collection = oldValue.attributes[reverseKey])) {
                 collection._deferEvents = true;
                 if (!this._reverseRemovePending) {
                     this._newReverseModel = newValue;
                     collection.remove(this);
                 }
-                this._addAssociatedEventSources(collection);
+                this._addAssociatedEventSources(collection, true);
             }
-            if (newValue && (collection = newValue.attributes[relation.reverseOf.key])) {
+            if (newValue && (collection = newValue.attributes[reverseKey])) {
+                if (!(collection instanceof BackboneCollection)) {
+                    var attrs = {};
+                    newValue._deferEvents = true
+                    newValue.attributes[reverseKey] = null;
+                    attrs[reverseKey] = collection;
+                    newValue._setAttr(attrs, collection);
+                    collection = newValue.attributes[reverseKey];
+                }
                 collection._deferEvents = true;
                 collection.add(this);
             }
@@ -475,14 +563,13 @@
         // Called when models are removed from a Many relation; sets their
         // their reverseKeys to null (unless the model is in the midst of
         // a setting the reverse key to something else).
-        _propagateReverseRemove:function (relation, models, method, options) {
+        _propagateReverseRemove:function (collection, relation, models, method, options) {
             if (this._deferReverseRelations) {
                 this._deferReverseRelation("_propagateReverseRemove", arguments);
                 return;
             }
 
             var reverseKey = relation.reverseKey;
-            var collection = this.attributes[relation.key];
             var silent = (options || {}).silent;
             var attrs = {}
 
@@ -507,12 +594,12 @@
                 }
             }, this);
 
-            collection._addAssociatedEventSources(models);
+            collection._addAssociatedEventSources(models, true);
         },
 
-        // Called when models are removed from a Many relation; sets their
+        // Called when models are added to a Many relation; sets their
         // their reverseKeys to the new value.
-        _propagateReverseAdd:function (relation, models) {
+        _propagateReverseAdd:function (collection, relation, models) {
             if (this._deferReverseRelations) {
                 this._deferReverseRelation("_propagateReverseAdd", arguments);
                 return;
@@ -526,7 +613,7 @@
                     model._setAttr(attrs);
                 }
             }, this);
-            this.attributes[relation.key]._addAssociatedEventSources(models);
+            collection._addAssociatedEventSources(models, true);
         },
 
         _deferReverseRelation: function(method, args) {
@@ -551,7 +638,8 @@
         // severed (i.e. model no longer member of collection) and so
         // wouldn't be found when traversing relationships when processing
         // the deferred events.
-        _addAssociatedEventSources:function (sources) {
+        _addAssociatedEventSources:function (sources, really) {
+            if (!really) return;
             this._associatedEventSources || (this._associatedEventSources = []);
             this._associatedEventSources = this._associatedEventSources.concat(sources);
         },
@@ -561,25 +649,24 @@
         // "change" events.
         _processDestroyEvent:function (eventArguments) {
             _.each(this.relations || [], function(relation) {
-                if (relation.type == Backbone._ManyReverse) {
+                if (relation.type == Backbone.One && relation.reverseKey) {
                     this._deferEvents = true;
-                    var reverseKey = relation.key,
-                        reverseModel = this.attributes[reverseKey],
+                    var reverseModel = this.attributes[relation.key],
                         attrs = {};
                     if (reverseModel) {
-                        var collection = reverseModel.attributes[relation.reverseOf.key];
+                        var collection = reverseModel.attributes[relation.reverseKey];
                         collection._deferEvents = true;
 
                         // disconnect reverse relation, silently to avoid
                         // change events
-                        this.attributes[reverseKey] = null;
+                        this.attributes[relation.key] = null;
                         collection.remove(this, {silent: true});
 
                         // manually trigger "remove" and "destroy" events
                         this.trigger("remove", this, collection);
                         collection.trigger("remove destroy", this, collection);
 
-                        this._addAssociatedEventSources(collection);
+                        this._addAssociatedEventSources(collection, true);
                     }
                 }
             }, this);
@@ -743,8 +830,9 @@
         proxies[method] = BackboneCollection.prototype[method];
 
         CollectionProto[method] = function (models, options) {
-            var reverseRelation = this._reverseRelation;
-            var reverseModel = this._reverseModel;
+            var relation = this._relation;
+            var reverseKey = relation && relation.reverseKey;
+            var relationModel = this._relationModel;
             var topLevel;
 
             //Short-circuit if this collection doesn't hold `AssociatedModels`
@@ -753,7 +841,7 @@
                 arguments[0] = map2models(this.parents, this, models);
             }
 
-            if (reverseRelation) {
+            if (reverseKey) {
                 var models = [].concat(arguments[0]);
                 topLevel = !this._deferEvents;
                 this._deferEvents = true;
@@ -768,15 +856,15 @@
                         break;
                 };
                 if (orphans) {
-                    reverseModel._propagateReverseRemove(reverseRelation.reverseOf, orphans, method, options);
+                    relationModel._propagateReverseRemove(this, relation, orphans, method, options);
                 }
             }
 
             var result = proxies[method].apply(this, arguments);
 
-            if (reverseRelation) {
+            if (reverseKey) {
                 if (method != 'remove') {
-                    reverseModel._propagateReverseAdd(reverseRelation.reverseOf, [].concat(result));
+                    relationModel._propagateReverseAdd(this, relation, [].concat(result));
                 }
                 if (topLevel) {
                     this._processPendingEvents();

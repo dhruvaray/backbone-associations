@@ -1050,6 +1050,89 @@ $(document).ready(function () {
         throws(function() { new Experience(); }, /teacher/);
     });
 
+    window.TestAssociatedCircular = {}
+
+    test("reverse relation defined on child", function() {
+        var Zoo = TestAssociatedCircular.Zoo = Backbone.AssociatedModel.extend({
+            defaults: {
+                name:"",
+                animals: []
+            }
+        });
+        var Animal = TestAssociatedCircular.Animal = Backbone.AssociatedModel.extend({
+            relations: [{
+                type: Backbone.One,
+                key: "zoo",
+                relatedModel: "TestAssociatedCircular.Zoo",
+                reverseKey: "animals"
+            }],
+            defaults: {
+                name: ""
+            }
+        });
+        var zoo = new Zoo({name: "zoo"});
+        var animal = new Animal({name: "animal"});
+        animal.set('zoo', zoo);
+        equal(zoo.get('animals[0].name'), "animal");
+    });
+
+    test("reverse relation defined in both directions", function() {
+        var Zoo = TestAssociatedCircular.Zoo = Backbone.AssociatedModel.extend({
+            relations: [{
+                type: Backbone.Many,
+                key: "animals",
+                relatedModel: "TestAssociatedCircular.Animal",
+                reverseKey: "zoo"
+            }],
+            defaults: {
+                name:"",
+                animals: []
+            }
+        });
+        var Animal = TestAssociatedCircular.Animal = Backbone.AssociatedModel.extend({
+            relations: [{
+                type: Backbone.One,
+                key: "zoo",
+                relatedModel: "TestAssociatedCircular.Zoo",
+                reverseKey: "animals"
+            }],
+            defaults: {
+                name: ""
+            }
+        });
+        var zoo = new Zoo({name: "zoo"});
+        var animal = new Animal({name: "animal"});
+        animal.set('zoo', zoo);
+        equal(zoo.get('animals[0].name'), "animal");
+    });
+
+    test("reverse relation defined inconsistently", function() {
+        var Zoo = TestAssociatedCircular.Zoo = Backbone.AssociatedModel.extend({
+            relations: [{
+                type: Backbone.Many,
+                key: "animals",
+                relatedModel: "TestAssociatedCircular.Animal",
+                reverseKey: "zoo"
+            }],
+            defaults: {
+                name:"",
+                animals: []
+            }
+        });
+        var Animal = TestAssociatedCircular.Animal = Backbone.AssociatedModel.extend({
+            relations: [{
+                type: Backbone.One,
+                key: "livesIn",
+                relatedModel: "TestAssociatedCircular.Zoo",
+                reverseKey: "animals"
+            }],
+            defaults: {
+                name: ""
+            }
+        });
+        throws(function() { new Zoo(); }, /Inconsistent/);
+    });
+
     test("reverse relation model construction", 29, function() {
 
         // reverse relations should not be added until after construction (including
