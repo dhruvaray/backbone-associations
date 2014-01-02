@@ -19,8 +19,8 @@
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
     var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
-        CollectionProto, defaultEvents, AssociatedModel, pathChecker,
-        collectionEvents, delimiters, pathSeparator, source;
+        CollectionProto, AssociatedModel, pathChecker,
+        delimiters, pathSeparator, source;
 
     if (typeof exports !== 'undefined') {
         _ = require('underscore');
@@ -225,8 +225,10 @@
 
                                 if (val instanceof BackboneCollection) {
                                     data = val;
+                                    this._setParentForChild(data);
                                 } else {
                                     data = collectionType ? new collectionType() : this._createCollection(relatedModel);
+                                    this._setParentForChild(data);
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
@@ -240,6 +242,8 @@
                                 throw new Error('specify an AssociatedModel for Backbone.One type');
 
                             data = val instanceof AssociatedModel ? val : new relatedModel(val, relationOptions);
+                            this._setParentForChild(data);
+
                             //Is the passed in data for the same key?
                             if (currVal && data.attributes[idKey] &&
                                 currVal.attributes[idKey] === data.attributes[idKey]) {
@@ -257,7 +261,6 @@
                             throw new Error('type attribute must be specified and have the values Backbone.One or Backbone.Many');
                         }
 
-
                         attributes[relationKey] = data;
                         relationValue = data;
 
@@ -272,24 +275,31 @@
                         }
 
                     }
-                    //Distinguish between the value of undefined versus a set no-op
                     if (attributes.hasOwnProperty(relationKey)) {
-                        //Maintain reverse pointers - a.k.a parents
                         var updated = attributes[relationKey];
-                        var original = this.attributes[relationKey];
-                        if (updated) {
-                            updated.parents = updated.parents || [];
-                            (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
-                        } else if (original && original.parents.length > 0) { // New value is undefined
-                            original.parents = _.difference(original.parents, [this]);
-                            // Don't bubble to this parent anymore
-                            original._proxyCallback && original.off("all", original._proxyCallback, this);
+                        if (!updated) { // New value is undefined or null
+                            var original = this.attributes[relationKey];
+                            if (original && original.parents.length > 0) {
+                                original.parents = _.difference(original.parents, [this]);
+                                // Don't bubble to this parent anymore
+                                original._proxyCallback && original.off("all", original._proxyCallback, this);
+                            }
                         }
                     }
+
                 }, this);
             }
             // Return results for `BackboneModel.set`.
             return  ModelProto.set.call(this, attributes, options);
+        },
+
+        // Set the parent for the child
+        _setParentForChild: function (child) {
+            //Maintain reverse pointers - a.k.a parents
+            if (child) {
+                child.parents = child.parents || [];
+                (_.indexOf(child.parents, this) == -1) && child.parents.push(this);
+            }
         },
         // Bubble-up event to `parent` Model
         _bubbleEvent:function (relationKey, relationValue, eventArguments) {
