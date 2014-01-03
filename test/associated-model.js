@@ -1283,6 +1283,17 @@ $(document).ready(function () {
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
 
+    test("reverse relation set mother no-op", 1, function () {
+        // potential inifinite recursion: setting son0's mother to mother0
+        // could cause it to re-add to mother0's sons collection, which
+        // could re-set son0's mother to mother0.
+        mother0.set("id", 0, { silent: true});
+
+        son0.set("mother", mother0);
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
     test("reverse relation add son", 37, function () {
         son1.on("change:mother",                assert_son1_in_mother1);
         mother0.on("remove:sons",               assert_son1_in_mother1);
@@ -1370,6 +1381,20 @@ $(document).ready(function () {
             "nested-change"
         ];
         expectedEvents.teacherStudents = ["change", "change:mother"];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
+
+    test("reverse relation set sons no-op", 1, function () {
+
+        // potential inifinite recursion: setting mother0's
+        // sons could cause son0 to set its mother to mother0, which will
+        // 'merge' its attributes and attempt to set sons to [son0, son1] again.
+        mother0.set("id", 0, { silent: true});
+        mother0.set("sons", [son0, son1]);
+
+        expectedEvents.mother0 =     ["sort:sons"]
+        expectedEvents.mother0Sons = ["sort"]
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
