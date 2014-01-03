@@ -543,7 +543,7 @@
                     this._newReverseModel = newValue;
                     collection.remove(this);
                 }
-                this._addAssociatedEventSources(collection, true);
+                this._addAssociatedEventSources(collection);
             }
             if (newValue && (collection = newValue.attributes[reverseKey])) {
                 if (!(collection instanceof BackboneCollection)) {
@@ -594,7 +594,7 @@
                 }
             }, this);
 
-            collection._addAssociatedEventSources(models, true);
+            collection._addAssociatedEventSources(models);
         },
 
         // Called when models are added to a Many relation; sets their
@@ -613,7 +613,7 @@
                     model._setAttr(attrs);
                 }
             }, this);
-            collection._addAssociatedEventSources(models, true);
+            collection._addAssociatedEventSources(models);
         },
 
         _deferReverseRelation: function(method, args) {
@@ -638,8 +638,7 @@
         // severed (i.e. model no longer member of collection) and so
         // wouldn't be found when traversing relationships when processing
         // the deferred events.
-        _addAssociatedEventSources:function (sources, really) {
-            if (!really) return;
+        _addAssociatedEventSources:function (sources) {
             this._associatedEventSources || (this._associatedEventSources = []);
             this._associatedEventSources = this._associatedEventSources.concat(sources);
         },
@@ -666,7 +665,7 @@
                         this.trigger("remove", this, collection);
                         collection.trigger("remove destroy", this, collection);
 
-                        this._addAssociatedEventSources(collection, true);
+                        this._addAssociatedEventSources(collection);
                     }
                 }
             }, this);
