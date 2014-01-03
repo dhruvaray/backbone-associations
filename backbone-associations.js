@@ -316,10 +316,15 @@
                 basecolEventPath;
 
 
-            //Short circuit the listen in to the nested-graph event
+            // Short circuit the listen in to the nested-graph event
             if (catch_all) return;
 
-            if (relationValue instanceof BackboneCollection) {
+            // Short circuit the listen in to the wild-card event
+            if (Backbone.Associations.EVENTS_WILDCARD) {
+                if (/\[\*\]/g.test(eventPath)) return this;
+            }
+
+            if (relationValue instanceof BackboneCollection && (isChangeEvent || eventPath)) {
                 // O(n) search :(
                 indexEventObject = relationValue.indexOf(source || eventObject);
             }
@@ -329,19 +334,23 @@
                 source = this;
             }
             // Manipulate `eventPath`.
-            eventPath = relationKey + ((indexEventObject !== -1 && (eventType === "change" || eventPath)) ?
+            eventPath = relationKey + ((indexEventObject !== -1 && (isChangeEvent || eventPath)) ?
                 "[" + indexEventObject + "]" : "") + (eventPath ? pathSeparator + eventPath : "");
 
             // Short circuit collection * events
 
             if (Backbone.Associations.EVENTS_WILDCARD) {
-                if (/\[\*\]/g.test(eventPath)) return this;
                 basecolEventPath = eventPath.replace(/\[\d+\]/g, '[*]');
             }
 
             cargs = [];
             cargs.push.apply(cargs, args);
             cargs[0] = eventType + ":" + eventPath;
+
+            // Create a collection modified event with wild-card
+            if (Backbone.Associations.EVENTS_WILDCARD && eventPath !== basecolEventPath) {
+                cargs[0] = cargs[0] + " " + eventType + ":" + basecolEventPath;
+            }
 
             // If event has been already triggered as result of same source `eventPath`,
             // no need to re-trigger event to prevent cycle.
@@ -374,11 +383,6 @@
             // which allow event to be triggered on for next operation of `set`.
             if (_proxyCalls && eventPath) delete _proxyCalls[eventPath];
 
-            // Create a collection modified event with wild-card
-            if (Backbone.Associations.EVENTS_WILDCARD && eventPath !== basecolEventPath) {
-                cargs[0] = eventType + ":" + basecolEventPath;
-                this.trigger.apply(this, cargs);
-            }
             source = undefined;
 
             return this;
