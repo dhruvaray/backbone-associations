@@ -185,20 +185,23 @@
                 _.each(this.relations, function (relation) {
                     relation = this._resolveRelation(relation, attributes);
 
-                    var relationKey = relation.key,
-                        reverseKey = relation.reverseKey,
-                        relatedModel = relation.relatedModel,
-                        collectionType = relation.collectionType,
-                        map = relation.map,
-                        currVal = this.attributes[relationKey],
-                        idKey = currVal && currVal.idAttribute,
-                        val, relationOptions, data, relationValue, newCtx = false,
-                        bubbleOK = Backbone.Associations.EVENTS_BUBBLE;
+                    if (!relation) return;
 
-                    // Merge in `options` specific to this relation.
-                    relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
+                    var relationKey = relation.key,
+                        reverseKey = relation.reverseKey;
 
                     if (attributes[relationKey]) {
+                        var relatedModel = relation.relatedModel,
+                            collectionType = relation.collectionType,
+                            map = relation.map,
+                            currVal = this.attributes[relationKey],
+                            idKey = currVal && currVal.idAttribute,
+                            val, data, relationOptions, relationValue, newCtx = false,
+                            bubbleOK = Backbone.Associations.EVENTS_BUBBLE;
+
+                        // Merge in `options` specific to this relation.
+                        relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
+
                         // Get value of attribute with relation key in `val`.
                         val = _.result(attributes, relationKey);
                         // Map `val` if a transformation function is provided.
@@ -207,10 +210,6 @@
                         // If `relation.type` is `Backbone.Many`,
                         // Create `Backbone.Collection` with passed data and perform Backbone `set`.
                         if (relation.type === Backbone.Many) {
-                            // `collectionType` of defined `relation` should be instance of `Backbone.Collection`.
-                            if (collectionType && !collectionType.prototype instanceof BackboneCollection) {
-                                throw new Error('collectionType must inherit from Backbone.Collection');
-                            }
 
                             if (currVal) {
                                 // Setting this flag will prevent events from firing immediately. That way clients
@@ -245,12 +244,6 @@
 
                         } else if (relation.type === Backbone.One) {
 
-                            if (!relatedModel)
-                                throw new Error('specify a relatedModel for Backbone.One type');
-
-                            if (!(relatedModel.prototype instanceof Backbone.AssociatedModel))
-                                throw new Error('specify an AssociatedModel for Backbone.One type');
-
                             data = val instanceof AssociatedModel ? val : new relatedModel(val, relationOptions);
                             //Is the passed in data for the same key?
                             if (currVal && data.attributes[idKey] &&
@@ -270,8 +263,6 @@
                             if (reverseKey) {
                                 bubbleOK = false; // Suppress circular triggers of the form change:parent.children[0].parent...
                             }
-                        } else {
-                            throw new Error('type attribute must be specified and have the values Backbone.One or Backbone.Many');
                         }
 
 
@@ -292,20 +283,23 @@
                     //Distinguish between the value of undefined versus a set no-op
                     if (attributes.hasOwnProperty(relationKey)) {
                         var updated = attributes[relationKey];
-                        var original = this.attributes[relationKey];
-
-                        if (relation.type == Backbone.One && reverseKey && !updated) {
-                            this._updateReverseRelation(relation, undefined);
-                        }
 
                         //Maintain reverse pointers - a.k.a parents
                         if (updated) {
                             updated.parents = updated.parents || [];
                             (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
-                        } else if (original && original.parents.length > 0) { // New value is undefined
-                            original.parents = _.difference(original.parents, [this]);
-                            // Don't bubble to this parent anymore
-                            original._proxyCallback && original.off("all", original._proxyCallback, this);
+                        } else {
+                            var original = this.attributes[relationKey];
+
+                            if (reverseKey && relation.type == Backbone.One) {
+                                this._updateReverseRelation(relation, undefined);
+                            }
+
+                            if (original && original.parents.length > 0) { // New value is undefined
+                                original.parents = _.difference(original.parents, [this]);
+                                // Don't bubble to this parent anymore
+                                original._proxyCallback && original.off("all", original._proxyCallback, this);
+                            }
                         }
                     }
                 }, this);
@@ -405,16 +399,10 @@
         },
 
         // Returns New `collection` of type `relation.relatedModel`.
-        _createCollection:function (type) {
-            var collection, relatedModel = type;
-            _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
+        _createCollection:function (relatedModel) {
             // Creates new `Backbone.Collection` and defines model class.
-            if (relatedModel && (relatedModel.prototype instanceof AssociatedModel) || _.isFunction(relatedModel)) {
-                collection = new BackboneCollection();
-                collection.model = relatedModel;
-            } else {
-                throw new Error('type must inherit from Backbone.AssociatedModel');
-            }
+            var collection = new BackboneCollection();
+            collection.model = relatedModel;
             return collection;
         },
 
@@ -429,13 +417,13 @@
                 map = relation.map,
                 reverseKey = relation.reverseKey;
 
+            // No need to resolve a relation that won't be used, unless we're looking up a reverse
+            if (!(relationKey in attributes) && !reverseLookup) return null;
+
             if (relation._isResolved) return relation;
 
-            // No need to resolve a relation that won't be used, unless we're looking up a reverse
-            if (!(relationKey in attributes) && !reverseLookup) return relation;
-
             var result = _.clone(relation);
-            result._isResolved = true
+            result._isResolved = true;
 
             modelType || (modelType = this.constructor);
 
@@ -460,8 +448,33 @@
                 map: map
             });
 
-            if ((!relatedModel) && (!collectionType))
-                throw new Error('specify either a relatedModel or collectionType');
+            // Check necessary values specified for type, relatedModel and
+            // collectionType
+            if (relation.type === Backbone.Many) {
+
+                if ((!relatedModel) && (!collectionType))
+                    throw new Error('specify either a relatedModel or collectionType');
+
+                if (relatedModel && !relatedModel.prototype instanceof AssociatedModel)
+                    throw new Error('relatedModel must inherit from Backbone.AssociatedModel');
+
+                // `collectionType` of defined `relation` should be instance of `Backbone.Collection`.
+                if (collectionType && !collectionType.prototype instanceof BackboneCollection)
+                    throw new Error('collectionType must inherit from Backbone.Collection');
+            }
+            else if (relation.type === Backbone.One) {
+
+                if (!relatedModel)
+                    throw new Error('specify a relatedModel for Backbone.One type');
+
+                if (!(relatedModel.prototype instanceof Backbone.AssociatedModel))
+                    throw new Error('specify an AssociatedModel for Backbone.One type');
+
+            } else {
+                throw new Error('type attribute must be specified and have the values Backbone.One or Backbone.Many');
+            }
+
+
 
             // Verify validity of existing reverse relation, or construct missing
             // reverse relation.
@@ -683,24 +696,27 @@
                     val && val._processPendingEvents();
                 }, this);
 
-                _.each(this._associatedEventSources, function(model) {
-                    model._processPendingEvents();
-                }, this);
-                this._associatedEventSources = [];
+                if (this._associatedEventSources) {
+                    _.each(this._associatedEventSources, function(model) {
+                        model._processPendingEvents();
+                    }, this);
+                    delete this._associatedEventSources;
+                }
 
                 delete this._orphanIndex;
                 delete this._processedEvents;
             }
         },
 
-        // Override trigger to defer events in the object graph.
+        // Override trigger to defer events in the object graph, and to
+        // intercept "destroy" events.
         trigger:function (name) {
             // Defer event processing
             if (this._deferEvents) {
                 this._pendingEvents = this._pendingEvents || [];
                 // Maintain a queue of pending events to trigger after the entire object graph is updated.
                 this._pendingEvents.push({c:this, a:arguments});
-            } else if (name == "destroy") {
+            } else if (name === "destroy") {
                 this._processDestroyEvent(arguments);
             } else {
                 ModelProto.trigger.apply(this, arguments);
