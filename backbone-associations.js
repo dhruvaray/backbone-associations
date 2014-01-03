@@ -186,6 +186,7 @@
                     relation = this._resolveRelation(relation, attributes);
 
                     var relationKey = relation.key,
+                        reverseKey = relation.reverseKey,
                         relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
                         map = relation.map,
@@ -227,13 +228,17 @@
 
                                 if (val instanceof BackboneCollection) {
                                     data = val;
-                                    data._relation = relation;
-                                    data._relationModel = this;
+                                    if (reverseKey) {
+                                        data._relationWithReverse = relation;
+                                        data._relationModel = this;
+                                    }
                                 } else {
                                     data = collectionType ? new collectionType() : this._createCollection(relatedModel);
-                                    data._relation = relation;
-                                    data._relationModel = this;
-                                    data._deferEvents = true;
+                                    if (reverseKey) {
+                                        data._relationWithReverse = relation;
+                                        data._relationModel = this;
+                                        data._deferEvents = true;
+                                    }
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
@@ -258,11 +263,11 @@
                                 data = currVal;
                             } else {
                                 newCtx = true;
-                                if (relation.reverseKey) {
+                                if (reverseKey) {
                                     this._updateReverseRelation(relation, data);
                                 }
                             }
-                            if (relation.reverseKey) {
+                            if (reverseKey) {
                                 bubbleOK = false; // Suppress circular triggers of the form change:parent.children[0].parent...
                             }
                         } else {
@@ -289,7 +294,7 @@
                         var updated = attributes[relationKey];
                         var original = this.attributes[relationKey];
 
-                        if (relation.type == Backbone.One && relation.reverseKey && !updated) {
+                        if (relation.type == Backbone.One && reverseKey && !updated) {
                             this._updateReverseRelation(relation, undefined);
                         }
 
@@ -422,23 +427,7 @@
                 relatedModel = relation.relatedModel,
                 collectionType = relation.collectionType,
                 map = relation.map,
-                reverseKey = relation.reverseKey,
-                reverseOfType = function(relationType) {
-                    return relationType == Backbone.Many ? Backbone.One : Backbone.Many;
-                },
-                relationToString = function(modelType, relation) {
-                    var str = "Relation ";
-                    if (modelType.name) str += ' ' + modelType.name;
-                    str += ' type='+relation.type+' key='+relation.key+' reverseKey='+relation.reverseKey;
-                    return str;
-                },
-                relationsAreReverse = function(modela, a, modelb, b) {
-                    return (a.relatedModel === modelb &&
-                           b.relatedModel === modela &&
-                           a.reverseKey == b.key &&
-                           b.reverseKey == a.key &&
-                           a.type == reverseOfType(b.type));
-                };
+                reverseKey = relation.reverseKey;
 
             if (relation._isResolved) return relation;
 
@@ -789,6 +778,25 @@
         }
     });
 
+    var reverseOfType = function(relationType) {
+        return relationType == Backbone.Many ? Backbone.One : Backbone.Many;
+    };
+
+    var relationToString = function(modelType, relation) {
+        var str = "Relation ";
+        if (modelType.name) str += ' ' + modelType.name;
+        str += ' type='+relation.type+' key='+relation.key+' reverseKey='+relation.reverseKey;
+        return str;
+    };
+
+    var relationsAreReverse = function(modela, a, modelb, b) {
+        return (a.relatedModel === modelb &&
+                b.relatedModel === modela &&
+                a.reverseKey == b.key &&
+                b.reverseKey == a.key &&
+                a.type == reverseOfType(b.type));
+    };
+
     // Tokenize the fully qualified event path
     var getPathArray = function (path) {
         if (path === '') return [''];
@@ -829,7 +837,7 @@
         proxies[method] = BackboneCollection.prototype[method];
 
         CollectionProto[method] = function (models, options) {
-            var relation = this._relation;
+            var relation = this._relationWithReverse;
             var reverseKey = relation && relation.reverseKey;
             var relationModel = this._relationModel;
             var topLevel;
