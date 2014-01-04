@@ -261,7 +261,7 @@
                             } else {
                                 newCtx = true;
                                 if (reverseKey) {
-                                    this._updateReverseRelation(relation, data);
+                                    this._updateReverseRelation(relation, data, relationOptions);
                                 }
                             }
                             if (reverseKey) {
@@ -296,7 +296,7 @@
                             var original = this.attributes[relationKey];
 
                             if (reverseKey && relation.type == Backbone.One) {
-                                this._updateReverseRelation(relation, undefined);
+                                this._updateReverseRelation(relation, undefined, relationOptions);
                             }
 
                             if (original && original.parents.length > 0) { // New value is undefined
@@ -351,6 +351,9 @@
                 basecolEventPath = eventPath.replace(/\[\d+\]/g, '[*]');
             }
 
+            var o = args[args.length-1], orphanedChangeAttr = o && o._orphanedChangeAttr;
+            if (orphanedChangeAttr) delete o._orphanedChangeAttr;
+
             cargs = [];
             cargs.push.apply(cargs, args);
             cargs[0] = eventType + ":" + eventPath;
@@ -363,18 +366,18 @@
             // Add `eventPath` in `_proxyCalls` to keep track of already triggered `event`.
             _proxyCalls[eventPath] = true;
 
-
             // Set up previous attributes correctly.
             if ("change" === eventType) {
                 this._previousAttributes[relationKey] = relationValue._previousAttributes;
                 this.changed[relationKey] = relationValue;
             }
 
+
             // Bubble up event to parent `model` with new changed arguments.
             this.trigger.apply(this, cargs);
 
             //Only fire for change. Not change:attribute
-            if (Backbone.Associations.EVENTS_NC && "change" === eventType && this.get(eventPath) != args[2]) {
+            if (Backbone.Associations.EVENTS_NC && "change" === eventType && this.get(eventPath) != args[2] && !orphanedChangeAttr) {
                 var ncargs = ["nested-change", eventPath, args[1]];
                 args[2] && ncargs.push(args[2]); //args[2] will be options if present
                 this.trigger.apply(this, ncargs);
@@ -532,7 +535,7 @@
 
         // Called when a model updates a reverse key of a Many relation;
         // removes/adds from appropriate collections.
-        _updateReverseRelation:function(relation, newValue) {
+        _updateReverseRelation:function(relation, newValue, options) {
             if (this._deferReverseRelations) {
                 this._deferReverseRelation("_updateReverseRelation", arguments);
                 return;
@@ -547,7 +550,7 @@
                 collection._deferEvents = true;
                 if (!this._reverseRemovePending) {
                     this._newReverseModel = newValue;
-                    collection.remove(this);
+                    collection.remove(this, options);
                 }
                 this._addAssociatedEventSources(collection);
             }
@@ -557,11 +560,11 @@
                     newValue._deferEvents = true
                     newValue.attributes[reverseKey] = null;
                     attrs[reverseKey] = collection;
-                    newValue._setAttr(attrs, collection);
+                    newValue._setAttr(attrs, collection, options);
                     collection = newValue.attributes[reverseKey];
                 }
                 collection._deferEvents = true;
-                collection.add(this);
+                collection.add(this, options);
             }
             delete this._reverseSetPending;
         },
@@ -596,7 +599,7 @@
                 if (method === "remove" && !silent) {
                     collection.trigger(method, model, collection, options);
                     collection.trigger("change", model, options);
-                    collection.trigger("change:"+reverseKey, model, model._newReverseModel, options);
+                    collection.trigger("change:"+reverseKey, model, model._newReverseModel, _.extend({}, options, {_orphanedChangeAttr: true}));
                 }
             }, this);
 
@@ -605,7 +608,7 @@
 
         // Called when models are added to a Many relation; sets their
         // their reverseKeys to the new value.
-        _propagateReverseAdd:function (collection, relation, models) {
+        _propagateReverseAdd:function (collection, relation, models, options) {
             if (this._deferReverseRelations) {
                 this._deferReverseRelation("_propagateReverseAdd", arguments);
                 return;
@@ -616,7 +619,7 @@
             _.each(models, function(model) {
                 if (!model._reverseSetPending && model.attributes[reverseKey] != this) {
                     model._deferEvents = true;
-                    model._setAttr(attrs);
+                    model._setAttr(attrs, options);
                 }
             }, this);
             collection._addAssociatedEventSources(models);
@@ -873,7 +876,7 @@
                 topLevel = !this._deferEvents;
                 this._deferEvents = true;
                 _.each(models, function(model) { model._deferEvents = true; });
-                var orphans, silent = (options || {}).silent;
+                var orphans;
                 switch (method) {
                     case 'remove':
                         orphans = models;
@@ -891,7 +894,7 @@
 
             if (reverseKey) {
                 if (method != 'remove') {
-                    relationModel._propagateReverseAdd(this, relation, [].concat(result));
+                    relationModel._propagateReverseAdd(this, relation, [].concat(result), options);
                 }
                 if (topLevel) {
                     this._processPendingEvents();
