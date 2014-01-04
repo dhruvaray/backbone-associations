@@ -207,6 +207,8 @@
                         // Map `val` if a transformation function is provided.
                         val = map ? map.call(this, val, collectionType ? collectionType : relatedModel) : val;
 
+                        if (val == currVal) return;
+
                         // If `relation.type` is `Backbone.Many`,
                         // Create `Backbone.Collection` with passed data and perform Backbone `set`.
                         if (relation.type === Backbone.Many) {
@@ -245,17 +247,16 @@
                         } else if (relation.type === Backbone.One) {
 
                             data = val instanceof AssociatedModel ? val : new relatedModel(val, relationOptions);
+
                             //Is the passed in data for the same key?
                             if (currVal && data.attributes[idKey] != null &&
                                 currVal.attributes[idKey] === data.attributes[idKey]) {
 
-                                if (currVal !== val) {
-                                    // Setting this flag will prevent events from firing immediately. That way clients
-                                    // will not get events until the entire object graph is updated.
-                                    currVal._deferEvents = true;
-                                    // Perform the traditional `set` operation
-                                    currVal._set(val instanceof AssociatedModel ? val.attributes : val, relationOptions);
-                                }
+                                // Setting this flag will prevent events from firing immediately. That way clients
+                                // will not get events until the entire object graph is updated.
+                                currVal._deferEvents = true;
+                                // Perform the traditional `set` operation
+                                currVal._set(val instanceof AssociatedModel ? val.attributes : val, relationOptions);
                                 data = currVal;
                             } else {
                                 newCtx = true;
