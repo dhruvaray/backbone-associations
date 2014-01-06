@@ -980,6 +980,40 @@ $(document).ready(function () {
         emp.get('works_for').get("locations").at(0).set('zip', 94403, {dummy:true});
     });
 
+    test("relation resolution caching", 4, function() {
+        ok(_.all(emp.relations, function(relation) { return relation._isResolved;}), "Employee relations cached");
+        ok(_.all(mother0.relations, function(relation) { return relation._isResolved;}), "Mother relations cached");
+        ok(_.all(son0.relations, function(relation) { return relation._isResolved;}), "Son relations cached");
+
+        var Club = Backbone.AssociatedModel.extend({
+            relations:[{
+                type:Backbone.Many,
+                key:'members',
+                relatedModel:function (relation, attributes) {
+                    return function (attrs, options) {
+                        if (_.isArray(attrs.dependents)) {
+                            return new Employee(attrs);
+                        }
+
+                        return new Dependent(attrs);
+                    }
+                }
+            }],
+            defaults:{
+                name:"",
+                members:[]
+            },
+        });
+
+        var club = new Club({
+            name:"Club X"
+        });
+
+        ok(_.all(club.relations, function(relation) { return !relation._isResolved;}), "polymorphic relations not cached");
+    });
+
+
+
     //
     // reverse relation assertions that test for atomicity: on any event
     // callback, all relations should be in place
@@ -3611,4 +3645,5 @@ $(document).ready(function () {
         emp.get("dependents").remove([child1]);
         emp.get("dependents").reset();
     });
+
 });

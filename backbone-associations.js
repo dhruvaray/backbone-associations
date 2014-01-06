@@ -183,12 +183,13 @@
                 // Iterate over `this.relations` and `set` model and collection values
                 // if `relations` are available.
                 _.each(this.relations, function (relation) {
+                    var relationKey = relation.key;
+
+                    if (!(relationKey in attributes)) return;
+
                     relation = this._resolveRelation(relation, attributes);
 
-                    if (!relation) return;
-
-                    var relationKey = relation.key,
-                        reverseKey = relation.reverseKey;
+                    var reverseKey = relation.reverseKey;
 
                     if (attributes[relationKey]) {
                         var relatedModel = relation.relatedModel,
@@ -284,26 +285,24 @@
                         }
 
                     }
-                    //Distinguish between the value of undefined versus a set no-op
-                    if (attributes.hasOwnProperty(relationKey)) {
-                        var updated = attributes[relationKey];
 
-                        //Maintain reverse pointers - a.k.a parents
-                        if (updated) {
-                            updated.parents = updated.parents || [];
-                            (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
-                        } else {
-                            var original = this.attributes[relationKey];
+                    var updated = attributes[relationKey];
 
-                            if (reverseKey && relation.type == Backbone.One) {
-                                this._updateReverseRelation(relation, undefined, relationOptions);
-                            }
+                    //Maintain reverse pointers - a.k.a parents
+                    if (updated) {
+                        updated.parents = updated.parents || [];
+                        (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
+                    } else {
+                        var original = this.attributes[relationKey];
 
-                            if (original && original.parents.length > 0) { // New value is undefined
-                                original.parents = _.difference(original.parents, [this]);
-                                // Don't bubble to this parent anymore
-                                original._proxyCallback && original.off("all", original._proxyCallback, this);
-                            }
+                        if (reverseKey && relation.type == Backbone.One) {
+                            this._updateReverseRelation(relation, undefined, relationOptions);
+                        }
+
+                        if (original && original.parents.length > 0) { // New value is undefined
+                            original.parents = _.difference(original.parents, [this]);
+                            // Don't bubble to this parent anymore
+                            original._proxyCallback && original.off("all", original._proxyCallback, this);
                         }
                     }
                 }, this);
@@ -418,29 +417,31 @@
         // builds and/or verifies reverse relations.  Caches the results to
         // avoid doing this repeatedly (unless the relatedModel is defined by a function).
         _resolveRelation:function (relation, attributes, modelType, reverseLookup) {
+            if (relation._isResolved) return relation;
+
             var relationKey = relation.key,
                 relatedModel = relation.relatedModel,
                 collectionType = relation.collectionType,
                 map = relation.map,
-                reverseKey = relation.reverseKey;
-
-            // No need to resolve a relation that won't be used, unless we're looking up a reverse
-            if (!(relationKey in attributes) && !reverseLookup) return null;
-
-            if (relation._isResolved) return relation;
-
-            var result = _.clone(relation);
-            result._isResolved = true;
-
-            modelType || (modelType = this.constructor);
+                reverseKey = relation.reverseKey,
+                canCache = true;
 
             // Call function if relatedModel is implemented as a function
             if (relatedModel && !(relatedModel.prototype instanceof BackboneModel)) {
                 if (_.isFunction(relatedModel)) {
-                    result._isResolved = false; // can't cache since function may return different values
+                    canCache = false; // can't cache since function may return different values
                     relatedModel = relatedModel.call(this, relation, attributes);
                 }
             }
+
+            if (canCache)
+                // Mark as resolved to skip future resolution
+                relation._isResolved = true;
+            else
+                // Work on a cloned copy to avoid changing the definition
+                relation = _.clone(relation);
+
+            modelType || (modelType = this.constructor);
 
             // Get class if relation and map is stored as a string.
             if (relatedModel && _.isString(relatedModel)) {
@@ -449,14 +450,15 @@
             collectionType && _.isString(collectionType) && (collectionType = map2Scope(collectionType));
             map && _.isString(map) && (map = map2Scope(map));
 
-            _.extend(result, {
+            // Store resolved values
+            _.extend(relation, {
                 relatedModel: relatedModel,
                 collectionType: collectionType,
                 map: map
             });
 
-            // Check necessary values specified for type, relatedModel and
-            // collectionType
+            // Check that necessary values are specified for type,
+            // relatedModel and collectionType
             if (relation.type === Backbone.Many) {
 
                 if ((!relatedModel) && (!collectionType))
@@ -465,7 +467,6 @@
                 if (relatedModel && !relatedModel.prototype instanceof AssociatedModel)
                     throw new Error('relatedModel must inherit from Backbone.AssociatedModel');
 
-                // `collectionType` of defined `relation` should be instance of `Backbone.Collection`.
                 if (collectionType && !collectionType.prototype instanceof BackboneCollection)
                     throw new Error('collectionType must inherit from Backbone.Collection');
             }
@@ -481,8 +482,6 @@
                 throw new Error('type attribute must be specified and have the values Backbone.One or Backbone.Many');
             }
 
-
-
             // Verify validity of existing reverse relation, or construct missing
             // reverse relation.
             if (reverseKey && !reverseLookup) {
@@ -495,14 +494,14 @@
 
                 _.each(relatedProto.relations || [], function (otherRelation) {
                     otherRelation = this._resolveRelation(otherRelation, attributes, relatedModel, true);
-                    if (otherRelation.key === reverseKey && !relationsAreReverse(modelType, result, relatedModel, otherRelation)) {
+                    if (otherRelation.key === reverseKey && !relationsAreReverse(modelType, relation, relatedModel, otherRelation)) {
                         throw new Error("reverseKey of " +
-                                        relationToString(modelType, result) +
+                                        relationToString(modelType, relation) +
                                         " conflicts with existing key of " +
                                         relationToString(relatedModel, otherRelation));
                     }
                     if (otherRelation.reverseKey === relation.key && otherRelation.relatedModel == modelType) {
-                        if (!relationsAreReverse(modelType, result, relatedModel, otherRelation)) {
+                        if (!relationsAreReverse(modelType, relation, relatedModel, otherRelation)) {
                             throw new Error("Inconsistent reverse relations: "+
                                             relationToString(modelType, relation) +
                                             " vs. " +
@@ -525,12 +524,7 @@
                 }
             }
 
-            var result = relation._isResolved ? relation : _.clone(relation);
-            return _.extend(result, {
-                relatedModel: relatedModel,
-                collectionType: collectionType,
-                map: map,
-            })
+            return relation;
         },
 
         // Called when a model updates a reverse key of a Many relation;
