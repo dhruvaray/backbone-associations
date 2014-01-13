@@ -20,7 +20,7 @@
     // Exported for the browser and CommonJS.
     var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
         CollectionProto, defaultEvents, AssociatedModel, pathChecker,
-        collectionEvents, delimiters, pathSeparator, sources = [];
+        eventArity, delimiters, pathSeparator, sources = [];
 
     if (typeof exports !== 'undefined') {
         _ = require('underscore');
@@ -41,7 +41,19 @@
 
     // Built-in Backbone `events`.
     defaultEvents = ["change", "add", "remove", "reset", "sort", "destroy"];
-    collectionEvents = ["reset", "sort"];
+    eventArity = {
+        add: 3,
+        remove: 3,
+        reset: 2,
+        sort: 2,
+        change: 3, // referring to change:attribute
+        destroy: 3,
+        request: 3,
+        sync: 3,
+        error: 3,
+        invalid: 3
+    };
+
 
     Backbone.Associations = {
         VERSION: "0.5.4"
@@ -95,9 +107,6 @@
     AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({
         // Define relations with Associated Model.
         relations:undefined,
-        // Define `Model` property which can keep track of already fired `events`,
-        // and prevent redundant event to be triggered in case of cyclic model graphs.
-        _proxyCalls:undefined,
 
         // When constructing a model, defer processing of reverse
         // relations until initialization of the model is complete, 
@@ -197,8 +206,7 @@
                             map = relation.map,
                             currVal = this.attributes[relationKey],
                             idKey = currVal && currVal.idAttribute,
-                            val, data, relationOptions, relationValue, newCtx = false,
-                            bubbleOK = Backbone.Associations.EVENTS_BUBBLE;
+                            val, data, relationOptions, relationValue, newCtx = false;
 
                         // Merge in `options` specific to this relation.
                         relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
@@ -265,11 +273,7 @@
                                     this._updateReverseRelation(relation, data, relationOptions);
                                 }
                             }
-                            if (reverseKey) {
-                                bubbleOK = false; // Suppress circular triggers of the form change:parent.children[0].parent...
-                            }
                         }
-
 
                         attributes[relationKey] = data;
                         relationValue = data;
@@ -278,8 +282,8 @@
                         // Only add callback if not defined or new Ctx has been identified.
                         if (newCtx || (relationValue && !relationValue._proxyCallback)) {
                             relationValue._proxyCallback = function () {
-                                return bubbleOK &&
-                                    this._bubbleEvent.call(this, relationKey, relationValue, arguments);
+                                return Backbone.Associations.EVENTS_BUBBLE &&
+                                    this._bubbleEvent.call(this, relation, relationValue, arguments);
                             };
                             relationValue.on("all", relationValue._proxyCallback, this);
                         }
@@ -311,19 +315,18 @@
             return  ModelProto.set.call(this, attributes, options);
         },
         // Bubble-up event to `parent` Model
-        _bubbleEvent:function (relationKey, relationValue, eventArguments) {
-            var args = eventArguments,
+        _bubbleEvent:function (relation, relationValue, eventArguments) {
+            var relationKey = relation.key,
+                args = eventArguments,
                 opt = args[0].split(":"),
                 eventType = opt[0],
                 catch_all = args[0] == "nested-change",
                 eventObject = args[1],
                 indexEventObject = -1,
-                _proxyCalls = relationValue._proxyCalls,
                 cargs,
                 eventPath = opt[1],
                 basecolEventPath,
                 orphanIndex = this._orphanIndex || {};
-
 
             //Short circuit the listen in to the nested-graph event
             if (catch_all) return;
@@ -332,11 +335,14 @@
 
             // Find the specific object in the collection which has changed.
             var source = sources.pop() || eventObject;
-            if (relationValue instanceof BackboneCollection && isDefaultEvent) {
+
+            var isCollection = relationValue instanceof BackboneCollection
+            isCollection || (isCollection = Backbone.VirtualCollection && isCollection instanceof Backbone.VirtualCollection)
+            if (isCollection && isDefaultEvent) {
                 indexEventObject = orphanIndex[source.cid] || relationValue.indexOf(source);
                 sources.push(relationValue.parents[0]);
             } else {
-                sources.push(relationValue);
+                sources.push(this);
             }
 
             // Manipulate `eventPath`.
@@ -344,33 +350,41 @@
                 "[" + indexEventObject + "]" : "") + (eventPath ? pathSeparator + eventPath : "");
 
             // Short circuit collection * events
-
             if (Backbone.Associations.EVENTS_WILDCARD) {
-                if (/\[\*\]/g.test(eventPath)) return this;
+                if (/\[\*\]/g.test(eventPath)) {
+                    sources.pop();
+                    return this;
+                }
                 basecolEventPath = eventPath.replace(/\[\d+\]/g, '[*]');
             }
-
-            var o = args[args.length-1], orphanedChangeAttr = o && o._orphanedChangeAttr;
-            if (orphanedChangeAttr) delete o._orphanedChangeAttr;
 
             cargs = [];
             cargs.push.apply(cargs, args);
             cargs[0] = eventType + ":" + eventPath;
 
-            // If event has been already triggered as result of same source `eventPath`,
-            // no need to re-trigger event to prevent cycle.
-            _proxyCalls = relationValue._proxyCalls = (_proxyCalls || {});
-            if (this._isEventAvailable.call(this, _proxyCalls, eventPath)) return this;
+            var o = eventArity[eventType];
+            var eventOpts = cargs[o] = _.clone(args[o] || {});
+            var orphanedChangeAttr = eventOpts._orphanedChangeAttr;
+            if (orphanedChangeAttr) delete eventOpts._orphanedChangeAttr;
+            if (!eventOpts._visited) {
+                eventOpts._visited = {
+                    models: {},
+                    relations: []
+                };
+                eventOpts._visited.models[eventObject.cid] = true;
+            }
 
-            // Add `eventPath` in `_proxyCalls` to keep track of already triggered `event`.
-            _proxyCalls[eventPath] = true;
+            if (eventOpts._visited.models[this.cid]) return;
+            if (relation.reverseOf && _.indexOf(eventOpts._visited.relations, relation.reverseOf) != -1) return;
+
+            eventOpts._visited.models[this.cid] = true;
+            eventOpts._visited.relations.push(relation);
 
             // Set up previous attributes correctly.
             if ("change" === eventType) {
                 this._previousAttributes[relationKey] = relationValue._previousAttributes;
                 this.changed[relationKey] = relationValue;
             }
-
 
             // Bubble up event to parent `model` with new changed arguments.
             this.trigger.apply(this, cargs);
@@ -382,11 +396,6 @@
                 this.trigger.apply(this, ncargs);
             }
 
-            // Remove `eventPath` from `_proxyCalls`,
-            // if `eventPath` and `_proxyCalls` are available,
-            // which allow event to be triggered on for next operation of `set`.
-            if (_proxyCalls && eventPath) delete _proxyCalls[eventPath];
-
             // Create a collection modified event with wild-card
             if (Backbone.Associations.EVENTS_WILDCARD && eventPath !== basecolEventPath) {
                 cargs[0] = eventType + ":" + basecolEventPath;
@@ -395,13 +404,6 @@
             sources.pop();
 
             return this;
-        },
-
-        // Has event been fired from this source. Used to prevent event recursion in cyclic graphs
-        _isEventAvailable:function (_proxyCalls, path) {
-            return _.find(_proxyCalls, function (value, eventKey) {
-                return path.indexOf(eventKey, path.length - eventKey.length) !== -1;
-            });
         },
 
         // Returns New `collection` of type `relation.relatedModel`.
@@ -490,7 +492,7 @@
                 }
                 var relatedProto = relatedModel.prototype,
                     reverseType = reverseOfType(relation.type),
-                    foundReverse = false;
+                    reverseRelation = false;
 
                 _.each(relatedProto.relations || [], function (otherRelation) {
                     otherRelation = this._resolveRelation(otherRelation, attributes, relatedModel, true);
@@ -507,21 +509,24 @@
                                             " vs. " +
                                             relationToString(relatedModel, otherRelation));
                         }
-                        foundReverse = true;
+                        reverseRelation = otherRelation;
                         return false; // lodash optimization
                     }
                 }, this);
 
-                if (!foundReverse) {
+                if (!reverseRelation) {
                     relatedProto.relations || (relatedProto.relations = []);
-                    relatedProto.relations.push({
+                    reverseRelation = {
                         type: reverseType,
                         relatedModel: modelType,
                         key: reverseKey,
                         reverseKey: relation.key,
                         _isResolved: true
-                    });
+                    };
+                    relatedProto.relations.push(reverseRelation);
                 }
+                relation.reverseOf = reverseRelation;
+                reverseRelation.reverseOf = relation;
             }
 
             return relation;
@@ -642,8 +647,10 @@
         // wouldn't be found when traversing relationships when processing
         // the deferred events.
         _addAssociatedEventSources:function (sources) {
-            this._associatedEventSources || (this._associatedEventSources = []);
-            this._associatedEventSources = this._associatedEventSources.concat(sources);
+            if (sources) {
+                this._associatedEventSources || (this._associatedEventSources = []);
+                this._associatedEventSources = this._associatedEventSources.concat(sources);
+            }
         },
 
         // Call this when intercepting a (non-deferred) "destroy" event, in
@@ -866,7 +873,7 @@
             }
 
             if (reverseKey) {
-                var models = [].concat(arguments[0]);
+                var models = arguments[0] && [].concat(arguments[0]);
                 topLevel = !this._deferEvents;
                 this._deferEvents = true;
                 _.each(models, function(model) { model._deferEvents = true; });
@@ -888,7 +895,7 @@
 
             if (reverseKey) {
                 if (method != 'remove') {
-                    relationModel._propagateReverseAdd(this, relation, [].concat(result), options);
+                    relationModel._propagateReverseAdd(this, relation, result && [].concat(result), options);
                 }
                 if (topLevel) {
                     this._processPendingEvents();

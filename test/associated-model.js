@@ -339,24 +339,18 @@ $(document).ready(function () {
             });
             allEvents= {
                 mother0: [],
-                mother0Sons: [],
                 mother1: [],
-                mother1Sons: [],
                 son0: [],
                 son1: [],
                 teacher: [],
-                teacherStudents: []
             };
             expectedEvents = JSON.parse(JSON.stringify(allEvents));
             var addEvent = function(source, args) { allEvents[source].push(args[0]) ; allEvents[source].sort() };
             mother0.on("all", function() { addEvent("mother0", arguments); });
-            mother0.get('sons').on("all", function() { addEvent("mother0Sons", arguments); });
             mother1.on("all", function() { addEvent("mother1", arguments); });
-            mother1.get('sons').on("all", function() { addEvent("mother1Sons", arguments); });
             son0.on("all", function() { addEvent("son0", arguments); });
             son1.on("all", function() { addEvent("son1", arguments); });
             teacher.on("all", function() { addEvent("teacher", arguments); });
-            teacher.get('students').on("all", function() { addEvent("teacherStudents", arguments); });
         }
     });
 
@@ -1195,9 +1189,7 @@ $(document).ready(function () {
         });
 
         expectedEvents.mother1 =         ["add:sons"];
-        expectedEvents.mother1Sons =     ["add"];
         expectedEvents.teacher =         ["add:students"];
-        expectedEvents.teacherStudents = ["add"];
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
@@ -1230,7 +1222,6 @@ $(document).ready(function () {
             "nested-change",
             "remove:sons"
         ];
-        expectedEvents.mother0Sons =     ["change", "change:mother", "remove"];
         expectedEvents.son1 =         ["add", "change", "change:mother", "remove"];
 
         expectedEvents.teacher = [
@@ -1240,7 +1231,6 @@ $(document).ready(function () {
             "change:students[1].mother",
             "nested-change",
         ];
-        expectedEvents.teacherStudents = ["change", "change:mother"];
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
@@ -1271,6 +1261,16 @@ $(document).ready(function () {
         equal(son.get('mother.name'), "newMother");
     });
 
+    test("reverse relation bubble through", 2, function() {
+        mother0.on("change:sons[0].name", function() {
+            equal(this.get('sons[0].name'), "newSonName");
+        });
+        son0.on("change:mother.name", function() {
+            equal(this.get('mother.name'), "newMotherName");
+        });
+        son0.set("name", "newSonName");
+        mother0.set("name", "newMotherName");
+    });
 
     test("reverse relation set mother", 37, function() {
         son1.on("change:mother",                assert_son1_in_mother1);
@@ -1294,7 +1294,6 @@ $(document).ready(function () {
             "nested-change",
             "remove:sons"
         ];
-        expectedEvents.mother0Sons =    ["change", "change:mother", "remove"];
         expectedEvents.mother1 =        [
             "add:sons",
             "change:sons[*]",
@@ -1303,7 +1302,6 @@ $(document).ready(function () {
             "change:sons[0].mother",
             "nested-change",
         ];
-        expectedEvents.mother1Sons =    ["add", "change", "change:mother"];
         expectedEvents.son1 =           ["add", "change", "change:mother", "remove"];
         expectedEvents.teacher =        [
             "change:students[*]",
@@ -1312,7 +1310,6 @@ $(document).ready(function () {
             "change:students[1].mother",
             "nested-change"
         ];
-        expectedEvents.teacherStudents = ["change", "change:mother"];
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
@@ -1359,7 +1356,6 @@ $(document).ready(function () {
             "nested-change",
             "remove:sons"
         ];
-        expectedEvents.mother0Sons =    ["change", "change:mother", "remove"];
         expectedEvents.mother1 =        [
             "add:sons",
             "change:sons[*]",
@@ -1368,7 +1364,6 @@ $(document).ready(function () {
             "change:sons[0].mother",
             "nested-change",
         ];
-        expectedEvents.mother1Sons =    ["add", "change", "change:mother"];
         expectedEvents.son1 =           ["add", "change", "change:mother", "remove"];
         expectedEvents.teacher =        [
             "change:students[*]",
@@ -1377,7 +1372,6 @@ $(document).ready(function () {
             "change:students[1].mother",
             "nested-change"
         ];
-        expectedEvents.teacherStudents = ["change", "change:mother"];
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
@@ -1404,7 +1398,6 @@ $(document).ready(function () {
             "nested-change",
             "remove:sons"
         ];
-        expectedEvents.mother0Sons =    ["change", "change:mother", "remove"];
         expectedEvents.mother1 =        [
             "add:sons",
             "change:sons[*]",
@@ -1414,7 +1407,6 @@ $(document).ready(function () {
             "nested-change",
             "sort:sons",
         ];
-        expectedEvents.mother1Sons =    ["add", "change", "change:mother", "sort"];
         expectedEvents.son1 =           ["add", "change", "change:mother", "remove"];
         expectedEvents.teacher =        [
             "change:students[*]",
@@ -1423,7 +1415,6 @@ $(document).ready(function () {
             "change:students[1].mother",
             "nested-change"
         ];
-        expectedEvents.teacherStudents = ["change", "change:mother"];
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
@@ -1446,7 +1437,6 @@ $(document).ready(function () {
         mother0.set("sons", [son0, son1]);
 
         expectedEvents.mother0 =     ["sort:sons"]
-        expectedEvents.mother0Sons = ["sort"]
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
@@ -1471,11 +1461,22 @@ $(document).ready(function () {
             "change:sons[2].mother",
             "nested-change",
         ];
-        expectedEvents.mother0Sons =    ["add", "change", "change:mother"];
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
 
+    test("reverse relation create with mother", 2, function() {
+
+        var newSon = new Son({
+            name: "newSon",
+            mother: mother0,
+        });
+        equal(newSon.get('mother.name'), "mother0");
+
+        expectedEvents.mother0 = [ "add:sons" ];
+
+        deepEqual(allEvents, expectedEvents, "trigger the expected events");
+    });
     test("reverse relation unset mother", 25, function () {
         son1.on("change:mother",         assert_son1_orphan);
         mother0.on("remove:sons",        assert_son1_orphan);
@@ -1494,7 +1495,6 @@ $(document).ready(function () {
             "change:sons[1].mother",
             "remove:sons"
         ];
-        expectedEvents.mother0Sons =    ["change", "change:mother", "remove"];
         expectedEvents.son1 =           ["change", "change:mother", "remove"];
         expectedEvents.teacher =        [
             "change:students[*]",
@@ -1503,7 +1503,6 @@ $(document).ready(function () {
             "change:students[1].mother",
             "nested-change"
         ];
-        expectedEvents.teacherStudents = ["change", "change:mother"];
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
@@ -1526,7 +1525,6 @@ $(document).ready(function () {
             "change:sons[1].mother",
             "remove:sons"
         ];
-        expectedEvents.mother0Sons =    ["change", "change:mother", "remove"];
         expectedEvents.son1 =           ["change", "change:mother", "remove"];
         expectedEvents.teacher =        [
             "change:students[*]",
@@ -1535,7 +1533,6 @@ $(document).ready(function () {
             "change:students[1].mother",
             "nested-change"
         ];
-        expectedEvents.teacherStudents = ["change", "change:mother"];
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
@@ -1550,11 +1547,9 @@ $(document).ready(function () {
 
         mother0.get("sons").reset([son0]);
 
-        expectedEvents.mother0Sons =    ["reset"];
         expectedEvents.mother0 =        [
             "reset:sons"
         ];
-        expectedEvents.mother0Sons =    ["reset"];
         expectedEvents.son1 =           ["change", "change:mother"];
         expectedEvents.teacher =        [
             "change:students[*]",
@@ -1563,7 +1558,6 @@ $(document).ready(function () {
             "change:students[1].mother",
             "nested-change"
         ];
-        expectedEvents.teacherStudents = ["change", "change:mother"];
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
@@ -1584,13 +1578,11 @@ $(document).ready(function () {
             "destroy:sons",
             "remove:sons"
         ];
-        expectedEvents.mother0Sons =    ["destroy", "remove"];
         expectedEvents.son1 =           ["destroy", "remove", "remove"];
         expectedEvents.teacher =        [
             "destroy:students",
             "remove:students",
         ];
-        expectedEvents.teacherStudents = ["destroy", "remove"];
 
         deepEqual(allEvents, expectedEvents, "trigger the expected events");
     });
