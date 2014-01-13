@@ -326,7 +326,8 @@
                 cargs,
                 eventPath = opt[1],
                 basecolEventPath,
-                orphanIndex = this._orphanIndex || {};
+                orphanIndex = this._orphanIndex || {},
+                isChange = "change" === eventType;
 
             //Short circuit the listen in to the nested-graph event
             if (catch_all) return;
@@ -336,9 +337,7 @@
             // Find the specific object in the collection which has changed.
             var source = sources.pop() || eventObject;
 
-            var isCollection = relationValue instanceof BackboneCollection
-            isCollection || (isCollection = Backbone.VirtualCollection && isCollection instanceof Backbone.VirtualCollection)
-            if (isCollection && isDefaultEvent) {
+            if (relationValue instanceof BackboneCollection && isDefaultEvent) {
                 indexEventObject = orphanIndex[source.cid] || relationValue.indexOf(source);
                 sources.push(relationValue.parents[0]);
             } else {
@@ -346,7 +345,7 @@
             }
 
             // Manipulate `eventPath`.
-            eventPath = relationKey + ((indexEventObject !== -1 && (eventType === "change" || eventPath)) ?
+            eventPath = relationKey + ((indexEventObject !== -1 && (isChange || eventPath)) ?
                 "[" + indexEventObject + "]" : "") + (eventPath ? pathSeparator + eventPath : "");
 
             // Short circuit collection * events
@@ -362,8 +361,14 @@
             cargs.push.apply(cargs, args);
             cargs[0] = eventType + ":" + eventPath;
 
-            var o = eventArity[eventType];
-            var eventOpts = cargs[o] = _.clone(args[o] || {});
+            var optsIndex = eventArity[eventType];
+            if (isChange || !optsIndex) {
+                if (this.get(eventPath) == cargs[cargs.length - 1]) {
+                    cargs.push({});
+                }
+                optsIndex = cargs.length - 1;
+            }
+            var eventOpts = cargs[optsIndex] = _.clone(args[optsIndex] || {});
             var orphanedChangeAttr = eventOpts._orphanedChangeAttr;
             if (orphanedChangeAttr) delete eventOpts._orphanedChangeAttr;
             if (!eventOpts._visited) {
@@ -381,7 +386,7 @@
             eventOpts._visited.relations.push(relation);
 
             // Set up previous attributes correctly.
-            if ("change" === eventType) {
+            if (isChange) {
                 this._previousAttributes[relationKey] = relationValue._previousAttributes;
                 this.changed[relationKey] = relationValue;
             }
@@ -390,9 +395,8 @@
             this.trigger.apply(this, cargs);
 
             //Only fire for change. Not change:attribute
-            if (Backbone.Associations.EVENTS_NC && "change" === eventType && this.get(eventPath) != args[2] && !orphanedChangeAttr) {
-                var ncargs = ["nested-change", eventPath, args[1]];
-                args[2] && ncargs.push(args[2]); //args[2] will be options if present
+            if (Backbone.Associations.EVENTS_NC && isChange && optsIndex === 2 && !orphanedChangeAttr) {
+                var ncargs = ["nested-change", eventPath, args[1], eventOpts];
                 this.trigger.apply(this, ncargs);
             }
 
