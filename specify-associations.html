@@ -189,6 +189,21 @@
             </dd>
         </dl>
 
+        <dl class="dl-horizontal">
+            <dt>remoteKey (optional)</dt>
+            <dd>
+                <p><span class="label label-info">v0.5.5+</span></p>Specify remoteKey to serialize the key to a different key name in toJSON() calls. Useful in ROR nested-attributes like scenarios.
+            </dd>
+        </dl>
+
+        <dl class="dl-horizontal">
+            <dt>isTransient (optional)</dt>
+            <dd>
+                <p><span class="label label-info">v0.5.5+</span></p> Default value is false. If isTransient is set to true, then the attribute will not be serialized in toJSON() calls.
+
+            </dd>
+        </dl>
+
     </div>
 </section>
 <section id="sa-one">
