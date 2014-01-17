@@ -1243,6 +1243,82 @@ $(document).ready(function () {
 
     });
 
+    test("Remote Key: Issue#78", 11, function () {
+
+        var Location = Backbone.AssociatedModel.extend({});
+
+        var Job = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'location',
+                    isTransient: true,
+                    relatedModel: Location
+                }
+            ]
+        });
+
+        var User = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'job',
+                    remoteKey: 'job_attributes',
+                    relatedModel: Job
+                }
+            ]
+        });
+
+        var MultiContainer = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'owner',
+                    remoteKey : 'owner_attributes',
+                    relatedModel: User
+                }
+            ]
+        });
+
+        var home = new MultiContainer();
+        var u = new User({name: "Chip Lay", job: new Job({name: 'dream_job', location: new Location({name: 'loc1'})})});
+        var u1 = new User({name: "John Sr"});
+        home.set('owner', [u,u1]);
+        equal(home.toJSON()['owner_attributes'].length,2);
+        equal(home.toJSON()['owner'],undefined);
+
+        var UniContainer = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'owner',
+                    remoteKey : 'owner_attributes',
+                    relatedModel: User
+                }
+            ]
+        });
+
+        var home2 = new UniContainer();
+        home2.set('owner', u);
+        equal(home2.toJSON()['owner_attributes']['name'],'Chip Lay');
+        equal(home2.toJSON()['owner_attributes']['job'], undefined);
+        equal(home2.toJSON()['owner_attributes']['job_attributes']['name'], 'dream_job');
+        equal(home2.toJSON()['owner_attributes']['job_attributes']['location'], undefined);
+        equal(home2.toJSON()['owner'],undefined);
+
+
+        var home3 = new UniContainer();
+        equal(home3.toJSON()['owner_attributes'],undefined);
+        equal(home3.toJSON()['owner'],undefined);
+
+
+        var home4 = new MultiContainer();
+        equal(home4.toJSON()['owner_attributes'],undefined);
+        equal(home4.toJSON()['owner'],undefined);
+
+
+    });
+
     test("Cycle save: Issue#51", 3, function () {
         var MyApp = {
             Models:{},
