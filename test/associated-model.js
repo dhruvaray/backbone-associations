@@ -1243,7 +1243,7 @@ $(document).ready(function () {
 
     });
 
-    test("Scope support: Issue#93", 1, function () {
+    test("Scope support: Issue#98", 1, function () {
 
         var scope = {};
 
