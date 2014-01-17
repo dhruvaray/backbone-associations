@@ -1265,8 +1265,8 @@ $(document).ready(function () {
             }
         });
 
-        home = new Container();
-        u = new User({id: 1, name: "Chip Lay"});
+        var home = new Container();
+        var u = new User({id: 1, name: "Chip Lay"});
 
         home.set('owner', u);
         equal(home.get('owner').get('name') == 'Chip Lay', true);
