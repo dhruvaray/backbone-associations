@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.5.4
+//  Backbone-associations.js 0.5.5
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -40,7 +40,7 @@
     CollectionProto = BackboneCollection.prototype;
 
     Backbone.Associations = {
-        VERSION: "0.5.4"
+        VERSION: "0.5.5"
     };
 
     // Define `getter` and `setter` for `separator`
