@@ -1243,6 +1243,38 @@ $(document).ready(function () {
 
     });
 
+    test("Scope support: Issue#93", 1, function () {
+
+        var scope = {};
+
+        var User = scope.User = Backbone.AssociatedModel.extend({
+
+        });
+
+        var Container = scope.Container = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'owner',
+                    relatedModel: 'User',
+                    scope: scope
+                }
+            ],
+            defaults: {
+                users: []
+            }
+        });
+
+        home = new Container();
+        u = new User({id: 1, name: "Chip Lay"});
+
+        home.set('owner', u);
+        equal(home.get('owner').get('name') == 'Chip Lay', true);
+
+
+    });
+
+
     test("Remote Key: Issue#78", 11, function () {
 
         var Location = Backbone.AssociatedModel.extend({});

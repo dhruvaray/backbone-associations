@@ -172,6 +172,7 @@
                     var relationKey = relation.key,
                         relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
+                        activationContext = relation.scope || root,
                         map = relation.map,
                         currVal = this.attributes[relationKey],
                         idKey = currVal && currVal.idAttribute,
@@ -185,10 +186,13 @@
 
                     // Get class if relation and map is stored as a string.
                     if (relatedModel && _.isString(relatedModel)) {
-                        relatedModel = (relatedModel === Backbone.Self) ? this.constructor : map2Scope(relatedModel);
+                        relatedModel = (relatedModel === Backbone.Self) ?
+                            this.constructor :
+                            map2Scope(relatedModel, activationContext);
                     }
-                    collectionType && _.isString(collectionType) && (collectionType = map2Scope(collectionType));
-                    map && _.isString(map) && (map = map2Scope(map));
+                    collectionType && _.isString(collectionType) &&
+                    (collectionType = map2Scope(collectionType, activationContext));
+                    map && _.isString(map) && (map = map2Scope(map, activationContext));
                     // Merge in `options` specific to this relation.
                     relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
 
@@ -226,7 +230,8 @@
                                 if (val instanceof BackboneCollection) {
                                     data = val;
                                 } else {
-                                    data = collectionType ? new collectionType() : this._createCollection(relatedModel);
+                                    data = collectionType ?
+                                        new collectionType() : this._createCollection(relatedModel, activationContext);
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
@@ -388,9 +393,9 @@
         },
 
         // Returns New `collection` of type `relation.relatedModel`.
-        _createCollection:function (type) {
+        _createCollection: function (type, context) {
             var collection, relatedModel = type;
-            _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
+            _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel, context));
             // Creates new `Backbone.Collection` and defines model class.
             if (relatedModel && (relatedModel.prototype instanceof AssociatedModel) || _.isFunction(relatedModel)) {
                 collection = new BackboneCollection();
@@ -514,10 +519,10 @@
         return _.isString(path) ? (path.match(delimiters)) : path || [];
     };
 
-    var map2Scope = function (path) {
+    var map2Scope = function (path, context) {
         return _.reduce(path.split(pathSeparator), function (memo, elem) {
             return memo[elem];
-        }, root);
+        }, context);
     };
 
     //Infer the relation from the collection's parents and find the appropriate map for the passed in `models`
