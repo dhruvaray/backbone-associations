@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.5.4
+//  Backbone-associations.js 0.5.5
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -19,8 +19,8 @@
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
     var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
-        CollectionProto, defaultEvents, AssociatedModel, pathChecker,
-        collectionEvents, delimiters, pathSeparator;
+        CollectionProto, AssociatedModel, pathChecker,
+        delimiters, pathSeparator, source;
 
     if (typeof exports !== 'undefined') {
         _ = require('underscore');
@@ -39,12 +39,8 @@
     ModelProto = BackboneModel.prototype;
     CollectionProto = BackboneCollection.prototype;
 
-    // Built-in Backbone `events`.
-    defaultEvents = ["change", "add", "remove", "reset", "sort", "destroy"];
-    collectionEvents = ["reset", "sort"];
-
     Backbone.Associations = {
-        VERSION: "0.5.4"
+        VERSION: "0.5.5"
     };
 
     // Define `getter` and `setter` for `separator`
@@ -82,7 +78,14 @@
     Backbone.Associations.SEPARATOR = ".";
     Backbone.Associations.getSeparator = getSeparator;
     Backbone.Associations.setSeparator = setSeparator;
+
+    Backbone.Associations.EVENTS_BUBBLE = true;
+    Backbone.Associations.EVENTS_WILDCARD = true;
+    Backbone.Associations.EVENTS_NC = true;
+
+
     setSeparator();
+
     // Define `AssociatedModel` (Extends Backbone.Model).
     AssociatedModel = Backbone.AssociatedModel = Backbone.Associations.AssociatedModel = BackboneModel.extend({
         // Define relations with Associated Model.
@@ -90,6 +93,7 @@
         // Define `Model` property which can keep track of already fired `events`,
         // and prevent redundant event to be triggered in case of cyclic model graphs.
         _proxyCalls:undefined,
+
 
         // Get the value of an attribute.
         get:function (attr) {
@@ -261,7 +265,8 @@
                         // Only add callback if not defined or new Ctx has been identified.
                         if (newCtx || (relationValue && !relationValue._proxyCallback)) {
                             relationValue._proxyCallback = function () {
-                                return this._bubbleEvent.call(this, relationKey, relationValue, arguments);
+                                return Backbone.Associations.EVENTS_BUBBLE &&
+                                    this._bubbleEvent.call(this, relationKey, relationValue, arguments);
                             };
                             relationValue.on("all", relationValue._proxyCallback, this);
                         }
@@ -286,69 +291,58 @@
             // Return results for `BackboneModel.set`.
             return  ModelProto.set.call(this, attributes, options);
         },
+
+
         // Bubble-up event to `parent` Model
         _bubbleEvent:function (relationKey, relationValue, eventArguments) {
             var args = eventArguments,
                 opt = args[0].split(":"),
                 eventType = opt[0],
                 catch_all = args[0] == "nested-change",
+                isChangeEvent = eventType === "change",
                 eventObject = args[1],
-                colObject = args[2],
                 indexEventObject = -1,
                 _proxyCalls = relationValue._proxyCalls,
                 cargs,
-                eventPath,
-                basecolEventPath,
-                isDefaultEvent = _.indexOf(defaultEvents, eventType) !== -1;
+                eventPath = opt[1],
+                basecolEventPath;
 
-            //Short circuit the listen in to the nested-graph event
+
+            // Short circuit the listen in to the nested-graph event
             if (catch_all) return;
 
-            // Change the event name to a fully qualified path.
-            _.size(opt) > 1 && (eventPath = opt[1]);
-
-            if (_.indexOf(collectionEvents, eventType) !== -1) {
-                colObject = eventObject;
+            // Short circuit the listen in to the wild-card event
+            if (Backbone.Associations.EVENTS_WILDCARD) {
+                if (/\[\*\]/g.test(eventPath)) return this;
             }
 
-            // Find the specific object in the collection which has changed.
-            if (relationValue instanceof BackboneCollection && isDefaultEvent && eventObject) {
-                var pathTokens = getPathArray(eventPath),
-                    initialTokens = _.initial(pathTokens), colModel;
-
-                colModel = relationValue.find(function (model) {
-                    if (eventObject === model) return true;
-                    if (!model) return false;
-                    var changedModel = model.get(initialTokens);
-
-                    if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
-                        && eventObject === changedModel)
-                        return true;
-
-                    changedModel = model.get(pathTokens);
-
-                    if ((changedModel instanceof AssociatedModel || changedModel instanceof BackboneCollection)
-                        && eventObject === changedModel)
-                        return true;
-
-                    if (changedModel instanceof BackboneCollection && colObject
-                        && colObject === changedModel)
-                        return true;
-                });
-                colModel && (indexEventObject = relationValue.indexOf(colModel));
+            if (relationValue instanceof BackboneCollection && (isChangeEvent || eventPath)) {
+                // O(n) search :(
+                indexEventObject = relationValue.indexOf(source || eventObject);
             }
 
+            if (this instanceof BackboneModel) {
+                // A quicker way to identify the model which caused an update inside the collection (while bubbling up)
+                source = this;
+            }
             // Manipulate `eventPath`.
-            eventPath = relationKey + ((indexEventObject !== -1 && (eventType === "change" || eventPath)) ?
+            eventPath = relationKey + ((indexEventObject !== -1 && (isChangeEvent || eventPath)) ?
                 "[" + indexEventObject + "]" : "") + (eventPath ? pathSeparator + eventPath : "");
 
             // Short circuit collection * events
-            if (/\[\*\]/g.test(eventPath)) return this;
-            basecolEventPath = eventPath.replace(/\[\d+\]/g, '[*]');
+
+            if (Backbone.Associations.EVENTS_WILDCARD) {
+                basecolEventPath = eventPath.replace(/\[\d+\]/g, '[*]');
+            }
 
             cargs = [];
             cargs.push.apply(cargs, args);
             cargs[0] = eventType + ":" + eventPath;
+
+            // Create a collection modified event with wild-card
+            if (Backbone.Associations.EVENTS_WILDCARD && eventPath !== basecolEventPath) {
+                cargs[0] = cargs[0] + " " + eventType + ":" + basecolEventPath;
+            }
 
             // If event has been already triggered as result of same source `eventPath`,
             // no need to re-trigger event to prevent cycle.
@@ -358,17 +352,19 @@
             // Add `eventPath` in `_proxyCalls` to keep track of already triggered `event`.
             _proxyCalls[eventPath] = true;
 
+
             // Set up previous attributes correctly.
-            if ("change" === eventType) {
+            if (isChangeEvent) {
                 this._previousAttributes[relationKey] = relationValue._previousAttributes;
                 this.changed[relationKey] = relationValue;
             }
 
             // Bubble up event to parent `model` with new changed arguments.
+
             this.trigger.apply(this, cargs);
 
             //Only fire for change. Not change:attribute
-            if ("change" === eventType && this.get(eventPath) != args[2]) {
+            if (Backbone.Associations.EVENTS_NC && isChangeEvent && this.get(eventPath) != args[2]) {
                 var ncargs = ["nested-change", eventPath, args[1]];
                 args[2] && ncargs.push(args[2]); //args[2] will be options if present
                 this.trigger.apply(this, ncargs);
@@ -379,11 +375,7 @@
             // which allow event to be triggered on for next operation of `set`.
             if (_proxyCalls && eventPath) delete _proxyCalls[eventPath];
 
-            // Create a collection modified event with wild-card
-            if (eventPath !== basecolEventPath) {
-                cargs[0] = eventType + ":" + basecolEventPath;
-                this.trigger.apply(this, cargs);
-            }
+            source = undefined;
 
             return this;
         },
@@ -457,11 +449,21 @@
                 // and added it's json representation to parents' json representation.
                 if (this.relations) {
                     _.each(this.relations, function (relation) {
-                        var attr = this.attributes[relation.key];
-                        if (attr) {
-                            aJson = attr.toJSON ? attr.toJSON(options) : attr;
-                            json[relation.key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
+                        var key = relation.key,
+                            remoteKey = relation.remoteKey,
+                            attr = this.attributes[key],
+                            serialize = !relation.isTransient;
+
+                        // Remove default Backbone serialization for associations.
+                        delete json[key];
+
+                        //Assign to remoteKey if specified. Otherwise use the default key.
+                        //Only for non-transient relationships
+                        if (serialize) {
+                            aJson = attr && attr.toJSON ? attr.toJSON(options) : attr;
+                            json[remoteKey || key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
                         }
+
                     }, this);
                 }
                 delete this.visited;

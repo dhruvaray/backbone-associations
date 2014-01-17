@@ -1,3 +1,10 @@
+### Version 0.5.5 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.4...v0.5.5)
+
+* Improve event bubbling performance for large object graphs.
+* Introduces flags to switch off/on events. Set Backbone.Associations.EVENTS_WILDCARD = false to stop throwing wild-char events. Set Backbone.Associations.EVENTS_NC = false to stop throwing nested-change events. Set Backbone.Associations.EVENTS_BUBBLE = false to conditionally stop events from bubbling up. May be useful when constructing complex object (sub) graphs. After construction the value can be set to true. Note that all of these flags can be toggled at any time during the application flow.
+* Introduces isTransient flag to avoid serializing the particular attribute in toJSON().
+* Introduces remoteKey for serializing relations to a different key name. Useful in ROR nested-attributes like scenarios.
+
 ### Version 0.5.4 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.3...v0.5.4)
 
 * Supports Backbone v1.1.0
