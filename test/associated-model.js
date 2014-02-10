@@ -187,6 +187,9 @@ $(document).ready(function () {
 
     module("Backbone.AssociatedModel", {
         setup:function () {
+
+            Backbone.Associations.EVENTS_NC = false;
+
             emp = new Employee({
                 fname:"John",
                 lname:"Smith",
@@ -832,6 +835,8 @@ $(document).ready(function () {
     });
 
     test("collection `*` sort", function () {
+        Backbone.Associations.EVENTS_NC = true;
+
         emp.on('change:works_for.controls[0].locations', function () {
             ok(true, "Fired emp change:works_for.controls[0].locations");
         });
@@ -867,6 +872,9 @@ $(document).ready(function () {
     });
 
     test("child `nested-change`", 9, function () {
+
+        Backbone.Associations.EVENTS_NC = true;
+
         emp.get('works_for').get('locations').on('change', function () {
             ok(true, "Regular backbone change event from collections...");
         });
@@ -1558,6 +1566,9 @@ $(document).ready(function () {
 
 
     test("Issue #28", 2, function () {
+
+        Backbone.Associations.EVENTS_NC = true;
+
         var ItemModel = Backbone.AssociatedModel.extend({
             relations:[
                 {
@@ -2306,6 +2317,101 @@ $(document).ready(function () {
         // Add child to parent
         root.set('child', child);
         equal(root.get('nested').parents[0] === root, true);
+
+
+    });
+
+    test("Do not bubble if possible - Issue #88", 1, function () {
+
+        var addAnimals = function (zoo, count, auto) {
+            var result = [];
+            for (var i = 0; i < count; i++) {
+                result.push(auto ? {species: 'species' + i} : {species: 'species' + i, livesIn: zoo });
+            }
+            return result;
+        };
+
+        var _populateZoo = function (zoos) {
+            var result = [];
+            for (var i = 0; i < zoos; i++) {
+                result.push({name: i});
+            }
+            return result;
+        };
+
+        var setupCounties = function (countries, zoos) {
+            var result = [];
+            for (var i = 0; i < countries; i++) {
+                result.push({name: i, zoos: _populateZoo(zoos)});
+            }
+            return result;
+        };
+
+        // Associated Model
+        var associatedModel = {};
+
+        associatedModel.Zoo = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'animals',
+                    relatedModel: function () {
+                        return associatedModel.Animal
+                    }
+                }
+            ],
+
+            defaults: {animals: []}
+
+        });
+        associatedModel.Animal = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'livesIn',
+                    relatedModel: function () {
+                        return associatedModel.Zoo
+                    }
+                }
+            ]
+        });
+
+        associatedModel.Country = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'zoos',
+                    relatedModel: associatedModel.Zoo
+                }
+            ]
+        });
+
+        Backbone.Associations.EVENTS_NC = false;
+
+        var start = new Date().getTime();
+        var c1 = new Backbone.Collection(setupCounties(3, 100), {model: associatedModel.Country});
+        c1.each(function (country) {
+            country.get('zoos').each(function (zoo) {
+                zoo.get('animals').add(addAnimals(zoo, 50))
+            });
+        });
+        var end = new Date().getTime();
+        var diff1 = end - start;
+
+        Backbone.Associations.EVENTS_NC = true;
+
+        start = new Date().getTime();
+        var c2 = new Backbone.Collection(setupCounties(3, 100), {model: associatedModel.Country});
+        c2.each(function (country) {
+            country.get('zoos').each(function (zoo) {
+                zoo.get('animals').add(addAnimals(zoo, 50))
+            });
+        });
+
+        end = new Date().getTime();
+        var diff2 = end - start;
+
+        equal(diff2 > diff1, true);
 
 
     });

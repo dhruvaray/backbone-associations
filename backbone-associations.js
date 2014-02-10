@@ -18,9 +18,9 @@
 
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
-    var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
+    var _, Backbone, BackboneModel, BackboneCollection, ModelProto, BackboneEvent,
         CollectionProto, AssociatedModel, pathChecker,
-        delimiters, pathSeparator, source;
+        delimiters, pathSeparator, sourceModel, sourceKey, endPoints = {};
 
     if (typeof exports !== 'undefined') {
         _ = require('underscore');
@@ -38,6 +38,7 @@
     BackboneCollection = Backbone.Collection;
     ModelProto = BackboneModel.prototype;
     CollectionProto = BackboneCollection.prototype;
+    BackboneEvent = Backbone.Events;
 
     Backbone.Associations = {
         VERSION: "0.5.5"
@@ -94,6 +95,64 @@
         // and prevent redundant event to be triggered in case of cyclic model graphs.
         _proxyCalls:undefined,
 
+        on: function (name, callback, context) {
+
+            var result = BackboneEvent.on.apply(this, arguments);
+
+            // No optimization possible if nested-events is wanted by the application
+            if (Backbone.Associations.EVENTS_NC) return result;
+
+            // Regular expression used to split event strings.
+            var eventSplitter = /\s+/;
+            // Atomic event name
+            if (_.isString(name) && name && (!eventSplitter.test(name)) && callback) {
+                var endPoint = getPathEndPoint(name);
+                if (endPoint) {
+                    //Increment end point counter. Represents # of nodes which listen to this end point
+                    endPoints[endPoint] = (typeof endPoints[endPoint] === 'undefined') ? 1 : (endPoints[endPoint] + 1);
+                }
+            }
+            return result;
+        },
+
+        off: function (name, callback, context) {
+
+            // No optimization possible if nested-events is wanted by the application
+            if (Backbone.Associations.EVENTS_NC) return BackboneEvent.off.apply(this, arguments);
+
+            var eventSplitter = /\s+/,
+                events = this._events,
+                listeners = {},
+                names = events ? _.keys(events) : [],
+                all = !name,
+                atomic_event = (_.isString(name) && (!eventSplitter.test(name)));
+
+            if (all || atomic_event) {
+                for (var i = 0, l = names.length; i < l; i++) {
+                    // Store the # of callbacks listening to the event name prior to the `off` call
+                    listeners[names[i]] = events[names[i]] ? events[names[i]].length : 0;
+                }
+            }
+            // Call Backbone off implementation
+            var result = BackboneEvent.off.apply(this, arguments);
+
+            //
+            if (all || atomic_event) {
+                for (i = 0, l = names.length; i < l; i++) {
+                    var endPoint = getPathEndPoint(names[i]);
+                    if (endPoint) {
+                        if (events[names[i]]) {
+                            // Some listeners wiped out for this name for this object
+                            endPoints[endPoint] -= (listeners[names[i]] - events[names[i]].length);
+                        } else {
+                            // All listeners wiped out for this name for this object
+                            endPoints[endPoint] -= listeners[names[i]];
+                        }
+                    }
+                }
+            }
+            return result;
+        },
 
         // Get the value of an attribute.
         get:function (attr) {
@@ -310,11 +369,18 @@
                 _proxyCalls = relationValue._proxyCalls,
                 cargs,
                 eventPath = opt[1],
+                eSrc = !eventPath || (eventPath.indexOf(pathSeparator) == -1),
                 basecolEventPath;
 
 
             // Short circuit the listen in to the nested-graph event
             if (catch_all) return;
+
+            // Record the source of the event
+            if (eSrc) sourceKey = (getPathEndPoint(args[0]) || relationKey);
+
+            // Short circuit the event bubbling as there are no listeners for this end point
+            if (!Backbone.Associations.EVENTS_NC && !endPoints[sourceKey]) return;
 
             // Short circuit the listen in to the wild-card event
             if (Backbone.Associations.EVENTS_WILDCARD) {
@@ -323,12 +389,12 @@
 
             if (relationValue instanceof BackboneCollection && (isChangeEvent || eventPath)) {
                 // O(n) search :(
-                indexEventObject = relationValue.indexOf(source || eventObject);
+                indexEventObject = relationValue.indexOf(sourceModel || eventObject);
             }
 
             if (this instanceof BackboneModel) {
                 // A quicker way to identify the model which caused an update inside the collection (while bubbling up)
-                source = this;
+                sourceModel = this;
             }
             // Manipulate `eventPath`.
             eventPath = relationKey + ((indexEventObject !== -1 && (isChangeEvent || eventPath)) ?
@@ -364,6 +430,7 @@
                 this.changed[relationKey] = relationValue;
             }
 
+
             // Bubble up event to parent `model` with new changed arguments.
 
             this.trigger.apply(this, cargs);
@@ -380,7 +447,7 @@
             // which allow event to be triggered on for next operation of `set`.
             if (_proxyCalls && eventPath) delete _proxyCalls[eventPath];
 
-            source = undefined;
+            sourceModel = undefined;
 
             return this;
         },
@@ -519,11 +586,31 @@
         return _.isString(path) ? (path.match(delimiters)) : path || [];
     };
 
+    // Get the end point of the path.
+    var getPathEndPoint = function (path) {
+
+        if (!path) return path;
+
+        //event_type:<path>
+        var tokens = path.split(":");
+
+        if (tokens.length > 1) {
+            path = tokens[tokens.length - 1]
+            tokens = path.split(pathSeparator);
+            return tokens.length > 1 ? tokens[tokens.length - 1].split('[')[0] : tokens[0].split('[')[0];
+        } else {
+            //path of 0 depth
+            return "";
+        }
+
+    };
+
     var map2Scope = function (path, context) {
         return _.reduce(path.split(pathSeparator), function (memo, elem) {
             return memo[elem];
         }, context);
     };
+
 
     //Infer the relation from the collection's parents and find the appropriate map for the passed in `models`
     var map2models = function (parents, target, models) {
@@ -576,6 +663,8 @@
 
     // Attach process pending event functionality on collections as well. Re-use from `AssociatedModel`
     CollectionProto._processPendingEvents = AssociatedModel.prototype._processPendingEvents;
+    CollectionProto.on = AssociatedModel.prototype.on;
+    CollectionProto.off = AssociatedModel.prototype.off;
 
 
 }).call(this);
