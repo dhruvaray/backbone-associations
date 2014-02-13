@@ -44,6 +44,9 @@
         VERSION: "0.5.5"
     };
 
+    // Alternative scopes other than root
+    Backbone.Associations.scopes = [];
+
     // Define `getter` and `setter` for `separator`
     var getSeparator = function() {
         return pathSeparator;
@@ -618,9 +621,21 @@
     };
 
     var map2Scope = function (path, context) {
-        return _.reduce(path.split(pathSeparator), function (memo, elem) {
-            return memo[elem];
-        }, context);
+        var target,
+            scopes = [context];
+
+        //Check global scopes after passed-in context
+        scopes.push.apply(scopes, Backbone.Associations.scopes);
+
+        for (var ctx, i = 0, l = scopes.length; i < l; ++i) {
+            if (ctx = scopes[i]) {
+                target = _.reduce(path.split(pathSeparator), function (memo, elem) {
+                    return memo[elem];
+                }, ctx);
+                if (target) break;
+            }
+        }
+        return target;
     };
 
 

@@ -1267,21 +1267,30 @@ $(document).ready(function () {
 
     });
 
-    test("Scope support: Issue#98", 1, function () {
+    test("Global scope support: Issue#98", 3, function () {
 
-        var scope = {};
+        var scope1 = {};
+        var scope2 = {};
 
-        var User = scope.User = Backbone.AssociatedModel.extend({
+        Backbone.Associations.scopes.push(scope1);
+        Backbone.Associations.scopes.push(scope2);
+
+        scope1.User = Backbone.AssociatedModel.extend({
+            defaults: {omid: "s1.u"}
 
         });
 
-        var Container = scope.Container = Backbone.AssociatedModel.extend({
+        scope2.User = Backbone.AssociatedModel.extend({
+            defaults: {omid: "s2.u"}
+        });
+
+
+        var Container = Backbone.AssociatedModel.extend({
             relations: [
                 {
                     type: Backbone.One,
                     key: 'owner',
-                    relatedModel: 'User',
-                    scope: scope
+                    relatedModel: 'User'
                 }
             ],
             defaults: {
@@ -1290,10 +1299,24 @@ $(document).ready(function () {
         });
 
         var home = new Container();
-        var u = new User({id: 1, name: "Chip Lay"});
+        home.set('owner', {id: 1, name: "Chip Lay"});
 
-        home.set('owner', u);
-        equal(home.get('owner').get('name') == 'Chip Lay', true);
+        equal(home.get('owner').get('omid') == 's1.u', true);
+
+        Backbone.Associations.scopes = [];
+        Backbone.Associations.scopes.push(scope2);
+        Backbone.Associations.scopes.push(scope1);
+
+        home.set('owner', {id: 2, name: "Chip Lay"});
+
+        equal(home.get('owner').get('omid') == 's2.u', true);
+
+        //scope1 takes precedence over scope 2
+        home.relations[0].scope = scope1;
+
+        home.set('owner', {id: 3, name: "Chip Lay"});
+
+        equal(home.get('owner').get('omid') == 's1.u', true);
 
 
     });
@@ -1610,7 +1633,6 @@ $(document).ready(function () {
 
         item.get('product').set({ name:'dave' });
     });
-
 
     test("transform from store", 16, function () {
         emp.set('works_for', 99);
@@ -2338,6 +2360,46 @@ $(document).ready(function () {
     });
 
     test("Make collectionType a function as well - Issue #102", 1, function () {
+
+        var Animal = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'livesIn',
+                    relatedModel: function () {
+                        return Zoo;
+                    }
+                }
+            ]
+        });
+
+        var Animals = Backbone.Collection.extend({
+            model: Animal
+        });
+
+        var Zoo = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'animals',
+                    collectionType: function () {
+                        return Animals;
+                    }
+                }
+            ]
+        });
+
+        var aZoo = new Zoo();
+        var animals = new Animals([
+            {species: 'fish', livesIn: aZoo},
+            {species: 'mamals', livesIn: aZoo}
+        ]);
+        aZoo.set('animals', animals);
+        equal(aZoo.get('animals').models.length, 2);
+
+    });
+
+    test("Make collectionType a function as well - Issue #98", 1, function () {
 
         var Animal = Backbone.AssociatedModel.extend({
             relations: [
