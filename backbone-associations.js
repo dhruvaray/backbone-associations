@@ -82,7 +82,7 @@
 
     Backbone.Associations.EVENTS_BUBBLE = true;
     Backbone.Associations.EVENTS_WILDCARD = true;
-    Backbone.Associations.EVENTS_NC = true;
+    Backbone.Associations.EVENTS_NC = false;
 
 
     setSeparator();
@@ -104,7 +104,8 @@
 
             // Regular expression used to split event strings.
             var eventSplitter = /\s+/;
-            // Atomic event name
+
+            // Handle atomic event names only
             if (_.isString(name) && name && (!eventSplitter.test(name)) && callback) {
                 var endPoint = getPathEndPoint(name);
                 if (endPoint) {
@@ -124,7 +125,7 @@
                 events = this._events,
                 listeners = {},
                 names = events ? _.keys(events) : [],
-                all = !name,
+                all = (!name && !callback && !context),
                 atomic_event = (_.isString(name) && (!eventSplitter.test(name)));
 
             if (all || atomic_event) {
@@ -136,7 +137,6 @@
             // Call Backbone off implementation
             var result = BackboneEvent.off.apply(this, arguments);
 
-            //
             if (all || atomic_event) {
                 for (i = 0, l = names.length; i < l; i++) {
                     var endPoint = getPathEndPoint(names[i]);

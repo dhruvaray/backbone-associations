@@ -188,8 +188,6 @@ $(document).ready(function () {
     module("Backbone.AssociatedModel", {
         setup:function () {
 
-            Backbone.Associations.EVENTS_NC = false;
-
             emp = new Employee({
                 fname:"John",
                 lname:"Smith",
@@ -2386,8 +2384,6 @@ $(document).ready(function () {
             ]
         });
 
-        Backbone.Associations.EVENTS_NC = false;
-
         var start = new Date().getTime();
         var c1 = new Backbone.Collection(setupCounties(3, 100), {model: associatedModel.Country});
         c1.each(function (country) {
@@ -2416,6 +2412,122 @@ $(document).ready(function () {
 
     });
 
+    test("Do not bubble if possible - on/off behavior- Issue #88", 5, function () {
+
+        var addAnimals = function (zoo, count, auto) {
+            var result = [];
+            for (var i = 0; i < count; i++) {
+                result.push(auto ? {species: 'species' + i} : {species: 'species' + i, livesIn: zoo });
+            }
+            return result;
+        };
+
+        var _populateZoo = function (zoos) {
+            var result = [];
+            for (var i = 0; i < zoos; i++) {
+                result.push({name: i});
+            }
+            return result;
+        };
+
+        var setupCounties = function (countries, zoos) {
+            var result = [];
+            for (var i = 0; i < countries; i++) {
+                result.push({name: i, zoos: _populateZoo(zoos)});
+            }
+            return result;
+        };
+
+        // Associated Model
+        var associatedModel = {};
+
+        associatedModel.Zoo = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'animals',
+                    relatedModel: function () {
+                        return associatedModel.Animal
+                    }
+                }
+            ],
+
+            defaults: {animals: []}
+
+        });
+        associatedModel.Animal = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'livesIn',
+                    relatedModel: function () {
+                        return associatedModel.Zoo
+                    }
+                }
+            ]
+        });
+
+        associatedModel.Country = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'zoos',
+                    relatedModel: associatedModel.Zoo
+                }
+            ]
+        });
+
+        var c1 = new Backbone.Collection(setupCounties(1, 2), {model: associatedModel.Country});
+
+        var cb = function () {
+            ok(true)
+        };
+
+        c1.at(0).on('change:zoos[*].animals[*].species', cb);
+
+        c1.each(function (country) {
+            country.get('zoos').each(function (zoo) {
+                zoo.get('animals').add(addAnimals(zoo, 2))
+            });
+        });
+
+        c1.at(0).set('zoos[0].animals[0].species', 's1');//1
+
+        c1.at(0).off();
+
+        c1.at(0).set('zoos[0].animals[0].species', 's2');//0
+
+        c1.at(0).on('change:zoos[*].animals[*].species', cb);
+
+        c1.at(0).set('zoos[0].animals[0].species', 's3');//1
+
+        c1.at(0).off('change:zoos[*].animals[*].species', cb);
+
+        c1.at(0).set('zoos[0].animals[0].species', 's4');//0
+
+        c1.at(0).once('change:zoos[*].animals[*].species', cb);
+
+        c1.at(0).set('zoos[0].animals[0].species', 's5');//1
+        c1.at(0).set('zoos[0].animals[0].species', 's6');//0
+
+        var obj = {};
+        _.extend(obj, Backbone.Events);
+
+        obj.listenTo(c1.at(0), 'change:zoos[*].animals[*].species', cb);
+
+        c1.at(0).set('zoos[0].animals[0].species', 's7');//1
+
+        obj.stopListening();
+
+        c1.at(0).set('zoos[0].animals[0].species', 's8');//0
+
+        obj.listenToOnce(c1.at(0), 'change:zoos[*].animals[*].species', cb);
+
+        c1.at(0).set('zoos[0].animals[0].species', 's9');//1
+        c1.at(0).set('zoos[0].animals[0].species', 's10');//0
+
+
+    });
 
     test("Many relation's options : parse", 3, function () {
         //relation options with `set`
