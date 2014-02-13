@@ -249,14 +249,10 @@
                             this.constructor :
                             map2Scope(relatedModel, activationContext);
                     }
-                    collectionType && _.isString(collectionType) &&
-                    (collectionType = map2Scope(collectionType, activationContext));
+
                     map && _.isString(map) && (map = map2Scope(map, activationContext));
                     // Merge in `options` specific to this relation.
                     relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
-
-                    if ((!relatedModel) && (!collectionType))
-                        throw new Error('specify either a relatedModel or collectionType');
 
                     if (attributes[relationKey]) {
                         // Get value of attribute with relation key in `val`.
@@ -267,6 +263,22 @@
                         // If `relation.type` is `Backbone.Many`,
                         // Create `Backbone.Collection` with passed data and perform Backbone `set`.
                         if (relation.type === Backbone.Many) {
+
+                            if (collectionType && _.isFunction(collectionType) &&
+                                (collectionType.prototype instanceof BackboneModel))
+                                throw new Error('type is of Backbone.Model. Specify derivatives of Backbone.Collection');
+
+                            // Call function if collectionType is implemented as a function
+                            if (collectionType && !(collectionType.prototype instanceof BackboneCollection))
+                                collectionType = _.isFunction(collectionType) ?
+                                    collectionType.call(this, relation, attributes) : collectionType;
+
+                            collectionType && _.isString(collectionType) &&
+                            (collectionType = map2Scope(collectionType, activationContext));
+
+                            if ((!relatedModel) && (!collectionType))
+                                throw new Error('specify either a relatedModel or collectionType');
+
                             // `collectionType` of defined `relation` should be instance of `Backbone.Collection`.
                             if (collectionType && !collectionType.prototype instanceof BackboneCollection) {
                                 throw new Error('collectionType must inherit from Backbone.Collection');

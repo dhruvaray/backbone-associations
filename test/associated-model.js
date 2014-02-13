@@ -413,7 +413,7 @@ $(document).ready(function () {
         equal(emp.get("works_for").get('number'), -1, "number has default value");
     });
 
-    test("invalid relations", 4, function () {
+    test("invalid relations", 5, function () {
         var em1 = Backbone.AssociatedModel.extend({
             relations:[
                 {
@@ -464,6 +464,24 @@ $(document).ready(function () {
         } catch (e) {
             equal(e.message === "specify a relatedModel for Backbone.One type", true)
         }
+
+        var em4 = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'parent',
+                    collectionType: em2//RelatedModel specified
+                }
+            ]
+        });
+
+        try {
+            var em4i = new em4;
+            em4i.set('parent', {id: 1});
+        } catch (e) {
+            equal(e.message === "type is of Backbone.Model. Specify derivatives of Backbone.Collection", true)
+        }
+
 
         var Owner = Backbone.OriginalModel.extend();
         var House = Backbone.AssociatedModel.extend({
@@ -2316,6 +2334,46 @@ $(document).ready(function () {
         root.set('child', child);
         equal(root.get('nested').parents[0] === root, true);
 
+
+    });
+
+    test("Make collectionType a function as well - Issue #102", 1, function () {
+
+        var Animal = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'livesIn',
+                    relatedModel: function () {
+                        return Zoo;
+                    }
+                }
+            ]
+        });
+
+        var Animals = Backbone.Collection.extend({
+            model: Animal
+        });
+
+        var Zoo = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'animals',
+                    collectionType: function () {
+                        return Animals;
+                    }
+                }
+            ]
+        });
+
+        var aZoo = new Zoo();
+        var animals = new Animals([
+            {species: 'fish', livesIn: aZoo},
+            {species: 'mamals', livesIn: aZoo}
+        ]);
+        aZoo.set('animals', animals);
+        equal(aZoo.get('animals').models.length, 2);
 
     });
 
