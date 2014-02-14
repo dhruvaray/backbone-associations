@@ -1414,7 +1414,7 @@ $(document).ready(function () {
                     type: Backbone.Many,
                     key: 'contender',
                     relatedModel: Contender,
-                    serialize: ['id']
+                    serialize: ['id'] // or 'id' will work too
                 }
             ]
         });
