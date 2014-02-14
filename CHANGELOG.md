@@ -1,3 +1,12 @@
+### Upcoming
+
+* Significantly improve event bubbling performance. Only bubble events if objects are listening to those event paths. 
+* BREAKING CHANGE : nested-change events are not fired by default. To switch them on set Backbone.Associations.EVENTS_NC = true at any point in your application flow.
+* `collectionType` can be a function as well. This makes the API of `relatedModel` and `collectionType` uniform.
+* Added support for specifying global scopes. When `relatedModel` and `collectionType` are specified as strings, the global scopes will also be searched for locating the model definition.
+* Additional attribute - `scope` - can now be specified while defining a relation. Use to it define the scope of `relatedModel` and `collectionType` string.
+* Additional attribute - `serialize` - can now be specified while defining a relation. Use this attribute to set an array of attributes (singleton or subset) which will be serialized to the server end-point. 
+
 ### Version 0.5.5 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.4...v0.5.5)
 
 * Improve event bubbling performance for large object graphs.
