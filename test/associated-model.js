@@ -1398,6 +1398,34 @@ $(document).ready(function () {
 
     });
 
+    test("Serialize subset of attributes - Issue#100", 2, function () {
+        var Location = Backbone.AssociatedModel.extend();
+        var Contender = Backbone.AssociatedModel.extend();
+
+        var Job = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'location',
+                    relatedModel: Location,
+                    serialize: ['id', 'name']
+                },
+                {
+                    type: Backbone.Many,
+                    key: 'contender',
+                    relatedModel: Contender,
+                    serialize: ['id']
+                }
+            ]
+        });
+
+        var aJob = new Job({location: {id: '1', name: 'CTO', org: 'Google'}, contender: {id: '2', name: 'Page'}});
+        var jsonrep = aJob.toJSON();
+        deepEqual(jsonrep['location'], {id: '1', name: 'CTO'});
+        deepEqual(jsonrep['contender'][0], {id: '2'});
+
+    });
+
     test("Cycle save: Issue#51", 3, function () {
         var MyApp = {
             Models:{},

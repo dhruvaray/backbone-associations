@@ -532,6 +532,11 @@
                 this.visited = true;
                 // Get json representation from `BackboneModel.toJSON`.
                 json = ModelProto.toJSON.apply(this, arguments);
+
+                // Pick up only the keys you want to serialize
+                if (options && options.serialize_keys) {
+                    json = _.pick(json, options.serialize_keys);
+                }
                 // If `this.relations` is defined, iterate through each `relation`
                 // and added it's json representation to parents' json representation.
                 if (this.relations) {
@@ -539,7 +544,8 @@
                         var key = relation.key,
                             remoteKey = relation.remoteKey,
                             attr = this.attributes[key],
-                            serialize = !relation.isTransient;
+                            serialize = !relation.isTransient,
+                            serialize_keys = relation.serialize || []
 
                         // Remove default Backbone serialization for associations.
                         delete json[key];
@@ -547,20 +553,29 @@
                         //Assign to remoteKey if specified. Otherwise use the default key.
                         //Only for non-transient relationships
                         if (serialize) {
+
+                            // Pass the keys to serialize as options to the toJSON method.
+                            if (serialize_keys.length) {
+                                options ?
+                                    (options.serialize_keys = serialize_keys) :
+                                    (options = {serialize_keys: serialize_keys})
+                            }
+
                             aJson = attr && attr.toJSON ? attr.toJSON(options) : attr;
                             json[remoteKey || key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
                         }
 
                     }, this);
                 }
+
                 delete this.visited;
             }
             return json;
         },
 
         // Create a new model with identical attributes to this one.
-        clone:function () {
-            return new this.constructor(this.toJSON());
+        clone: function (options) {
+            return new this.constructor(this.toJSON(options));
         },
 
         // Call this if you want to set an `AssociatedModel` to a falsy value like undefined/null directly.
@@ -610,7 +625,7 @@
         var tokens = path.split(":");
 
         if (tokens.length > 1) {
-            path = tokens[tokens.length - 1]
+            path = tokens[tokens.length - 1];
             tokens = path.split(pathSeparator);
             return tokens.length > 1 ? tokens[tokens.length - 1].split('[')[0] : tokens[0].split('[')[0];
         } else {
