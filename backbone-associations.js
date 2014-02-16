@@ -7,32 +7,38 @@
 //  https://github.com/dhruvaray/backbone-associations/
 //
 
-// Initial Setup
-// --------------
-(function () {
+(function(root, factory) {
+    // Set up Backbone-associations appropriately for the environment. Start with AMD.
+    if (typeof define === 'function' && define.amd) {
+        define(['underscore', 'backbone'], function(_, Backbone) {
+            // Export global even in AMD case in case this script is loaded with
+            // others that may still expect a global Backbone.
+            factory(root, Backbone, _);
+        });
+
+    // Next for Node.js or CommonJS.
+    } else if (typeof exports !== 'undefined') {
+        var _ = require('underscore'),
+            Backbone = require('backbone');
+        factory(root, Backbone, _);
+
+    // Finally, as a browser global.
+    } else {
+        factory(root, root.Backbone, root._);
+    }
+
+}(this, function(root, Backbone, _) {
     "use strict";
 
-    // Save a reference to the global object (`window` in the browser, `exports`
-    // on the server).
-    var root = this;
+    // Initial Setup
+    // --------------
 
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
-    var _, Backbone, BackboneModel, BackboneCollection, ModelProto, BackboneEvent,
+    var BackboneModel, BackboneCollection, ModelProto, BackboneEvent,
         CollectionProto, AssociatedModel, pathChecker,
         delimiters, pathSeparator, sourceModel, sourceKey, endPoints = {};
 
-    if (typeof exports !== 'undefined') {
-        _ = require('underscore');
-        Backbone = require('backbone');
-        if (typeof module !== 'undefined' && module.exports) {
-            module.exports = Backbone;
-        }
-        exports = Backbone;
-    } else {
-        _ = root._;
-        Backbone = root.Backbone;
-    }
     // Create local reference `Model` prototype.
     BackboneModel = Backbone.Model;
     BackboneCollection = Backbone.Collection;
@@ -708,5 +714,4 @@
     CollectionProto.on = AssociatedModel.prototype.on;
     CollectionProto.off = AssociatedModel.prototype.off;
 
-
-}).call(this);
+}));
