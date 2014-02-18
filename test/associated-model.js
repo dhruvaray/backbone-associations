@@ -504,7 +504,7 @@ $(document).ready(function () {
 
     test("escape", 1, function () {
         emp.get('works_for').get("locations").at(0).set({'add1':'<a>New Address</a>'});
-        equal(_.escape(emp.get('works_for').get("locations").at(0).get("add1")), '&lt;a&gt;New Address&lt;&#x2F;a&gt;', "City should be in HTML-escaped version");
+        equal(_.escape(emp.get('works_for').get("locations").at(0).get("add1")), '&lt;a&gt;New Address&lt;/a&gt;', "City should be in HTML-escaped version");
     });
 
     test("has", 5, function () {
