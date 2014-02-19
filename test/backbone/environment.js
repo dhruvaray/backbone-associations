@@ -1,4 +1,4 @@
-//adopted from Backbone 1.1.0 test suite
+//adopted from Backbone 1.1.1 test suite
 (function() {
 
   var sync = Backbone.sync;

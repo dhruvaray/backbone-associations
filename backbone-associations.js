@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.5.5
+//  Backbone-associations.js 0.6.0
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -7,41 +7,51 @@
 //  https://github.com/dhruvaray/backbone-associations/
 //
 
-// Initial Setup
-// --------------
-(function () {
+(function(root, factory) {
+    // Set up Backbone-associations appropriately for the environment. Start with AMD.
+    if (typeof define === 'function' && define.amd) {
+        define(['underscore', 'backbone'], function(_, Backbone) {
+            // Export global even in AMD case in case this script is loaded with
+            // others that may still expect a global Backbone.
+            factory(root, Backbone, _);
+        });
+
+    // Next for Node.js or CommonJS.
+    } else if (typeof exports !== 'undefined') {
+        var _ = require('underscore'),
+            Backbone = require('backbone');
+        factory(root, Backbone, _);
+
+    // Finally, as a browser global.
+    } else {
+        factory(root, root.Backbone, root._);
+    }
+
+}(this, function(root, Backbone, _) {
     "use strict";
 
-    // Save a reference to the global object (`window` in the browser, `exports`
-    // on the server).
-    var root = this;
+    // Initial Setup
+    // --------------
 
     // The top-level namespace. All public Backbone classes and modules will be attached to this.
     // Exported for the browser and CommonJS.
-    var _, Backbone, BackboneModel, BackboneCollection, ModelProto,
+    var BackboneModel, BackboneCollection, ModelProto, BackboneEvent,
         CollectionProto, AssociatedModel, pathChecker,
-        delimiters, pathSeparator, source;
+        delimiters, pathSeparator, sourceModel, sourceKey, endPoints = {};
 
-    if (typeof exports !== 'undefined') {
-        _ = require('underscore');
-        Backbone = require('backbone');
-        if (typeof module !== 'undefined' && module.exports) {
-            module.exports = Backbone;
-        }
-        exports = Backbone;
-    } else {
-        _ = root._;
-        Backbone = root.Backbone;
-    }
     // Create local reference `Model` prototype.
     BackboneModel = Backbone.Model;
     BackboneCollection = Backbone.Collection;
     ModelProto = BackboneModel.prototype;
     CollectionProto = BackboneCollection.prototype;
+    BackboneEvent = Backbone.Events;
 
     Backbone.Associations = {
-        VERSION: "0.5.5"
+        VERSION: "0.6.0"
     };
+
+    // Alternative scopes other than root
+    Backbone.Associations.scopes = [];
 
     // Define `getter` and `setter` for `separator`
     var getSeparator = function() {
@@ -81,7 +91,7 @@
 
     Backbone.Associations.EVENTS_BUBBLE = true;
     Backbone.Associations.EVENTS_WILDCARD = true;
-    Backbone.Associations.EVENTS_NC = true;
+    Backbone.Associations.EVENTS_NC = false;
 
 
     setSeparator();
@@ -94,6 +104,64 @@
         // and prevent redundant event to be triggered in case of cyclic model graphs.
         _proxyCalls:undefined,
 
+        on: function (name, callback, context) {
+
+            var result = BackboneEvent.on.apply(this, arguments);
+
+            // No optimization possible if nested-events is wanted by the application
+            if (Backbone.Associations.EVENTS_NC) return result;
+
+            // Regular expression used to split event strings.
+            var eventSplitter = /\s+/;
+
+            // Handle atomic event names only
+            if (_.isString(name) && name && (!eventSplitter.test(name)) && callback) {
+                var endPoint = getPathEndPoint(name);
+                if (endPoint) {
+                    //Increment end point counter. Represents # of nodes which listen to this end point
+                    endPoints[endPoint] = (typeof endPoints[endPoint] === 'undefined') ? 1 : (endPoints[endPoint] + 1);
+                }
+            }
+            return result;
+        },
+
+        off: function (name, callback, context) {
+
+            // No optimization possible if nested-events is wanted by the application
+            if (Backbone.Associations.EVENTS_NC) return BackboneEvent.off.apply(this, arguments);
+
+            var eventSplitter = /\s+/,
+                events = this._events,
+                listeners = {},
+                names = events ? _.keys(events) : [],
+                all = (!name && !callback && !context),
+                atomic_event = (_.isString(name) && (!eventSplitter.test(name)));
+
+            if (all || atomic_event) {
+                for (var i = 0, l = names.length; i < l; i++) {
+                    // Store the # of callbacks listening to the event name prior to the `off` call
+                    listeners[names[i]] = events[names[i]] ? events[names[i]].length : 0;
+                }
+            }
+            // Call Backbone off implementation
+            var result = BackboneEvent.off.apply(this, arguments);
+
+            if (all || atomic_event) {
+                for (i = 0, l = names.length; i < l; i++) {
+                    var endPoint = getPathEndPoint(names[i]);
+                    if (endPoint) {
+                        if (events[names[i]]) {
+                            // Some listeners wiped out for this name for this object
+                            endPoints[endPoint] -= (listeners[names[i]] - events[names[i]].length);
+                        } else {
+                            // All listeners wiped out for this name for this object
+                            endPoints[endPoint] -= listeners[names[i]];
+                        }
+                    }
+                }
+            }
+            return result;
+        },
 
         // Get the value of an attribute.
         get:function (attr) {
@@ -172,6 +240,7 @@
                     var relationKey = relation.key,
                         relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
+                        activationContext = relation.scope || root,
                         map = relation.map,
                         currVal = this.attributes[relationKey],
                         idKey = currVal && currVal.idAttribute,
@@ -185,15 +254,14 @@
 
                     // Get class if relation and map is stored as a string.
                     if (relatedModel && _.isString(relatedModel)) {
-                        relatedModel = (relatedModel === Backbone.Self) ? this.constructor : map2Scope(relatedModel);
+                        relatedModel = (relatedModel === Backbone.Self) ?
+                            this.constructor :
+                            map2Scope(relatedModel, activationContext);
                     }
-                    collectionType && _.isString(collectionType) && (collectionType = map2Scope(collectionType));
-                    map && _.isString(map) && (map = map2Scope(map));
+
+                    map && _.isString(map) && (map = map2Scope(map, activationContext));
                     // Merge in `options` specific to this relation.
                     relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
-
-                    if ((!relatedModel) && (!collectionType))
-                        throw new Error('specify either a relatedModel or collectionType');
 
                     if (attributes[relationKey]) {
                         // Get value of attribute with relation key in `val`.
@@ -204,6 +272,22 @@
                         // If `relation.type` is `Backbone.Many`,
                         // Create `Backbone.Collection` with passed data and perform Backbone `set`.
                         if (relation.type === Backbone.Many) {
+
+                            if (collectionType && _.isFunction(collectionType) &&
+                                (collectionType.prototype instanceof BackboneModel))
+                                throw new Error('type is of Backbone.Model. Specify derivatives of Backbone.Collection');
+
+                            // Call function if collectionType is implemented as a function
+                            if (collectionType && !(collectionType.prototype instanceof BackboneCollection))
+                                collectionType = _.isFunction(collectionType) ?
+                                    collectionType.call(this, relation, attributes) : collectionType;
+
+                            collectionType && _.isString(collectionType) &&
+                            (collectionType = map2Scope(collectionType, activationContext));
+
+                            if ((!relatedModel) && (!collectionType))
+                                throw new Error('specify either a relatedModel or collectionType');
+
                             // `collectionType` of defined `relation` should be instance of `Backbone.Collection`.
                             if (collectionType && !collectionType.prototype instanceof BackboneCollection) {
                                 throw new Error('collectionType must inherit from Backbone.Collection');
@@ -226,7 +310,8 @@
                                 if (val instanceof BackboneCollection) {
                                     data = val;
                                 } else {
-                                    data = collectionType ? new collectionType() : this._createCollection(relatedModel);
+                                    data = collectionType ?
+                                        new collectionType() : this._createCollection(relatedModel, activationContext);
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
@@ -305,11 +390,18 @@
                 _proxyCalls = relationValue._proxyCalls,
                 cargs,
                 eventPath = opt[1],
+                eSrc = !eventPath || (eventPath.indexOf(pathSeparator) == -1),
                 basecolEventPath;
 
 
             // Short circuit the listen in to the nested-graph event
             if (catch_all) return;
+
+            // Record the source of the event
+            if (eSrc) sourceKey = (getPathEndPoint(args[0]) || relationKey);
+
+            // Short circuit the event bubbling as there are no listeners for this end point
+            if (!Backbone.Associations.EVENTS_NC && !endPoints[sourceKey]) return;
 
             // Short circuit the listen in to the wild-card event
             if (Backbone.Associations.EVENTS_WILDCARD) {
@@ -318,12 +410,12 @@
 
             if (relationValue instanceof BackboneCollection && (isChangeEvent || eventPath)) {
                 // O(n) search :(
-                indexEventObject = relationValue.indexOf(source || eventObject);
+                indexEventObject = relationValue.indexOf(sourceModel || eventObject);
             }
 
             if (this instanceof BackboneModel) {
                 // A quicker way to identify the model which caused an update inside the collection (while bubbling up)
-                source = this;
+                sourceModel = this;
             }
             // Manipulate `eventPath`.
             eventPath = relationKey + ((indexEventObject !== -1 && (isChangeEvent || eventPath)) ?
@@ -359,6 +451,7 @@
                 this.changed[relationKey] = relationValue;
             }
 
+
             // Bubble up event to parent `model` with new changed arguments.
 
             this.trigger.apply(this, cargs);
@@ -375,7 +468,7 @@
             // which allow event to be triggered on for next operation of `set`.
             if (_proxyCalls && eventPath) delete _proxyCalls[eventPath];
 
-            source = undefined;
+            sourceModel = undefined;
 
             return this;
         },
@@ -388,9 +481,9 @@
         },
 
         // Returns New `collection` of type `relation.relatedModel`.
-        _createCollection:function (type) {
+        _createCollection: function (type, context) {
             var collection, relatedModel = type;
-            _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel));
+            _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel, context));
             // Creates new `Backbone.Collection` and defines model class.
             if (relatedModel && (relatedModel.prototype instanceof AssociatedModel) || _.isFunction(relatedModel)) {
                 collection = new BackboneCollection();
@@ -445,6 +538,11 @@
                 this.visited = true;
                 // Get json representation from `BackboneModel.toJSON`.
                 json = ModelProto.toJSON.apply(this, arguments);
+
+                // Pick up only the keys you want to serialize
+                if (options && options.serialize_keys) {
+                    json = _.pick(json, options.serialize_keys);
+                }
                 // If `this.relations` is defined, iterate through each `relation`
                 // and added it's json representation to parents' json representation.
                 if (this.relations) {
@@ -452,7 +550,8 @@
                         var key = relation.key,
                             remoteKey = relation.remoteKey,
                             attr = this.attributes[key],
-                            serialize = !relation.isTransient;
+                            serialize = !relation.isTransient,
+                            serialize_keys = relation.serialize || []
 
                         // Remove default Backbone serialization for associations.
                         delete json[key];
@@ -460,20 +559,29 @@
                         //Assign to remoteKey if specified. Otherwise use the default key.
                         //Only for non-transient relationships
                         if (serialize) {
+
+                            // Pass the keys to serialize as options to the toJSON method.
+                            if (serialize_keys.length) {
+                                options ?
+                                    (options.serialize_keys = serialize_keys) :
+                                    (options = {serialize_keys: serialize_keys})
+                            }
+
                             aJson = attr && attr.toJSON ? attr.toJSON(options) : attr;
                             json[remoteKey || key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
                         }
 
                     }, this);
                 }
+
                 delete this.visited;
             }
             return json;
         },
 
         // Create a new model with identical attributes to this one.
-        clone:function () {
-            return new this.constructor(this.toJSON());
+        clone: function (options) {
+            return new this.constructor(this.toJSON(options));
         },
 
         // Call this if you want to set an `AssociatedModel` to a falsy value like undefined/null directly.
@@ -514,11 +622,43 @@
         return _.isString(path) ? (path.match(delimiters)) : path || [];
     };
 
-    var map2Scope = function (path) {
-        return _.reduce(path.split(pathSeparator), function (memo, elem) {
-            return memo[elem];
-        }, root);
+    // Get the end point of the path.
+    var getPathEndPoint = function (path) {
+
+        if (!path) return path;
+
+        //event_type:<path>
+        var tokens = path.split(":");
+
+        if (tokens.length > 1) {
+            path = tokens[tokens.length - 1];
+            tokens = path.split(pathSeparator);
+            return tokens.length > 1 ? tokens[tokens.length - 1].split('[')[0] : tokens[0].split('[')[0];
+        } else {
+            //path of 0 depth
+            return "";
+        }
+
     };
+
+    var map2Scope = function (path, context) {
+        var target,
+            scopes = [context];
+
+        //Check global scopes after passed-in context
+        scopes.push.apply(scopes, Backbone.Associations.scopes);
+
+        for (var ctx, i = 0, l = scopes.length; i < l; ++i) {
+            if (ctx = scopes[i]) {
+                target = _.reduce(path.split(pathSeparator), function (memo, elem) {
+                    return memo[elem];
+                }, ctx);
+                if (target) break;
+            }
+        }
+        return target;
+    };
+
 
     //Infer the relation from the collection's parents and find the appropriate map for the passed in `models`
     var map2models = function (parents, target, models) {
@@ -571,6 +711,7 @@
 
     // Attach process pending event functionality on collections as well. Re-use from `AssociatedModel`
     CollectionProto._processPendingEvents = AssociatedModel.prototype._processPendingEvents;
+    CollectionProto.on = AssociatedModel.prototype.on;
+    CollectionProto.off = AssociatedModel.prototype.off;
 
-
-}).call(this);
+}));
