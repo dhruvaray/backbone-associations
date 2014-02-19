@@ -28,7 +28,7 @@
         "test":"phantomjs test/lib/runner.js test/test-suite.html?noglobals=true"
     },
     "main":"backbone-associations.js",
-    "version": "0.5.5",
+    "version": "0.6.0",
     "repository":"git://github.com/dhruvaray/backbone-associations.git",
     "licenses":[
         {
