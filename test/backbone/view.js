@@ -1,4 +1,4 @@
-//adopted from Backbone 1.1.0 test suite
+//adopted from Backbone 1.1.1 test suite
 (function() {
 
   var view;
@@ -40,23 +40,23 @@
   test("delegateEvents", 6, function() {
     var counter1 = 0, counter2 = 0;
 
-    var view = new Backbone.View({el: '<p><a id="test"></a></p>'});
+    var view = new Backbone.View({el: '#testElement'});
     view.increment = function(){ counter1++; };
     view.$el.on('click', function(){ counter2++; });
 
-    var events = {'click #test': 'increment'};
+    var events = {'click h1': 'increment'};
 
     view.delegateEvents(events);
-    view.$('#test').trigger('click');
+    view.$('h1').trigger('click');
     equal(counter1, 1);
     equal(counter2, 1);
 
-    view.$('#test').trigger('click');
+    view.$('h1').trigger('click');
     equal(counter1, 2);
     equal(counter2, 2);
 
     view.delegateEvents(events);
-    view.$('#test').trigger('click');
+    view.$('h1').trigger('click');
     equal(counter1, 3);
     equal(counter2, 3);
   });
@@ -93,24 +93,24 @@
   test("undelegateEvents", 6, function() {
     var counter1 = 0, counter2 = 0;
 
-    var view = new Backbone.View({el: '<p><a id="test"></a></p>'});
+    var view = new Backbone.View({el: '#testElement'});
     view.increment = function(){ counter1++; };
     view.$el.on('click', function(){ counter2++; });
 
-    var events = {'click #test': 'increment'};
+    var events = {'click h1': 'increment'};
 
     view.delegateEvents(events);
-    view.$('#test').trigger('click');
+    view.$('h1').trigger('click');
     equal(counter1, 1);
     equal(counter2, 1);
 
     view.undelegateEvents();
-    view.$('#test').trigger('click');
+    view.$('h1').trigger('click');
     equal(counter1, 1);
     equal(counter2, 2);
 
     view.delegateEvents(events);
-    view.$('#test').trigger('click');
+    view.$('h1').trigger('click');
     equal(counter1, 2);
     equal(counter2, 3);
   });
@@ -219,7 +219,7 @@
     $('body').trigger('fake$event').trigger('fake$event');
     equal(count, 2);
 
-    $('body').unbind('.namespaced');
+    $('body').off('.namespaced');
     $('body').trigger('fake$event');
     equal(count, 2);
   });
@@ -305,28 +305,24 @@
     ok(view.$el.has('a'));
   });
 
-  test("events passed in options", 2, function() {
+  test("events passed in options", 1, function() {
     var counter = 0;
 
     var View = Backbone.View.extend({
-      el: '<p><a id="test"></a></p>',
+      el: '#testElement',
       increment: function() {
         counter++;
       }
     });
 
-    var view = new View({events:{'click #test':'increment'}});
-    var view2 = new View({events:function(){
-      return {'click #test':'increment'};
-    }});
+    var view = new View({
+      events: {
+        'click h1': 'increment'
+      }
+    });
 
-    view.$('#test').trigger('click');
-    view2.$('#test').trigger('click');
+    view.$('h1').trigger('click').trigger('click');
     equal(counter, 2);
-
-    view.$('#test').trigger('click');
-    view2.$('#test').trigger('click');
-    equal(counter, 4);
   });
 
 })();

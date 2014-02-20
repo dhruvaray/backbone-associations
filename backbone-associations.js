@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.5.5
+//  Backbone-associations.js 0.6.1
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -7,32 +7,42 @@
 //  https://github.com/dhruvaray/backbone-associations/
 //
 
-// Initial Setup
-// --------------
-(function () {
-    "use strict";
+(function(root, factory) {
+    // Set up Backbone-associations appropriately for the environment. Start with AMD.
+    if (typeof define === 'function' && define.amd) {
+        define(['underscore', 'backbone'], function(_, Backbone) {
+            // Export global even in AMD case in case this script is loaded with
+            // others that may still expect a global Backbone.
+            return factory(root, Backbone, _);
+        });
 
-    // Save a reference to the global object (`window` in the browser, `exports`
-    // on the server).
-    var root = this;
-
-    // The top-level namespace. All public Backbone classes and modules will be attached to this.
-    // Exported for the browser and CommonJS.
-    var _, Backbone, BackboneModel, BackboneCollection, ModelProto, BackboneEvent,
-        CollectionProto, AssociatedModel, pathChecker,
-        delimiters, pathSeparator, sourceModel, sourceKey, endPoints = {};
-
-    if (typeof exports !== 'undefined') {
-        _ = require('underscore');
-        Backbone = require('backbone');
+    // Next for Node.js or CommonJS.
+    } else if (typeof exports !== 'undefined') {
+        var _ = require('underscore'),
+            Backbone = require('backbone');
+        factory(root, Backbone, _);
         if (typeof module !== 'undefined' && module.exports) {
             module.exports = Backbone;
         }
         exports = Backbone;
+
+    // Finally, as a browser global.
     } else {
-        _ = root._;
-        Backbone = root.Backbone;
+        factory(root, root.Backbone, root._);
     }
+
+}(this, function(root, Backbone, _) {
+    "use strict";
+
+    // Initial Setup
+    // --------------
+
+    // The top-level namespace. All public Backbone classes and modules will be attached to this.
+    // Exported for the browser and CommonJS.
+    var BackboneModel, BackboneCollection, ModelProto, BackboneEvent,
+        CollectionProto, AssociatedModel, pathChecker,
+        delimiters, pathSeparator, sourceModel, sourceKey, endPoints = {};
+
     // Create local reference `Model` prototype.
     BackboneModel = Backbone.Model;
     BackboneCollection = Backbone.Collection;
@@ -41,7 +51,7 @@
     BackboneEvent = Backbone.Events;
 
     Backbone.Associations = {
-        VERSION: "0.5.5"
+        VERSION: "0.6.1"
     };
 
     // Alternative scopes other than root
@@ -714,5 +724,5 @@
     CollectionProto.on = AssociatedModel.prototype.on;
     CollectionProto.off = AssociatedModel.prototype.off;
 
-
-}).call(this);
+    return Backbone;
+}));

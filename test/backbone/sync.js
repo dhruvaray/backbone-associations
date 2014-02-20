@@ -1,4 +1,4 @@
-//adopted from Backbone 1.1.0 test suite
+//adopted from Backbone 1.1.1 test suite
 (function() {
 
   var Library = Backbone.Collection.extend({
@@ -132,7 +132,7 @@
 
   test("urlError", 2, function() {
     var model = new Backbone.Model();
-    raises(function() {
+    throws(function() {
       model.fetch();
     });
     model.fetch({url: '/one/two'});

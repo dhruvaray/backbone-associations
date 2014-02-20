@@ -1,9 +1,9 @@
 {
     "name":"backbone-associations",
-    "version": "0.5.5",
+    "version": "0.6.1",
     "main":"./backbone-associations.js",
     "dependencies":{
-        "backbone":"~1.1.0",
+        "backbone":">=1.0.0",
         "underscore":">=1.4.3"
     },
     "ignore": ["docs", "test", "*.yml"]

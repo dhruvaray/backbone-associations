@@ -1,4 +1,8 @@
-### Upcoming
+### Version 0.6.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.6.0...v0.6.1)
+
+* Add underscore as explicit dependency: Node js compatibility
+
+### Version 0.6.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.5...v0.6.0)
 
 * Significantly improve event bubbling performance. Only bubble events if objects are listening to those event paths. 
 * BREAKING CHANGE : nested-change events are not fired by default. To switch them on set Backbone.Associations.EVENTS_NC = true at any point in your application flow.
@@ -6,6 +10,7 @@
 * Added support for specifying global scopes. When `relatedModel` and `collectionType` are specified as strings, the global scopes will also be searched for locating the model definition.
 * Additional attribute - `scope` - can now be specified while defining a relation. Use to it define the scope of `relatedModel` and `collectionType` string.
 * Additional attribute - `serialize` - can now be specified while defining a relation. Use this attribute to set an array of attributes (singleton or subset) which will be serialized to the server end-point. 
+* Compatible with Backbone.js v1.1.1.
 
 ### Version 0.5.5 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.4...v0.5.5)
 
