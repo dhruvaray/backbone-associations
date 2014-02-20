@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.6.0
+//  Backbone-associations.js 0.6.1
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -47,7 +47,7 @@
     BackboneEvent = Backbone.Events;
 
     Backbone.Associations = {
-        VERSION: "0.6.0"
+        VERSION: "0.6.1"
     };
 
     // Alternative scopes other than root

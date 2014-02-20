@@ -1,3 +1,7 @@
+### Version 0.6.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.6.0...v0.6.1)
+
+* Add underscore as explicit dependency: Node js compatibility
+
 ### Version 0.6.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.5...v0.6.0)
 
 * Significantly improve event bubbling performance. Only bubble events if objects are listening to those event paths. 
