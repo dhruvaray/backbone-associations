@@ -13,7 +13,7 @@
         define(['underscore', 'backbone'], function(_, Backbone) {
             // Export global even in AMD case in case this script is loaded with
             // others that may still expect a global Backbone.
-            factory(root, Backbone, _);
+            return factory(root, Backbone, _);
         });
 
     // Next for Node.js or CommonJS.
@@ -21,6 +21,10 @@
         var _ = require('underscore'),
             Backbone = require('backbone');
         factory(root, Backbone, _);
+        if (typeof module !== 'undefined' && module.exports) {
+            module.exports = Backbone;
+        }
+        exports = Backbone;
 
     // Finally, as a browser global.
     } else {
@@ -714,4 +718,5 @@
     CollectionProto.on = AssociatedModel.prototype.on;
     CollectionProto.off = AssociatedModel.prototype.off;
 
+    return Backbone;
 }));
