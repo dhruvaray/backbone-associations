@@ -1,4 +1,4 @@
-//adopted from Backbone 1.1.1 test suite
+//adopted from Backbone 1.1.2 test suite
 (function() {
 
   var proxy = Backbone.Model.extend();

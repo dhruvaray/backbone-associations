@@ -1,9 +1,11 @@
 ### Version 0.6.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.6.0...v0.6.1)
 
-* Add underscore as explicit dependency: Node js compatibility
+* Bug fix : Add underscore as explicit dependency for BB-Associations in the node.js environment.
+* Compatible with Backbone.js v1.1.2.
 
 ### Version 0.6.0 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.5.5...v0.6.0)
 
+* __ Use v0.6.1 when using Backbone-Associations in node.js environments __
 * Significantly improve event bubbling performance. Only bubble events if objects are listening to those event paths. 
 * BREAKING CHANGE : nested-change events are not fired by default. To switch them on set Backbone.Associations.EVENTS_NC = true at any point in your application flow.
 * `collectionType` can be a function as well. This makes the API of `relatedModel` and `collectionType` uniform.

@@ -4,7 +4,7 @@
     "main":"./backbone-associations.js",
     "dependencies":{
         "backbone":">=1.0.0",
-        "underscore":">=1.4.3"
+        "underscore":">1.4.3"
     },
     "ignore": ["docs", "test", "*.yml"]
 }
