@@ -4,7 +4,7 @@ Associations allows Backbone applications to model 1:1 & 1:N associations betwee
 
 For features, performance #s, API documentation, tutorials and recipes, please visit :
 
-http://dhruvaray.github.io/backbone-associations/.
+http://dhruvaray.github.io/backbone-associations/
 
 
 ### Who uses Backbone-Associations? 
