@@ -7,14 +7,16 @@
     "keywords":["Backbone", "association", "associated", "nested", "model", "cyclic graph", "qualified event paths", "relational", "relations"],
     "author":["Dhruva Ray", "Jaynti Kanani"],
     "dependencies":{
-        "backbone":"~1.1.0"
+        "backbone":">=1.0.0",
+        "underscore":">=1.4.4"
     },
     "devDependencies":{
         "phantomjs":"0.2.2"
     },
     "jam":{
         "dependencies":{
-            "backbone":"~1.1.0"
+            "backbone":">=1.0.0",
+            "underscore":">=1.4.4"
         },
         "main":"backbone-associations.js",
         "include":[
@@ -28,7 +30,7 @@
         "test":"phantomjs test/lib/runner.js test/test-suite.html?noglobals=true"
     },
     "main":"backbone-associations.js",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "repository":"git://github.com/dhruvaray/backbone-associations.git",
     "licenses":[
         {

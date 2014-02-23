@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.6.0
+//  Backbone-associations.js 0.6.1
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -13,7 +13,7 @@
         define(['underscore', 'backbone'], function(_, Backbone) {
             // Export global even in AMD case in case this script is loaded with
             // others that may still expect a global Backbone.
-            factory(root, Backbone, _);
+            return factory(root, Backbone, _);
         });
 
     // Next for Node.js or CommonJS.
@@ -21,6 +21,10 @@
         var _ = require('underscore'),
             Backbone = require('backbone');
         factory(root, Backbone, _);
+        if (typeof module !== 'undefined' && module.exports) {
+            module.exports = Backbone;
+        }
+        exports = Backbone;
 
     // Finally, as a browser global.
     } else {
@@ -47,7 +51,7 @@
     BackboneEvent = Backbone.Events;
 
     Backbone.Associations = {
-        VERSION: "0.6.0"
+        VERSION: "0.6.1"
     };
 
     // Alternative scopes other than root
@@ -714,4 +718,5 @@
     CollectionProto.on = AssociatedModel.prototype.on;
     CollectionProto.off = AssociatedModel.prototype.off;
 
+    return Backbone;
 }));
