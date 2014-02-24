@@ -315,7 +315,7 @@
                                     data = val;
                                 } else {
                                     data = collectionType ?
-                                        new collectionType() : this._createCollection(relatedModel, activationContext);
+                                        this._createCustomCollection(collectionType, relationOptions) : this._createCollection(relatedModel, activationContext);
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
@@ -496,6 +496,12 @@
                 throw new Error('type must inherit from Backbone.AssociatedModel');
             }
             return collection;
+        },
+
+        // Returns New `collection` of custom type `collectionType`
+        _createCustomCollection: function (collectionType, options) {
+          var collection = new collectionType();
+          return collection;
         },
 
         // Process all pending events after the entire object graph has been updated
