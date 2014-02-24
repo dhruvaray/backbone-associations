@@ -1,4 +1,4 @@
-//adopted from Backbone 1.1.1 test suite
+//adopted from Backbone 1.1.2 test suite
 (function() {
 
   var a, b, c, d, e, col, otherCol;

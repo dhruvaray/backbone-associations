@@ -1687,6 +1687,7 @@ $(document).ready(function () {
         ok(emp.get('works_for').get('locations').at(1).get("id") == 7);
         ok(emp.get('works_for').get('locations').at(2).get("id") == 8);
 
+        emp.get('works_for').get('locations').reset();
         emp.get('works_for').get('locations').set([3, 7]);
         ok(emp.get('works_for').get('locations').length == 2);
         ok(emp.get('works_for').get('locations').at(0).get("id") == 3);
@@ -2532,19 +2533,19 @@ $(document).ready(function () {
             ]
         });
 
-        var start = new Date().getTime();
+        var start = _.now();
         var c1 = new Backbone.Collection(setupCounties(3, 100), {model: associatedModel.Country});
         c1.each(function (country) {
             country.get('zoos').each(function (zoo) {
                 zoo.get('animals').add(addAnimals(zoo, 50))
             });
         });
-        var end = new Date().getTime();
-        var diff1 = end - start;
+        var end = _.now();
+        var new_approach = end - start;
 
         Backbone.Associations.EVENTS_NC = true;
 
-        start = new Date().getTime();
+        start = _.now();
         var c2 = new Backbone.Collection(setupCounties(3, 100), {model: associatedModel.Country});
         c2.each(function (country) {
             country.get('zoos').each(function (zoo) {
@@ -2552,10 +2553,10 @@ $(document).ready(function () {
             });
         });
 
-        end = new Date().getTime();
-        var diff2 = end - start;
+        end = _.now();
+        var old_approach = end - start;
 
-        equal(diff2 > diff1, true);
+        equal(old_approach > new_approach, true);
 
 
     });
