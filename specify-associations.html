@@ -134,7 +134,7 @@
                         See the <a href="./recipes.html">recipes</a> for an <a href="./recipes.html#tut-pa">example</a>
                         of where this may be useful.
                     <li>A reference to a Backbone.AssociatedModel type.</li>
-                    <li>A fully qualified string which can be resolved to an object type on the global scope.</li>
+                    <li>A fully qualified string which can be resolved to an object type on the global scope. (or user defined scopes specified via Backbone.Associations.scopes list)</li>
                     <li><span class="label label-info">v0.5.1+</span> A special value - Backbone.Self - can also be set.
                         This special value is useful in self-reference scenarios.
                     </li>
@@ -172,7 +172,8 @@
                     is ignored.</p>
                 <ul>
                     <li>A reference to a Backbone.Collection type.</li>
-                    <li>A fully qualified string which can be resolved to an object type on the global scope.</li>
+                    <li>A fully qualified string which can be resolved to an object type on the global scope. (or user defined scopes specified via Backbone.Associations.scopes list)</li>
+                    <li><span class="label label-info">0.6.0+</span> A function which returns a reference to a Backbone.Collection.</li>
                 </ul>
             </dd>
         </dl>
@@ -204,6 +205,13 @@
             </dd>
         </dl>
 
+        <dl class="dl-horizontal">
+            <dt>serialize (optional)</dt>
+            <dd>
+                <p><span class="label label-info">v0.6.0+</span></p> Use this attribute to set an array of attributes (singleton or subset) which will be serialized to the server end-point. Default behavior is to serialize all attributes.
+
+            </dd>
+        </dl>
     </div>
 </section>
 <section id="sa-one">
