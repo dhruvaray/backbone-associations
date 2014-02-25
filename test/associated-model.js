@@ -1662,7 +1662,7 @@ $(document).ready(function () {
         item.get('product').set({ name:'dave' });
     });
 
-    test("Issue #109", 1, function () {
+    test("Issue #109", 2, function () {
 
         var scope = {};
         var product = scope.Product = Backbone.AssociatedModel.extend({});
@@ -1684,6 +1684,26 @@ $(document).ready(function () {
         var item = new ItemModel({ products: { name: 'johnny' } });
 
         equal(item.get('products').model === product, true);
+
+        ItemModel = scope.ItemModel = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'products',
+                    collectionType: 'Products',
+                    scope: scope,
+                    collectionOptions: function () {
+                        return {model: product}
+                    } //specify via function
+                }
+            ]
+
+        });
+
+        item = new ItemModel({ products: { name: 'johnny' } });
+
+        equal(item.get('products').model === product, true);
+
     });
 
     test("Issue #111", 2, function () {
