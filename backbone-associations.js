@@ -487,7 +487,7 @@
             });
         },
 
-        // Returns new `collection` of type `relation.relatedModel`.
+        // Returns new `collection` (or derivatives) of type `options.model`.
         _createCollection: function (type, options) {
             return new type([], options);
         },
