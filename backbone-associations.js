@@ -592,6 +592,40 @@
             }, this);
             this.off();
         },
+        
+        destroy: function(options) {
+            options = options ? _.clone(options) : {};
+            options = _.defaults(options, {remove_references: true});
+            var model = this;
+
+            var removeReferences = function() {
+                _.each(model.relations, function (relation) {
+                    var val = model.attributes[relation.key];
+
+                    if(val) {
+                        val._proxyCallback && val.off("all", val._proxyCallback, model);
+                        val.parents = _.difference(val.parents, [model])
+                    }
+                });
+            };
+
+            if(options.remove_references && options.wait) {
+                var success = options.success;
+
+                options.success = function (resp) {
+                    if (success) success(model, resp, options);
+                    removeReferences();
+                }
+            }
+
+            var xhr =  ModelProto.destroy.apply(this, [options]);
+
+            if(options.remove_references && !options.wait) {
+                removeReferences();
+            }
+
+            return xhr;
+        },
 
         // Navigate the path to the leaf object in the path to query for the attribute value
         _getAttr:function (path) {
