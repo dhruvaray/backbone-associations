@@ -1675,7 +1675,7 @@ $(document).ready(function () {
                     key: 'products',
                     collectionType: 'Products',
                     scope: scope,
-                    options: {model: product}
+                    collectionOptions: {model: product}
                 }
             ]
 

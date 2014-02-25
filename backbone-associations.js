@@ -244,6 +244,7 @@
                     var relationKey = relation.key,
                         relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
+                        collectionOptions = relation.collectionOptions || {},
                         activationContext = relation.scope || root,
                         map = relation.map,
                         currVal = this.attributes[relationKey],
@@ -315,8 +316,8 @@
                                     data = val;
                                 } else {
                                     data = collectionType ?
-                                        new collectionType([], relationOptions) :
-                                        this._createCollection(relatedModel, relationOptions, activationContext);
+                                        new collectionType([], collectionOptions) :
+                                        this._createCollection(relatedModel, collectionOptions, activationContext);
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
