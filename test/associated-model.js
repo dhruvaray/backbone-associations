@@ -1662,6 +1662,30 @@ $(document).ready(function () {
         item.get('product').set({ name:'dave' });
     });
 
+    test("Issue #109", 1, function () {
+
+        var scope = {};
+        var product = scope.Product = Backbone.AssociatedModel.extend({});
+        var products = scope.Products = Backbone.Collection.extend({});
+
+        var ItemModel = scope.ItemModel = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'products',
+                    collectionType: 'Products',
+                    scope: scope,
+                    options: {model: product}
+                }
+            ]
+
+        });
+
+        var item = new ItemModel({ products: { name: 'johnny' } });
+
+        equal(item.get('products').model === product, true);
+    });
+
     test("transform from store", 16, function () {
         emp.set('works_for', 99);
         ok(emp.get('works_for').get('name') == "sales", "Mapped id to dept instance");

@@ -315,7 +315,8 @@
                                     data = val;
                                 } else {
                                     data = collectionType ?
-                                        new collectionType() : this._createCollection(relatedModel, activationContext);
+                                        new collectionType([], relationOptions) :
+                                        this._createCollection(relatedModel, relationOptions, activationContext);
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
@@ -485,12 +486,12 @@
         },
 
         // Returns New `collection` of type `relation.relatedModel`.
-        _createCollection: function (type, context) {
+        _createCollection: function (type, options, context) {
             var collection, relatedModel = type;
             _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel, context));
             // Creates new `Backbone.Collection` and defines model class.
             if (relatedModel && (relatedModel.prototype instanceof AssociatedModel) || _.isFunction(relatedModel)) {
-                collection = new BackboneCollection();
+                collection = new BackboneCollection([], options);
                 collection.model = relatedModel;
             } else {
                 throw new Error('type must inherit from Backbone.AssociatedModel');
