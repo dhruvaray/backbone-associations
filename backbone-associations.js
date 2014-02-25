@@ -367,10 +367,12 @@
                         //Maintain reverse pointers - a.k.a parents
                         var updated = attributes[relationKey];
                         var original = this.attributes[relationKey];
+                        // Set new parent for updated
                         if (updated) {
                             updated.parents = updated.parents || [];
                             (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
                         }
+                        // Remove `this` from the earlier set value's parents (if the new value is different).
                         if (original && original.parents.length > 0 && original != updated) {
                             original.parents = _.difference(original.parents, [this]);
                             // Don't bubble to this parent anymore

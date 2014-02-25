@@ -1686,6 +1686,31 @@ $(document).ready(function () {
         equal(item.get('products').model === product, true);
     });
 
+    test("Issue #111", 2, function () {
+
+        var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo
+                }
+            ]
+        });
+
+        var foo1 = new Foo;
+        var foo2 = new Foo;
+
+        var bar = new Bar({rel: foo1});
+
+        bar.set({rel: foo2})
+
+        equal(foo1.parents.length == 0, true);
+        equal(foo2.parents.length == 1, true);
+    });
+
     test("transform from store", 16, function () {
         emp.set('works_for', 99);
         ok(emp.get('works_for').get('name') == "sales", "Mapped id to dept instance");
