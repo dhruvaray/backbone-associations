@@ -244,7 +244,6 @@
                     var relationKey = relation.key,
                         relatedModel = relation.relatedModel,
                         collectionType = relation.collectionType,
-                        collectionOptions = relation.collectionOptions || {},
                         activationContext = relation.scope || root,
                         map = relation.map,
                         currVal = this.attributes[relationKey],
@@ -315,9 +314,8 @@
                                 if (val instanceof BackboneCollection) {
                                     data = val;
                                 } else {
-                                    data = collectionType ?
-                                        new collectionType([], collectionOptions) :
-                                        this._createCollection(relatedModel, collectionOptions, activationContext);
+                                    data = this._createCollection(collectionType || BackboneCollection,
+                                        relation.collectionOptions || {model: relatedModel});
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
@@ -489,18 +487,9 @@
             });
         },
 
-        // Returns New `collection` of type `relation.relatedModel`.
-        _createCollection: function (type, options, context) {
-            var collection, relatedModel = type;
-            _.isString(relatedModel) && (relatedModel = map2Scope(relatedModel, context));
-            // Creates new `Backbone.Collection` and defines model class.
-            if (relatedModel && (relatedModel.prototype instanceof AssociatedModel) || _.isFunction(relatedModel)) {
-                collection = new BackboneCollection([], options);
-                collection.model = relatedModel;
-            } else {
-                throw new Error('type must inherit from Backbone.AssociatedModel');
-            }
-            return collection;
+        // Returns new `collection` of type `relation.relatedModel`.
+        _createCollection: function (type, options) {
+            return new type([], options);
         },
 
         // Process all pending events after the entire object graph has been updated
@@ -636,7 +625,7 @@
 
         if (!path) return path;
 
-        //event_type:<path>
+        // event_type:<path>
         var tokens = path.split(":");
 
         if (tokens.length > 1) {
@@ -654,7 +643,7 @@
         var target,
             scopes = [context];
 
-        //Check global scopes after passed-in context
+        // Check global scopes after passed-in context
         scopes.push.apply(scopes, Backbone.Associations.scopes);
 
         for (var ctx, i = 0, l = scopes.length; i < l; ++i) {
@@ -669,7 +658,7 @@
     };
 
 
-    //Infer the relation from the collection's parents and find the appropriate map for the passed in `models`
+    // Infer the relation from the collection's parents and find the appropriate map for the passed in `models`
     var map2models = function (parents, target, models) {
         var relation, surrogate;
         //Iterate over collection's parents
