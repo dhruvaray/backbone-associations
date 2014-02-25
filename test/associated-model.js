@@ -1730,6 +1730,45 @@ $(document).ready(function () {
         equal(foo1.parents.length == 0, true);
         equal(foo2.parents.length == 1, true);
     });
+    
+    test('Issue #113', 5, function() {
+
+    	var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo
+                }
+            ],
+            url: 'fc'
+        });
+
+        var foo = new Foo;
+
+        var bar1 = new Bar({rel: foo});
+
+        equal(foo.parents.length == 1, true);
+
+        bar1.destroy();
+
+        equal(foo.parents.length == 0, true);
+
+        bar1 = new Bar({rel: foo});
+        bar2 = new Bar({rel: foo});
+
+        equal(foo.parents.length == 2, true);
+
+        bar2.destroy();
+
+        equal(foo.parents.length == 1, true);
+
+        bar1.destroy({remove_references: false});
+
+        equal(foo.parents.length == 1, true);
+    });
 
     test("transform from store", 16, function () {
         emp.set('works_for', 99);
