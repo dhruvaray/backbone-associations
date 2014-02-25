@@ -2920,6 +2920,26 @@ $(document).ready(function () {
         node1.set({parent:node3, children:[node2, node3]});
     });
 
+    test("Backbone.One with child having falsy id", 1, function () {
+	var Child = Backbone.AssociatedModel.extend({
+	});
+
+	var Parent = Backbone.AssociatedModel.extend({
+	    relations: [
+		{
+		    type: Backbone.One,
+		    key: "child",
+		    relatedModel: Child
+		}
+	    ]
+	});
+	var parent = new Parent();
+	parent.set({child: {id: 0}});
+	var originalCid = parent.get('child').cid;
+	parent.set({child: {id: 0}});
+	ok(originalCid == parent.get('child').cid);
+    });
+
     test("set,trigger", 13, function () {
         node1.on("change:parent", function () {
             node1.trigger("nestedevent", arguments);
