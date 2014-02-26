@@ -1,3 +1,10 @@
+### Upcoming
+
+* Introducing `collectionOptions` - Can be an options hash or a function which returns an options hash. These options will be utilized while instantiating a new collection of type `collectionType`
+* Bug fix : Remove references from parents during re-assignment and model `destroy` operations (Issue #111 & #114)
+* Bug fix : Check for existence (rather than value) for `idAttribute` (Issue #112) 
+
+
 ### Version 0.6.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.6.0...v0.6.1)
 
 * Bug fix : Add underscore as explicit dependency for BB-Associations in the node.js environment.
