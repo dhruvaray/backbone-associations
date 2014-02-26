@@ -489,7 +489,7 @@
 
         // Returns new `collection` (or derivatives) of type `options.model`.
         _createCollection: function (type, options) {
-            return new type([], _.isFunction(options) ? options.call(this, this) : options);
+            return new type([], _.isFunction(options) ? options.call(this) : options);
         },
 
         // Process all pending events after the entire object graph has been updated
