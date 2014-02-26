@@ -245,7 +245,7 @@
                         activationContext = relation.scope || root,
                         relatedModel = this._getRelatedModel(relation, attributes),
                         collectionType = this._getCollectionType(relation, relatedModel, attributes),
-                        map = relation.map,
+                        map = _.isString(relation.map) ? map2Scope(relation.map, activationContext) : relation.map,
                         currVal = this.attributes[relationKey],
                         idKey = currVal && currVal.idAttribute,
                         val, relationOptions, data, relationValue, newCtx = false;
@@ -254,9 +254,6 @@
                     relationOptions = relation.options ? _.extend({}, relation.options, options) : options;
 
                     if (attributes[relationKey]) {
-
-                        // map a string to a ref by searching scopes
-                        map && _.isString(map) && (map = map2Scope(map, activationContext));
 
                         // Get value of attribute with relation key in `val`.
                         val = _.result(attributes, relationKey);
