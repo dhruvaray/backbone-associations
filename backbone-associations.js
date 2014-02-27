@@ -243,8 +243,8 @@
                 _.each(this.relations, function (relation) {
                     var relationKey = relation.key,
                         activationContext = relation.scope || root,
-                        relatedModel = this._getRelatedModel(relation, attributes),
-                        collectionType = this._getCollectionType(relation, relatedModel, attributes),
+                        relatedModel = this._transformRelatedModel(relation, attributes),
+                        collectionType = this._transformCollectionType(relation, relatedModel, attributes),
                         map = _.isString(relation.map) ? map2Scope(relation.map, activationContext) : relation.map,
                         currVal = this.attributes[relationKey],
                         idKey = currVal && currVal.idAttribute,
@@ -480,7 +480,7 @@
         },
 
         // Process the raw `relatedModel` value set in a relation
-        _getRelatedModel: function (relation, attributes) {
+        _transformRelatedModel: function (relation, attributes) {
 
             var relatedModel = relation.relatedModel;
             var activationContext = relation.scope || root;
@@ -512,7 +512,7 @@
         },
 
         // Process the raw `collectionType` value set in a relation
-        _getCollectionType: function (relation, relatedModel, attributes) {
+        _transformCollectionType: function (relation, relatedModel, attributes) {
 
             var collectionType = relation.collectionType;
             var activationContext = relation.scope || root;
@@ -627,6 +627,7 @@
             options = _.defaults(options, {remove_references: true});
             var model = this;
 
+            // Remove references to `model` in objects which have `model` as their parent
             var removeReferences = function() {
                 _.each(model.relations, function (relation) {
                     var val = model.attributes[relation.key];
@@ -638,13 +639,16 @@
             };
 
             if(options.remove_references && options.wait) {
+                // Proxy success implementation
                 var success = options.success;
 
+                // Substitute with an implementation which will remove references to `model`
                 options.success = function (resp) {
                     if (success) success(model, resp, options);
                     removeReferences();
                 }
             }
+            // Call the base implementation
             var xhr =  ModelProto.destroy.apply(this, [options]);
 
             if(options.remove_references && !options.wait) {
