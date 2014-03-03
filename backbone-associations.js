@@ -615,7 +615,9 @@
         // Call this if you want to set an `AssociatedModel` to a falsy value like undefined/null directly.
         // Not calling this will leak memory and have wrong parents.
         // See test case "parent relations"
-        cleanup:function () {
+        cleanup:function (options) {
+        	options = options || {};
+
             _.each(this.relations, function (relation) {
                 var val = this.attributes[relation.key];
                 if(val) {
@@ -623,7 +625,34 @@
                     val.parents = _.difference(val.parents, [this]);
                 }
             }, this);
-            this.off();
+            
+            (!options.listen) && this.off();
+        },
+
+        // Override destroy to perform house-keeping on `parents` collection
+        destroy: function(options) {
+            options = options ? _.clone(options) : {};
+            options = _.defaults(options, {remove_references: true});
+            var model = this;
+
+            if(options.remove_references && options.wait) {
+                // Proxy success implementation
+                var success = options.success;
+
+                // Substitute with an implementation which will remove references to `model`
+                options.success = function (resp) {
+                    if (success) success(model, resp, options);
+                    model.cleanup({listen: true});
+                }
+            }
+            // Call the base implementation
+            var xhr =  ModelProto.destroy.apply(this, [options]);
+
+            if(options.remove_references && !options.wait) {
+                model.cleanup({listen: true});
+            }
+
+            return xhr;
         },
 
         // Override destroy to perform house-keeping on `parents` collection
