@@ -618,7 +618,10 @@
         cleanup:function () {
             _.each(this.relations, function (relation) {
                 var val = this.attributes[relation.key];
-                val && (val.parents = _.difference(val.parents, [this]));
+                if(val) {
+                    val._proxyCallback && val.off("all", val._proxyCallback, this);
+                    val.parents = _.difference(val.parents, [this]);
+                }
             }, this);
             this.off();
         },
