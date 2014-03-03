@@ -615,7 +615,9 @@
         // Call this if you want to set an `AssociatedModel` to a falsy value like undefined/null directly.
         // Not calling this will leak memory and have wrong parents.
         // See test case "parent relations"
-        cleanup:function () {
+        cleanup:function (options) {
+        	options = options || {};
+
             _.each(this.relations, function (relation) {
                 var val = this.attributes[relation.key];
                 if(val) {
@@ -623,7 +625,8 @@
                     val.parents = _.difference(val.parents, [this]);
                 }
             }, this);
-            this.off();
+            
+            (!options.listen) && this.off();
         },
 
         // Override destroy to perform house-keeping on `parents` collection
@@ -639,28 +642,17 @@
                 // Substitute with an implementation which will remove references to `model`
                 options.success = function (resp) {
                     if (success) success(model, resp, options);
-                    model.removeReferences();
+                    model.cleanup({listen: true});
                 }
             }
             // Call the base implementation
             var xhr =  ModelProto.destroy.apply(this, [options]);
 
             if(options.remove_references && !options.wait) {
-                model.removeReferences();
+                model.cleanup({listen: true});
             }
 
             return xhr;
-        },
-
-        // Remove references to `model` in objects which have `model` as their parent
-        removeReferences: function() {
-            _.each(this.relations, function (relation) {
-                var relationValue = this.attributes[relation.key];
-                if(relationValue) {
-                    relationValue._proxyCallback && relationValue.off("all", relationValue._proxyCallback, this);
-                    relationValue.parents = _.difference(relationValue.parents, [this]);
-                }
-            }, this);
         },
 
         // Navigate the path to the leaf object in the path to query for the attribute value
