@@ -316,10 +316,12 @@
                         // Add proxy events to respective parents.
                         // Only add callback if not defined or new Ctx has been identified.
                         if (newCtx || (relationValue && !relationValue._proxyCallback)) {
-                            relationValue._proxyCallback = function () {
-                                return Backbone.Associations.EVENTS_BUBBLE &&
-                                    this._bubbleEvent.call(this, relationKey, relationValue, arguments);
-                            };
+                            if(!relationValue._proxyCallback) {
+                            	relationValue._proxyCallback = function () {
+                                	return Backbone.Associations.EVENTS_BUBBLE &&
+                                    	this._bubbleEvent.call(this, relationKey, relationValue, arguments);
+                            	};
+                            }
                             relationValue.on("all", relationValue._proxyCallback, this);
                         }
 
