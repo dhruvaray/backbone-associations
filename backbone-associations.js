@@ -629,17 +629,6 @@
             options = _.defaults(options, {remove_references: true});
             var model = this;
 
-            // Remove references to `model` in objects which have `model` as their parent
-            var removeReferences = function() {
-                _.each(model.relations, function (relation) {
-                    var val = model.attributes[relation.key];
-                    if(val) {
-                        val._proxyCallback && val.off("all", val._proxyCallback, model);
-                        val.parents = _.difference(val.parents, [model])
-                    }
-                });
-            };
-
             if(options.remove_references && options.wait) {
                 // Proxy success implementation
                 var success = options.success;
@@ -647,17 +636,28 @@
                 // Substitute with an implementation which will remove references to `model`
                 options.success = function (resp) {
                     if (success) success(model, resp, options);
-                    removeReferences();
+                    model.removeReferences();
                 }
             }
             // Call the base implementation
             var xhr =  ModelProto.destroy.apply(this, [options]);
 
             if(options.remove_references && !options.wait) {
-                removeReferences();
+                model.removeReferences();
             }
 
             return xhr;
+        },
+
+        // Remove references to `model` in objects which have `model` as their parent
+        removeReferences: function() {
+            _.each(this.relations, function (relation) {
+                var relationValue = this.attributes[relation.key];
+                if(relationValue) {
+                    relationValue._proxyCallback && relationValue.off("all", relationValue._proxyCallback, this);
+                    relationValue.parents = _.difference(relationValue.parents, [this]);
+                }
+            }, this);
         },
 
         // Navigate the path to the leaf object in the path to query for the attribute value
