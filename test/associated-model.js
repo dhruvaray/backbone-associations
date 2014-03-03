@@ -1810,6 +1810,33 @@ $(document).ready(function () {
         equal(foo._events.all.length, 1);
     });
 
+    test('Issue #117', 4, function() {
+        var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo
+                }
+            ],
+        });
+
+        var foo = new Foo;
+
+        var bar1 = new Bar({rel: foo});
+        var bar2 = new Bar({rel: foo});
+
+        equal(foo.parents.length, 2);
+        equal(foo._events.all.length, 2);
+
+        bar2.cleanup();
+
+        equal(foo.parents.length, 1);
+        equal(foo._events.all.length, 1);
+    });
+
     test("transform from store", 16, function () {
         emp.set('works_for', 99);
         ok(emp.get('works_for').get('name') == "sales", "Mapped id to dept instance");
