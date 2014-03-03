@@ -1832,6 +1832,7 @@ $(document).ready(function () {
         equal(foo._events.all.length, 2);
 
         bar2.cleanup();
+        bar2 = undefined;
 
         equal(foo.parents.length, 1);
         equal(foo._events.all.length, 1);
