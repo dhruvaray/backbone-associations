@@ -632,7 +632,7 @@
         // Override destroy to perform house-keeping on `parents` collection
         destroy: function(options) {
             options = options ? _.clone(options) : {};
-            options = _.defaults(options, {remove_references: true});
+            options = _.defaults(options, {remove_references: true, listen: true});
             var model = this;
 
             if(options.remove_references && options.wait) {
@@ -642,14 +642,14 @@
                 // Substitute with an implementation which will remove references to `model`
                 options.success = function (resp) {
                     if (success) success(model, resp, options);
-                    model.cleanup({listen: true});
+                    model.cleanup(options);
                 }
             }
             // Call the base implementation
             var xhr =  ModelProto.destroy.apply(this, [options]);
 
             if(options.remove_references && !options.wait) {
-                model.cleanup({listen: true});
+                model.cleanup(options);
             }
 
             return xhr;
