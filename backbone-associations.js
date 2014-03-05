@@ -560,26 +560,38 @@
 
         // The JSON representation of the model.
         toJSON:function (options) {
-            var json = {}, aJson;
+            options = options || {};
+            var json = {}, aJson, serialize_keys = options.serialize_keys;
             json[this.idAttribute] = this.id;
+
             if (!this.visited) {
-                this.visited = true;
                 // Get json representation from `BackboneModel.toJSON`.
                 json = ModelProto.toJSON.apply(this, arguments);
 
                 // Pick up only the keys you want to serialize
-                if (options && options.serialize_keys) {
-                    json = _.pick(json, options.serialize_keys);
+                if (serialize_keys) {
+                    if(_.isArray(serialize_keys) && serialize_keys.length > 0) {
+                        json = _.pick(json, options.serialize_keys);
+                    }
+                    else if(_.isString(serialize_keys)) {
+                        return _.has(json, serialize_keys) ? json[serialize_keys] : null;
+                    }
                 }
+                this.visited = true;
+
                 // If `this.relations` is defined, iterate through each `relation`
                 // and added it's json representation to parents' json representation.
                 if (this.relations) {
                     _.each(this.relations, function (relation) {
+                        if(serialize_keys && serialize_keys.indexOf(relation.key) == -1) {
+                            return;
+                        }
+
                         var key = relation.key,
                             remoteKey = relation.remoteKey,
                             attr = this.attributes[key],
                             serialize = !relation.isTransient,
-                            serialize_keys = relation.serialize || []
+                            _serialize_keys = relation.serialize;
 
                         // Remove default Backbone serialization for associations.
                         delete json[key];
@@ -589,10 +601,10 @@
                         if (serialize) {
 
                             // Pass the keys to serialize as options to the toJSON method.
-                            if (serialize_keys.length) {
+                            if (_serialize_keys) {
                                 options ?
-                                    (options.serialize_keys = serialize_keys) :
-                                    (options = {serialize_keys: serialize_keys})
+                                    (options.serialize_keys = _serialize_keys) :
+                                    (options = {serialize_keys: _serialize_keys})
                             }
 
                             aJson = attr && attr.toJSON ? attr.toJSON(options) : attr;
