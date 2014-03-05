@@ -1838,6 +1838,46 @@ $(document).ready(function () {
         equal(foo._events.all.length, 1);
     });
 
+    test('Issue #119', 2, function() {
+    	var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo,
+                    serialize: 'id'
+                }
+            ],
+        });
+
+        var FooCollection = Backbone.Collection.extend({
+        	model: Foo
+        });
+
+        var Baz = Backbone.AssociatedModel.extend({
+        	relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'rel',
+                    relatedModel: Foo,
+                    collectionType: FooCollection,
+                    serialize: 'id'
+                }
+            ],
+        })
+
+        var foo = new Foo({id: 111});
+        var bar = new Bar({rel: foo});
+
+        equal(bar.toJSON().rel, 111);
+
+        var baz = new Baz({rel: [{id: 11}, {id: 22, key: 'val'}]});
+
+        deepEqual(baz.toJSON(), {rel: [11, 22]});
+    });
+
     test("transform from store", 16, function () {
         emp.set('works_for', 99);
         ok(emp.get('works_for').get('name') == "sales", "Mapped id to dept instance");
