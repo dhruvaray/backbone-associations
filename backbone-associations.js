@@ -204,7 +204,8 @@
                         last = pathTokens[pathTokens.length - 1],
                         parentModel = this.get(initials);
                     if (parentModel instanceof AssociatedModel) {
-                        obj = modelMap[parentModel.cid] || (modelMap[parentModel.cid] = {'model':parentModel, 'data':{}});
+                        obj = modelMap[parentModel.cid] ||
+                            (modelMap[parentModel.cid] = {'model': parentModel, 'data': {}});
                         obj.data[last] = attributes[attr];
                     }
                 } else {
@@ -282,8 +283,10 @@
                                 if (val instanceof BackboneCollection) {
                                     data = val;
                                 } else {
-                                    data = this._createCollection(collectionType || BackboneCollection,
-                                        relation.collectionOptions || {model: relatedModel});
+                                    data = this._createCollection(
+                                        collectionType || BackboneCollection,
+                                        relation.collectionOptions || (relatedModel ? {model: relatedModel} : {})
+                                    );
                                     data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
                                 }
                             }
@@ -306,7 +309,8 @@
                             }
 
                         } else {
-                            throw new Error('type attribute must be specified and have the values Backbone.One or Backbone.Many');
+                            throw new Error('type attribute must be specified and ' +
+                                'have the values Backbone.One or Backbone.Many');
                         }
 
 
@@ -454,6 +458,7 @@
 
         // Returns new `collection` (or derivatives) of type `options.model`.
         _createCollection: function (type, options) {
+            options = _.defaults(options, {model: type.model});
             return new type([], _.isFunction(options) ? options.call(this) : options);
         },
 
