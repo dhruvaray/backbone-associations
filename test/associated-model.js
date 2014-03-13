@@ -1662,6 +1662,41 @@ $(document).ready(function () {
         item.get('product').set({ name:'dave' });
     });
 
+    test("Issue #121", 2, function () {
+
+        var ProductList = Backbone.Collection.extend({
+            model: Product
+        });
+
+        var Product = Backbone.AssociatedModel.extend({
+            initialize: function () {
+                equal(this.collection.parents.length, 1);
+                equal(this.collection.parents[0] instanceof Store, true);
+            }
+        });
+
+
+        var Store = Backbone.AssociatedModel.extend({
+            defaults: {
+                state: "MN"
+            },
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: "products",
+                    collectionType: ProductList
+                }
+            ]
+
+        });
+
+        var plist = new ProductList;
+        var s = new Store({products: plist});
+        var p = new Product({}, {collection: plist});
+
+    });
+
+
     test("Issue #109", 2, function () {
 
         var scope = {};
