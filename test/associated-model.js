@@ -1696,6 +1696,65 @@ $(document).ready(function () {
 
     });
 
+    test("Issue #121 - Traverse child upwards", 2, function () {
+
+        var Designation = Backbone.AssociatedModel.extend({
+            initialize: function () {
+                var parent = this.parents[0];
+                parent.on('change:state', function (model, value, options) {
+                    this.set('name', value == 'NY' ? 'Associate' : 'Dy. Manager')
+                }, this);
+            }
+        });
+        var Product = Backbone.AssociatedModel.extend({
+            initialize: function () {
+                var parent = this.collection.parents[0];
+                parent.on('change:state', function (model, value, options) {
+                    if (value == 'NY')
+                        this.set('name', this.get('name') + '-' + this.get('calories'));
+
+                }, this);
+            }
+        });
+
+        var Store = Backbone.AssociatedModel.extend({
+
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: "products",
+                    relatedModel: Product
+                },
+                {
+                    type: Backbone.One,
+                    key: "mgr_desig",
+                    relatedModel: Designation
+                }
+            ],
+            //Simulate a network call
+            sync: function (method, model, options) {
+                return options.success.call(this, {
+                    state: "NY",
+                    id: "1",
+                    mgr_desig: {},
+                    products: [
+                        {id: "1", name: "Capn Crunch", calories: '20mg'}
+                    ]
+                }, options);
+            }
+
+        });
+
+        var s = new Store();
+        s.fetch();
+
+        equal(s.get('products').at(0).get('name'), 'Capn Crunch-20mg');
+        equal(s.get('mgr_desig').get('name'), 'Associate');
+
+
+    });
+
+
     test("Issue #124", 7, function () {
 
         Backbone.AssociatedModel = Backbone.Model;

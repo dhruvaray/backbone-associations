@@ -108,6 +108,13 @@
         // and prevent redundant event to be triggered in case of cyclic model graphs.
         _proxyCalls:undefined,
 
+        // Override constructor to set parents
+        constructor: function (attributes, options) {
+            // Set parent's opportunistically.
+            options && options.__parents__ && (this.parents = [options.__parents__]);
+            BackboneModel.apply(this, arguments);
+        },
+
         on: function (name, callback, context) {
 
             var result = BackboneEvent.on.apply(this, arguments);
@@ -293,11 +300,16 @@
 
                         } else if (relation.type === Backbone.One) {
 
-                            data = val instanceof BackboneModel ? val : new relatedModel(val, relationOptions);
+                            var hasOwnProperty = (val instanceof BackboneModel) ?
+                                val.attributes.hasOwnProperty(idKey) :
+                                val.hasOwnProperty(idKey);
+                            var newIdKey = (val instanceof BackboneModel) ?
+                                val.attributes[idKey] :
+                                val[idKey];
 
                             //Is the passed in data for the same key?
-                            if (currVal && data.attributes.hasOwnProperty(idKey) &&
-                                currVal.attributes[idKey] === data.attributes[idKey]) {
+                            if (currVal && hasOwnProperty &&
+                                currVal.attributes[idKey] === newIdKey) {
                                 // Setting this flag will prevent events from firing immediately. That way clients
                                 // will not get events until the entire object graph is updated.
                                 currVal._deferEvents = true;
@@ -306,8 +318,16 @@
                                 data = currVal;
                             } else {
                                 newCtx = true;
-                            }
 
+                                if (val instanceof BackboneModel) {
+                                    data = val;
+                                } else {
+                                    relationOptions.__parents__ = this;
+                                    data = new relatedModel(val, relationOptions);
+                                    delete relationOptions.__parents__;
+                                }
+
+                            }
                         } else {
                             throw new Error('type attribute must be specified and ' +
                                 'have the values Backbone.One or Backbone.Many');
@@ -331,22 +351,8 @@
 
                     }
                     //Distinguish between the value of undefined versus a set no-op
-                    if (attributes.hasOwnProperty(relationKey)) {
-                        //Maintain reverse pointers - a.k.a parents
-                        var updated = attributes[relationKey];
-                        var original = this.attributes[relationKey];
-                        // Set new parent for updated
-                        if (updated) {
-                            updated.parents = updated.parents || [];
-                            (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
-                        }
-                        // Remove `this` from the earlier set value's parents (if the new value is different).
-                        if (original && original.parents.length > 0 && original != updated) {
-                            original.parents = _.difference(original.parents, [this]);
-                            // Don't bubble to this parent anymore
-                            original._proxyCallback && original.off("all", original._proxyCallback, this);
-                        }
-                    }
+                    if (attributes.hasOwnProperty(relationKey))
+                        this._setupParents(attributes[relationKey], this.attributes[relationKey]);
                 }, this);
             }
             // Return results for `BackboneModel.set`.
@@ -456,10 +462,27 @@
             });
         },
 
+        //Maintain reverse pointers - a.k.a parents
+        _setupParents: function (updated, original) {
+            // Set new parent for updated
+            if (updated) {
+                updated.parents = updated.parents || [];
+                (_.indexOf(updated.parents, this) == -1) && updated.parents.push(this);
+            }
+            // Remove `this` from the earlier set value's parents (if the new value is different).
+            if (original && original.parents.length > 0 && original != updated) {
+                original.parents = _.difference(original.parents, [this]);
+                // Don't bubble to this parent anymore
+                original._proxyCallback && original.off("all", original._proxyCallback, this);
+            }
+        },
+
         // Returns new `collection` (or derivatives) of type `options.model`.
         _createCollection: function (type, options) {
             options = _.defaults(options, {model: type.model});
-            return new type([], _.isFunction(options) ? options.call(this) : options);
+            var c = new type([], _.isFunction(options) ? options.call(this) : options);
+            c.parents = [this];
+            return c;
         },
 
         // Process all pending events after the entire object graph has been updated
