@@ -203,7 +203,7 @@
                     var pathTokens = getPathArray(attr), initials = _.initial(pathTokens),
                         last = pathTokens[pathTokens.length - 1],
                         parentModel = this.get(initials);
-                    if (parentModel instanceof AssociatedModel) {
+                    if (parentModel instanceof BackboneModel) {
                         obj = modelMap[parentModel.cid] ||
                             (modelMap[parentModel.cid] = {'model': parentModel, 'data': {}});
                         obj.data[last] = attributes[attr];
@@ -293,7 +293,7 @@
 
                         } else if (relation.type === Backbone.One) {
 
-                            data = val instanceof AssociatedModel ? val : new relatedModel(val, relationOptions);
+                            data = val instanceof BackboneModel ? val : new relatedModel(val, relationOptions);
 
                             //Is the passed in data for the same key?
                             if (currVal && data.attributes.hasOwnProperty(idKey) &&
@@ -302,7 +302,7 @@
                                 // will not get events until the entire object graph is updated.
                                 currVal._deferEvents = true;
                                 // Perform the traditional `set` operation
-                                currVal._set(val instanceof AssociatedModel ? val.attributes : val, relationOptions);
+                                currVal._set(val instanceof BackboneModel ? val.attributes : val, relationOptions);
                                 data = currVal;
                             } else {
                                 newCtx = true;

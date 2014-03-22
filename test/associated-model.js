@@ -1696,7 +1696,7 @@ $(document).ready(function () {
 
     });
 
-    test("Issue #124", 4, function () {
+    test("Issue #124", 7, function () {
 
         Backbone.AssociatedModel = Backbone.Model;
         Backbone.Model = Backbone.OriginalModel;
@@ -1725,6 +1725,18 @@ $(document).ready(function () {
         equal(parent.get('myChild.someValue'), 5);
         equal(parent.get('myChild') instanceof Backbone.Model, true);
         equal(parent.get('myChild') instanceof Backbone.AssociatedModel, false);
+
+        parent.on('change:myChild', function () {
+            ok('came here')
+        });
+        parent.on('change:myChild.someValue', function () {
+            ok('came here')
+        });
+
+        //equivalent to parent.get('myChild').set('someValue',6);
+        parent.set('myChild.someValue', 6);
+        equal(parent.get('myChild.someValue'), 6);
+
 
     });
 
