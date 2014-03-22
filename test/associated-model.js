@@ -497,7 +497,7 @@ $(document).ready(function () {
         try {
             new House({owner:owner});
         } catch (e) {
-            equal(e.message === "specify an AssociatedModel for Backbone.One type", true)
+            equal(e.message === "specify an AssociatedModel or Backbone.Model for Backbone.One type", true)
         }
 
     });
@@ -1693,6 +1693,38 @@ $(document).ready(function () {
         var plist = new ProductList;
         var s = new Store({products: plist});
         var p = new Product({}, {collection: plist});
+
+    });
+
+    test("Issue #124", 4, function () {
+
+        Backbone.AssociatedModel = Backbone.Model;
+        Backbone.Model = Backbone.OriginalModel;
+
+        var ChildModel = Backbone.Model.extend({
+            defaults: {
+                someValue: 5
+            }
+        });
+
+        var ParentModel = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'myChild',
+                    relatedModel: ChildModel
+                }
+            ]
+        });
+
+        var parent = new ParentModel({
+            myChild: new ChildModel()
+        });
+
+        equal(parent.get('myChild').get('someValue'), 5);
+        equal(parent.get('myChild.someValue'), 5);
+        equal(parent.get('myChild') instanceof Backbone.Model, true);
+        equal(parent.get('myChild') instanceof Backbone.AssociatedModel, false);
 
     });
 

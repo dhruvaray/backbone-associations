@@ -479,7 +479,7 @@
                 // Traverse down the object graph and call process pending events on sub-trees
                 _.each(this.relations, function (relation) {
                     var val = this.attributes[relation.key];
-                    val && val._processPendingEvents();
+                    val && val._processPendingEvents && val._processPendingEvents();
                 }, this);
 
                 delete this._processedEvents;
@@ -511,8 +511,8 @@
                 if (!relatedModel)
                     throw new Error('specify a relatedModel for Backbone.One type');
 
-                if (!(relatedModel.prototype instanceof Backbone.AssociatedModel))
-                    throw new Error('specify an AssociatedModel for Backbone.One type');
+                if (!(relatedModel.prototype instanceof Backbone.Model))
+                    throw new Error('specify an AssociatedModel or Backbone.Model for Backbone.One type');
             }
 
             return relatedModel;
