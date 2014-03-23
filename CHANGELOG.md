@@ -1,6 +1,8 @@
 ### Upcoming
 
 * Introducing `collectionOptions` - Can be an options hash or a function which returns an options hash. These options will be utilized while instantiating a new collection of type `collectionType`
+* Allow leaf nodes of the object graph to be simple Backbone.Model(s) as well.
+* Set `parents` property eagerly, so that it is available in the children `initialize` at the time of graph creation.
 * Bug fix : Remove references from parents during re-assignment and model `destroy` operations (Issue #111 & #114)
 * Bug fix : Check for existence (rather than value) for `idAttribute` (Issue #112) 
 
