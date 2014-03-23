@@ -176,7 +176,9 @@
 
         // Get the value of an attribute.
         get:function (attr) {
-            var obj = ModelProto.get.call(this, attr);
+            var cache = this.___attributes__,
+                val = ModelProto.get.call(this, attr),
+                obj = cache ? val || cache[attr] : val;
             return obj ? obj : this._getAttr.apply(this, arguments);
         },
 
@@ -203,6 +205,10 @@
         _set:function (attributes, options) {
             var attr, modelMap, modelId, obj, result = this;
             if (!attributes) return this;
+
+            // temp cache of attributes
+            this.__attributes__ = attributes;
+
             for (attr in attributes) {
                 //Create a map for each unique object whose attributes we want to set
                 modelMap || (modelMap = {});
@@ -230,6 +236,8 @@
             } else {
                 result = this._setAttr.call(this, attributes, options);
             }
+            delete this.__attributes__;
+
             return result;
 
         },
@@ -687,6 +695,7 @@
         _getAttr:function (path) {
 
             var result = this,
+                cache = this.__attributes__,
             //Tokenize the path
                 attrs = getPathArray(path),
                 key,
@@ -698,7 +707,7 @@
                 //Navigate the path to get to the result
                 result = result instanceof BackboneCollection
                     ? (isNaN(key) ? undefined : result.at(key))
-                    : result.attributes[key];
+                    : (cache ? result.attributes[key] || cache[key] : result.attributes[key]);
             }
             return result;
         }

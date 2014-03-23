@@ -1700,20 +1700,15 @@ $(document).ready(function () {
 
         var Designation = Backbone.AssociatedModel.extend({
             initialize: function () {
-                var parent = this.parents[0];
-                parent.on('change:state', function (model, value, options) {
-                    this.set('name', value == 'NY' ? 'Associate' : 'Dy. Manager')
-                }, this);
+                var state = this.parents[0].get('state');
+                this.set('name', state == 'NY' ? 'Associate' : 'Dy. Manager')
             }
         });
         var Product = Backbone.AssociatedModel.extend({
             initialize: function () {
-                var parent = this.collection.parents[0];
-                parent.on('change:state', function (model, value, options) {
-                    if (value == 'NY')
-                        this.set('name', this.get('name') + '-' + this.get('calories'));
-
-                }, this);
+                var state = this.collection.parents[0].get('state');
+                if (state = 'NY')
+                    this.set('name', this.get('name') + '-' + this.get('calories'));
             }
         });
 
