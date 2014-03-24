@@ -176,7 +176,7 @@
 
         // Get the value of an attribute.
         get:function (attr) {
-            var cache = this.___attributes__,
+            var cache = this.__attributes__,
                 val = ModelProto.get.call(this, attr),
                 obj = cache ? val || cache[attr] : val;
             return obj ? obj : this._getAttr.apply(this, arguments);
