@@ -615,7 +615,8 @@
                             remoteKey = relation.remoteKey,
                             attr = this.attributes[key],
                             serialize = !relation.isTransient,
-                            serialize_keys = relation.serialize || []
+                            serialize_keys = relation.serialize || [],
+                            _options = _.clone(options);
 
                         // Remove default Backbone serialization for associations.
                         delete json[key];
@@ -626,12 +627,12 @@
 
                             // Pass the keys to serialize as options to the toJSON method.
                             if (serialize_keys.length) {
-                                options ?
-                                    (options.serialize_keys = serialize_keys) :
-                                    (options = {serialize_keys: serialize_keys})
+                                _options ?
+                                    (_options.serialize_keys = serialize_keys) :
+                                    (_options = {serialize_keys: serialize_keys})
                             }
 
-                            aJson = attr && attr.toJSON ? attr.toJSON(options) : attr;
+                            aJson = attr && attr.toJSON ? attr.toJSON(_options) : attr;
                             json[remoteKey || key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
                         }
 

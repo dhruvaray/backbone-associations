@@ -1971,6 +1971,39 @@ $(document).ready(function () {
         equal(foo._events.all.length, 1);
     });
 
+    test('Issue #1177', 2, function() {
+        var Foo = Backbone.AssociatedModel.extend({});
+        var Bar = Backbone.AssociatedModel.extend({});
+
+        var Baz = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'fooRel',
+                    relatedModel: Foo,
+                    serialize: ['name']
+                },
+                {
+                    type: Backbone.One,
+                    key: 'barRel',
+                    relatedModel: Bar,
+                }
+            ],
+        });
+
+        var foo = new Foo({name: 'John', age: 30});
+        var bar = new Bar({test: 1});
+
+        var baz = new Baz({'fooRel': foo, 'barRel': bar});
+
+        var json = baz.toJSON();
+
+        console.log(json);
+
+        deepEqual(json.fooRel, {name: 'John'});
+        deepEqual(json.barRel, {test: 1});
+    });
+
     test("transform from store", 16, function () {
         emp.set('works_for', 99);
         ok(emp.get('works_for').get('name') == "sales", "Mapped id to dept instance");
