@@ -2004,6 +2004,26 @@ $(document).ready(function () {
         deepEqual(json.barRel, {test: 1});
     });
 
+    test('map return null', 1, function() {
+    	var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo,
+                    map: function(m) {
+                    	return null;
+                    }
+                }
+            ],
+        });
+
+        var bar = new Bar({rel: {'test': ''}});
+        equal(bar.get('rel'), null);
+    });
+
     test("transform from store", 16, function () {
         emp.set('works_for', 99);
         ok(emp.get('works_for').get('name') == "sales", "Mapped id to dept instance");

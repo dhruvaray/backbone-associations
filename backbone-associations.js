@@ -276,6 +276,10 @@
 
                         // Map `val` if a transformation function is provided.
                         val = map ? map.call(this, val, collectionType ? collectionType : relatedModel) : val;
+                        if(!val) {
+                            attributes[relationKey] = val;
+                            return;
+                        }
 
                         // If `relation.type` is `Backbone.Many`,
                         // Create `Backbone.Collection` with passed data and perform Backbone `set`.
