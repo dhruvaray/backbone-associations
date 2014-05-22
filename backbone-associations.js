@@ -178,8 +178,8 @@
         get:function (attr) {
             var cache = this.__attributes__,
                 val = ModelProto.get.call(this, attr),
-                obj = cache ? val || cache[attr] : val;
-            return obj ? obj : this._getAttr.apply(this, arguments);
+                obj = cache ? ((val != null) ? val : cache[attr]) : val;
+            return (obj != null) ? obj : this._getAttr.apply(this, arguments);
         },
 
         // Set a hash of model attributes on the Backbone Model.
