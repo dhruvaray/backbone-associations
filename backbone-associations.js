@@ -277,73 +277,72 @@
 
                         // Map `val` if a transformation function is provided.
                         val = map ? map.call(this, val, collectionType ? collectionType : relatedModel) : val;
-                        if(!val) {
-                            attributes[relationKey] = val;
-                            return;
-                        }
-
-                        // If `relation.type` is `Backbone.Many`,
-                        // Create `Backbone.Collection` with passed data and perform Backbone `set`.
-                        if (relation.type === Backbone.Many) {
-
-                            if (currVal) {
-                                // Setting this flag will prevent events from firing immediately. That way clients
-                                // will not get events until the entire object graph is updated.
-                                currVal._deferEvents = true;
-
-                                // Use Backbone.Collection's `reset` or smart `set` method
-                                currVal[relationOptions.reset ? 'reset' : 'set'](
-                                    val instanceof BackboneCollection ? val.models : val, relationOptions);
-
-                                data = currVal;
-
-                            } else {
-                                newCtx = true;
-
-                                if (val instanceof BackboneCollection) {
-                                    data = val;
-                                } else {
-                                    data = this._createCollection(
-                                        collectionType || BackboneCollection,
-                                        relation.collectionOptions || (relatedModel ? {model: relatedModel} : {})
-                                    );
-                                    data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
-                                }
-                            }
-
-                        } else if (relation.type === Backbone.One) {
-
-                            var hasOwnProperty = (val instanceof BackboneModel) ?
-                                val.attributes.hasOwnProperty(idKey) :
-                                val.hasOwnProperty(idKey);
-                            var newIdKey = (val instanceof BackboneModel) ?
-                                val.attributes[idKey] :
-                                val[idKey];
-
-                            //Is the passed in data for the same key?
-                            if (currVal && hasOwnProperty &&
-                                currVal.attributes[idKey] === newIdKey) {
-                                // Setting this flag will prevent events from firing immediately. That way clients
-                                // will not get events until the entire object graph is updated.
-                                currVal._deferEvents = true;
-                                // Perform the traditional `set` operation
-                                currVal._set(val instanceof BackboneModel ? val.attributes : val, relationOptions);
-                                data = currVal;
-                            } else {
-                                newCtx = true;
-
-                                if (val instanceof BackboneModel) {
-                                    data = val;
-                                } else {
-                                    relationOptions.__parents__ = this;
-                                    data = new relatedModel(val, relationOptions);
-                                    delete relationOptions.__parents__;
-                                }
-
-                            }
+                        if (!isValuePresent(val)) {
+                            data = val;
                         } else {
-                            throw new Error('type attribute must be specified and ' +
-                                'have the values Backbone.One or Backbone.Many');
+                            // If `relation.type` is `Backbone.Many`,
+                            // Create `Backbone.Collection` with passed data and perform Backbone `set`.
+                            if (relation.type === Backbone.Many) {
+
+                                if (currVal) {
+                                    // Setting this flag will prevent events from firing immediately. That way clients
+                                    // will not get events until the entire object graph is updated.
+                                    currVal._deferEvents = true;
+
+                                    // Use Backbone.Collection's `reset` or smart `set` method
+                                    currVal[relationOptions.reset ? 'reset' : 'set'](
+                                        val instanceof BackboneCollection ? val.models : val, relationOptions);
+
+                                    data = currVal;
+
+                                } else {
+                                    newCtx = true;
+
+                                    if (val instanceof BackboneCollection) {
+                                        data = val;
+                                    } else {
+                                        data = this._createCollection(
+                                            collectionType || BackboneCollection,
+                                            relation.collectionOptions || (relatedModel ? {model: relatedModel} : {})
+                                        );
+                                        data[relationOptions.reset ? 'reset' : 'set'](val, relationOptions);
+                                    }
+                                }
+
+                            } else if (relation.type === Backbone.One) {
+
+                                var hasOwnProperty = (val instanceof BackboneModel) ?
+                                    val.attributes.hasOwnProperty(idKey) :
+                                    val.hasOwnProperty(idKey);
+                                var newIdKey = (val instanceof BackboneModel) ?
+                                    val.attributes[idKey] :
+                                    val[idKey];
+
+                                //Is the passed in data for the same key?
+                                if (currVal && hasOwnProperty &&
+                                    currVal.attributes[idKey] === newIdKey) {
+                                    // Setting this flag will prevent events from firing immediately. That way clients
+                                    // will not get events until the entire object graph is updated.
+                                    currVal._deferEvents = true;
+                                    // Perform the traditional `set` operation
+                                    currVal._set(val instanceof BackboneModel ? val.attributes : val, relationOptions);
+                                    data = currVal;
+                                } else {
+                                    newCtx = true;
+
+                                    if (val instanceof BackboneModel) {
+                                        data = val;
+                                    } else {
+                                        relationOptions.__parents__ = this;
+                                        data = new relatedModel(val, relationOptions);
+                                        delete relationOptions.__parents__;
+                                    }
+
+                                }
+                            } else {
+                                throw new Error('type attribute must be specified and ' +
+                                    'have the values Backbone.One or Backbone.Many');
+                            }
                         }
 
 

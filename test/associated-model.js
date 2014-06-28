@@ -1696,6 +1696,29 @@ $(document).ready(function () {
 
     });
 
+    test("Issue #133", 1, function () {
+
+        var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo,
+                    map: function (m) {
+                        if (m.test == '') return null;
+                        return m;
+                    }
+                }
+            ]
+        });
+
+        var bar = new Bar({rel: {'test': ''}});
+        ok('came here');
+
+    });
+
     test("Issue #121 - Traverse child upwards", 2, function () {
 
         var Designation = Backbone.AssociatedModel.extend({
