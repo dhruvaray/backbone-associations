@@ -1,5 +1,5 @@
 //
-//  Backbone-associations.js 0.6.1
+//  Backbone-associations.js 0.6.2
 //
 //  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
@@ -51,7 +51,7 @@
     BackboneEvent = Backbone.Events;
 
     Backbone.Associations = {
-        VERSION: "0.6.1"
+        VERSION: "0.6.2"
     };
 
     // Alternative scopes other than root
@@ -178,8 +178,8 @@
         get:function (attr) {
             var cache = this.__attributes__,
                 val = ModelProto.get.call(this, attr),
-                obj = cache ? val || cache[attr] : val;
-            return obj ? obj : this._getAttr.apply(this, arguments);
+                obj = cache ? (isValuePresent(val) ? val : cache[attr]) : val;
+            return isValuePresent(obj) ? obj : this._getAttr.apply(this, arguments);
         },
 
         // Set a hash of model attributes on the Backbone Model.
@@ -236,6 +236,7 @@
             } else {
                 result = this._setAttr.call(this, attributes, options);
             }
+
             delete this.__attributes__;
 
             return result;
@@ -712,7 +713,10 @@
                 //Navigate the path to get to the result
                 result = result instanceof BackboneCollection
                     ? (isNaN(key) ? undefined : result.at(key))
-                    : (cache ? result.attributes[key] || cache[key] : result.attributes[key]);
+                    : (cache ?
+                    (isValuePresent(result.attributes[key]) ? result.attributes[key] : cache[key]) :
+                    result.attributes[key]
+                    );
             }
             return result;
         }
@@ -782,6 +786,11 @@
             return relation.map.call(surrogate, models, target);
         }
         return models;
+    };
+
+    // Utility method to check for null or undefined value
+    var isValuePresent = function (value) {
+        return (!_.isUndefined(value)) && (!_.isNull(value));
     };
 
     var proxies = {};
