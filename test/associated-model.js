@@ -497,7 +497,7 @@ $(document).ready(function () {
         try {
             new House({owner:owner});
         } catch (e) {
-            equal(e.message === "specify an AssociatedModel for Backbone.One type", true)
+            equal(e.message === "specify an AssociatedModel or Backbone.Model for Backbone.One type", true)
         }
 
     });
@@ -1660,6 +1660,391 @@ $(document).ready(function () {
         var item = new ItemModel({ product:{ name:'johnny' } });
 
         item.get('product').set({ name:'dave' });
+    });
+
+    test("Issue #121", 2, function () {
+
+        var ProductList = Backbone.Collection.extend({
+            model: Product
+        });
+
+        var Product = Backbone.AssociatedModel.extend({
+            initialize: function () {
+                equal(this.collection.parents.length, 1);
+                equal(this.collection.parents[0] instanceof Store, true);
+            }
+        });
+
+
+        var Store = Backbone.AssociatedModel.extend({
+            defaults: {
+                state: "MN"
+            },
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: "products",
+                    collectionType: ProductList
+                }
+            ]
+
+        });
+
+        var plist = new ProductList;
+        var s = new Store({products: plist});
+        var p = new Product({}, {collection: plist});
+
+    });
+
+    test("Issue #133", 1, function () {
+
+        var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo,
+                    map: function (m) {
+                        if (m.test == '') return null;
+                        return m;
+                    }
+                }
+            ]
+        });
+
+        var bar = new Bar({rel: {'test': ''}});
+        ok('came here');
+
+    });
+
+    test("Issue #121 - Traverse child upwards", 2, function () {
+
+        var Designation = Backbone.AssociatedModel.extend({
+            initialize: function () {
+                var state = this.parents[0].get('state');
+                this.set('name', state == 'NY' ? 'Associate' : 'Dy. Manager')
+            }
+        });
+        var Product = Backbone.AssociatedModel.extend({
+            initialize: function () {
+                var state = this.collection.parents[0].get('state');
+                if (state = 'NY')
+                    this.set('name', this.get('name') + '-' + this.get('calories'));
+            }
+        });
+
+        var Store = Backbone.AssociatedModel.extend({
+
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: "products",
+                    relatedModel: Product
+                },
+                {
+                    type: Backbone.One,
+                    key: "mgr_desig",
+                    relatedModel: Designation
+                }
+            ],
+            //Simulate a network call
+            sync: function (method, model, options) {
+                return options.success.call(this, {
+                    state: "NY",
+                    id: "1",
+                    mgr_desig: {},
+                    products: [
+                        {id: "1", name: "Capn Crunch", calories: '20mg'}
+                    ]
+                }, options);
+            }
+
+        });
+
+        var s = new Store();
+        s.fetch();
+
+        equal(s.get('products').at(0).get('name'), 'Capn Crunch-20mg');
+        equal(s.get('mgr_desig').get('name'), 'Associate');
+
+
+    });
+
+
+    test("Issue #124", 7, function () {
+
+        Backbone.AssociatedModel = Backbone.Model;
+        Backbone.Model = Backbone.OriginalModel;
+
+        var ChildModel = Backbone.Model.extend({
+            defaults: {
+                someValue: 5
+            }
+        });
+
+        var ParentModel = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'myChild',
+                    relatedModel: ChildModel
+                }
+            ]
+        });
+
+        var parent = new ParentModel({
+            myChild: new ChildModel()
+        });
+
+        equal(parent.get('myChild').get('someValue'), 5);
+        equal(parent.get('myChild.someValue'), 5);
+        equal(parent.get('myChild') instanceof Backbone.Model, true);
+        equal(parent.get('myChild') instanceof Backbone.AssociatedModel, false);
+
+        parent.on('change:myChild', function () {
+            ok('came here')
+        });
+        parent.on('change:myChild.someValue', function () {
+            ok('came here')
+        });
+
+        //equivalent to parent.get('myChild').set('someValue',6);
+        parent.set('myChild.someValue', 6);
+        equal(parent.get('myChild.someValue'), 6);
+
+
+    });
+
+
+    test("Issue #109", 2, function () {
+
+        var scope = {};
+        var product = scope.Product = Backbone.AssociatedModel.extend({});
+        var products = scope.Products = Backbone.Collection.extend({});
+
+        var ItemModel = scope.ItemModel = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'products',
+                    collectionType: 'Products',
+                    scope: scope,
+                    collectionOptions: {model: product}
+                }
+            ]
+
+        });
+
+        var item = new ItemModel({ products: { name: 'johnny' } });
+
+        equal(item.get('products').model === product, true);
+
+        ItemModel = scope.ItemModel = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.Many,
+                    key: 'products',
+                    collectionType: 'Products',
+                    scope: scope,
+                    collectionOptions: function () {
+                        return {model: product}
+                    } //specify via function
+                }
+            ]
+
+        });
+
+        item = new ItemModel({ products: { name: 'johnny' } });
+
+        equal(item.get('products').model === product, true);
+
+    });
+
+    test("Issue #111", 2, function () {
+
+        var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo
+                }
+            ]
+        });
+
+        var foo1 = new Foo;
+        var foo2 = new Foo;
+
+        var bar = new Bar({rel: foo1});
+
+        bar.set({rel: foo2})
+
+        equal(foo1.parents.length == 0, true);
+        equal(foo2.parents.length == 1, true);
+    });
+    
+    test('Issue #113', 8, function() {
+
+        var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo
+                }
+            ],
+            url: 'fc'
+        });
+
+        var foo = new Foo;
+
+        var bar1 = new Bar({rel: foo});
+
+        equal(foo.parents.length == 1, true);
+
+        bar1.destroy();
+
+        equal(foo.parents.length == 0, true);
+
+        bar1 = new Bar({rel: foo});
+        var bar2 = new Bar({rel: foo});
+
+        equal(foo.parents.length == 2, true);
+
+        bar2.destroy();
+
+        equal(foo.parents.length == 1, true);
+
+        bar1.destroy({remove_references: false});
+
+        equal(foo.parents.length == 1, true);
+
+        var foo = new Foo;
+
+        bar1 = new Bar({rel: foo});
+        bar2 = new Bar({rel: foo});
+
+        equal(foo.parents.length == 2, true);
+
+        bar1.destroy({wait: true});
+
+        equal(foo.parents.length == 1, true);
+
+        bar2.destroy({wait: true, remove_references: false});
+
+        equal(foo.parents.length == 1, true);
+    });
+
+    test('Issue #115', 2, function() {
+        var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo
+                }
+            ],
+        });
+
+        var foo = new Foo;
+
+        var bar1 = new Bar({rel: foo});
+        var bar2 = new Bar({rel: foo})
+
+        equal(foo._events.all.length, 2);
+
+        bar1.destroy();
+
+        equal(foo._events.all.length, 1);
+    });
+
+    test('Issue #117', 4, function() {
+        var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo
+                }
+            ],
+        });
+
+        var foo = new Foo;
+
+        var bar1 = new Bar({rel: foo});
+        var bar2 = new Bar({rel: foo});
+
+        equal(foo.parents.length, 2);
+        equal(foo._events.all.length, 2);
+
+        bar2.cleanup();
+        bar2 = undefined;
+
+        equal(foo.parents.length, 1);
+        equal(foo._events.all.length, 1);
+    });
+
+    test('Issue #1177', 2, function() {
+        var Foo = Backbone.AssociatedModel.extend({});
+        var Bar = Backbone.AssociatedModel.extend({});
+
+        var Baz = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'fooRel',
+                    relatedModel: Foo,
+                    serialize: ['name']
+                },
+                {
+                    type: Backbone.One,
+                    key: 'barRel',
+                    relatedModel: Bar,
+                }
+            ],
+        });
+
+        var foo = new Foo({name: 'John', age: 30});
+        var bar = new Bar({test: 1});
+
+        var baz = new Baz({'fooRel': foo, 'barRel': bar});
+
+        var json = baz.toJSON();
+
+        console.log(json);
+
+        deepEqual(json.fooRel, {name: 'John'});
+        deepEqual(json.barRel, {test: 1});
+    });
+
+    test('map return null', 1, function() {
+    	var Foo = Backbone.AssociatedModel.extend({});
+
+        var Bar = Backbone.AssociatedModel.extend({
+            relations: [
+                {
+                    type: Backbone.One,
+                    key: 'rel',
+                    relatedModel: Foo,
+                    map: function(m) {
+                    	return null;
+                    }
+                }
+            ],
+        });
+
+        var bar = new Bar({rel: {'test': ''}});
+        equal(bar.get('rel'), null);
     });
 
     test("transform from store", 16, function () {
@@ -2869,6 +3254,26 @@ $(document).ready(function () {
         });
 
         node1.set({parent:node3, children:[node2, node3]});
+    });
+
+    test("Backbone.One with child having falsy id", 1, function () {
+	var Child = Backbone.AssociatedModel.extend({
+	});
+
+	var Parent = Backbone.AssociatedModel.extend({
+	    relations: [
+		{
+		    type: Backbone.One,
+		    key: "child",
+		    relatedModel: Child
+		}
+	    ]
+	});
+	var parent = new Parent();
+	parent.set({child: {id: 0}});
+	var originalCid = parent.get('child').cid;
+	parent.set({child: {id: 0}});
+	ok(originalCid == parent.get('child').cid);
     });
 
     test("set,trigger", 13, function () {

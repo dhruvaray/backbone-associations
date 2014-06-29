@@ -1,3 +1,14 @@
+### Version 0.6.2 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.6.1...v0.6.2)
+
+* Introducing `collectionOptions` - Can be an options hash or a function which returns an options hash. These options will be utilized while instantiating a new collection of type `collectionType`
+* Allow leaf nodes of the object graph to be simple Backbone.Model(s) as well.
+* Set `parents` property eagerly, so that it is available in the children `initialize` at the time of graph creation.
+* Bug fix : Remove references from parents during re-assignment and model `destroy` operations (Issue #111 & #114)
+* Bug fix : Check for existence (rather than value) for `idAttribute` (Issue #112) 
+* Bug fix : Check for null/undefined v/s legitimate false value scenarios (Issue #137)
+* Bug fix : Checks for maps returning null values (Issue #133)
+
+
 ### Version 0.6.1 - [Diff](https://github.com/dhruvaray/backbone-associations/compare/v0.6.0...v0.6.1)
 
 * Bug fix : Add underscore as explicit dependency for BB-Associations in the node.js environment.
