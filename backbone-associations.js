@@ -1,7 +1,7 @@
 //
 //  Backbone-associations.js 0.6.2
 //
-//  (c) 2013 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
+//  (c) 2014 Dhruva Ray, Jaynti Kanani, Persistent Systems Ltd.
 //  Backbone-associations may be freely distributed under the MIT license.
 //  For all details and documentation:
 //  https://github.com/dhruvaray/backbone-associations/
