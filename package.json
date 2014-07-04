@@ -11,7 +11,7 @@
         "underscore":">=1.4.4"
     },
     "devDependencies":{
-        "phantomjs":"0.2.2"
+        "phantomjs":"1.7.0"
     },
     "jam":{
         "dependencies":{
