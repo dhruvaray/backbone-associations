@@ -71,12 +71,18 @@ $(document).ready(function () {
                 key:'locations',
                 relatedModel:Location,
                 map:map2locs
+            },
+            {
+                type:Backbone.One,
+                key:'supervisor',
+                relatedModel:'Employee'
             }
         ],
         defaults:{
             name:"",
             number:0,
-            locations:[]
+            locations:[],
+            supervisor: null
         },
         urlRoot:'/project'
     });
@@ -2378,6 +2384,64 @@ $(document).ready(function () {
 
     });
 
+    test("multiple _proxyCallback fn for different parent keys - issue #145", 2, function () {
+
+        var emp2 = new Employee({'fname':'emp2'});
+
+        project1.set({ supervisor: emp2 });
+
+        emp.set({ manager: emp2 });
+
+        project1.on('change:supervisor.fname', function (event) {
+            ok(true, "Fired project1 > change:supervisor.fname");
+        });
+
+        emp.on('change:manager.fname', function (event) {
+            ok(true, "Fired emp > change:manager.fname");
+        });
+
+        emp2.set('fname', 'emp3');
+
+    });
+
+    test("multiple _proxyCallback fn for different parent keys - _proxyCallbacks setup - issue #145", 2, function () {
+
+        var emp2 = new Employee({'fname':'emp2'});
+
+        project1.set({ supervisor: emp2 });
+
+        equal(_.keys(emp2._proxyCallbacks)[0], 'supervisor');
+
+        emp.set({ manager: emp2 });
+
+        equal(_.keys(emp2._proxyCallbacks)[1], 'manager');
+
+    });
+
+    test("multiple _proxyCallback fn for different parent keys - _proxyCallbacks teardown - issue #145", 7, function () {
+
+        var emp2 = new Employee({'fname':'emp2'});
+
+        equal(emp2._events, undefined);
+
+        project1.set({ supervisor: emp2 });
+        emp.set({ manager: emp2 });
+
+        equal(emp2._events['all'].length, 2);
+        equal(_.keys(emp2._proxyCallbacks).length, 2);
+
+        project1.cleanup();
+
+        equal(emp2._events['all'].length, 1);
+        equal(_.keys(emp2._proxyCallbacks).length, 1);
+
+        emp.cleanup();
+
+        equal(emp2._events['all'], undefined);
+        equal(_.keys(emp2._proxyCallbacks).length, 0);
+
+    });
+
     test("child `add`", 21, function () {
         emp.on('add:dependents', function () {
             ok(true, "Fired emp add:dependents...");
@@ -2462,10 +2526,10 @@ $(document).ready(function () {
         var rawJson2 = {"works_for":{"controls":[
             {"locations":[
                 {"add1":"P.O Box 3899", "add2":null, "id":"1", "zip":"94404", "state":"CA"}
-            ], "name":"Project X", "number":"2"},
+            ], "name":"Project X", "number":"2", "supervisor": null},
             {"locations":[
                 {"add1":"P.O Box 4899", "add2":null, "id":"2", "zip":"95502", "state":"CA"}
-            ], "name":"Project Y", "number":"2"}
+            ], "name":"Project Y", "number":"2", "supervisor": null}
         ], "locations":[
             {"add1":"P.O Box 3899", "add2":null, "id":"1", "zip":"94404", "state":"CA"},
             {"add1":"P.O Box 4899", "add2":null, "id":"2", "zip":"95502", "state":"CA"}

@@ -351,20 +351,23 @@
 
                         // Add proxy events to respective parents.
                         // Only add callback if not defined or new Ctx has been identified.
-                        if (newCtx || (relationValue && !relationValue._proxyCallback)) {
-                            if(!relationValue._proxyCallback) {
-                            	relationValue._proxyCallback = function () {
-                                	return Backbone.Associations.EVENTS_BUBBLE &&
-                                    	this._bubbleEvent.call(this, relationKey, relationValue, arguments);
-                            	};
+                        if (newCtx || (relationValue && relationValue._proxyCallbacks && !relationValue._proxyCallbacks[relationKey])) {
+
+                            relationValue._proxyCallbacks = relationValue._proxyCallbacks || {};
+
+                            if (!relationValue._proxyCallbacks[relationKey]) {
+                                relationValue._proxyCallbacks[relationKey] = function () {
+                                    return Backbone.Associations.EVENTS_BUBBLE &&
+                                        this._bubbleEvent.call(this, relationKey, relationValue, arguments);
+                                };
                             }
-                            relationValue.on("all", relationValue._proxyCallback, this);
+                            relationValue.on("all", relationValue._proxyCallbacks[relationKey], this);
                         }
 
                     }
                     //Distinguish between the value of undefined versus a set no-op
                     if (attributes.hasOwnProperty(relationKey))
-                        this._setupParents(attributes[relationKey], this.attributes[relationKey]);
+                        this._setupParents(attributes[relationKey], this.attributes[relationKey], relationKey);
                 }, this);
             }
             // Return results for `BackboneModel.set`.
@@ -475,7 +478,7 @@
         },
 
         //Maintain reverse pointers - a.k.a parents
-        _setupParents: function (updated, original) {
+        _setupParents: function (updated, original, relationKey) {
             // Set new parent for updated
             if (updated) {
                 updated.parents = updated.parents || [];
@@ -485,7 +488,10 @@
             if (original && original.parents.length > 0 && original != updated) {
                 original.parents = _.difference(original.parents, [this]);
                 // Don't bubble to this parent anymore
-                original._proxyCallback && original.off("all", original._proxyCallback, this);
+                if (original._proxyCallbacks && original._proxyCallbacks[relationKey]) {
+                    original.off("all", original._proxyCallbacks[relationKey], this);
+                    delete original._proxyCallbacks[relationKey];
+                }
             }
         },
 
@@ -661,12 +667,15 @@
 
             _.each(this.relations, function (relation) {
                 var val = this.attributes[relation.key];
-                if(val) {
-                    val._proxyCallback && val.off("all", val._proxyCallback, this);
+                if (val) {
+                    if (val._proxyCallbacks && val._proxyCallbacks[relation.key]) {
+                        val.off("all", val._proxyCallbacks[relation.key], this);
+                        delete val._proxyCallbacks[relation.key];
+                    }
                     val.parents = _.difference(val.parents, [this]);
                 }
             }, this);
-            
+
             (!options.listen) && this.off();
         },
 
