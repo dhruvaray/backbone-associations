@@ -227,6 +227,13 @@
                 }
             }
 
+
+            if (options) {
+                delete options.add;
+                delete options.remove;
+                delete options.merge;
+            }
+
             if (modelMap) {
                 for (modelId in modelMap) {
                     obj = modelMap[modelId];
