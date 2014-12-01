@@ -1216,6 +1216,57 @@ $(document).ready(function () {
         equal(searchResult.get('products').length, 4, "searchResult.products.length should be 4."); //1
     });
 
+    test("Fetch collection with options when the collection model as a 1:M relation", 5, function () {
+        var Category = Backbone.AssociatedModel.extend();
+        var Product = Backbone.AssociatedModel.extend({
+            defaults:{
+                name:undefined, // String
+                productId:undefined // String
+            },
+            relations:[
+                {
+                    type:Backbone.Many,
+                    key:'categories',
+                    relatedModel:Category
+                }
+            ]
+        });
+
+        var Products = Backbone.Collection.extend({
+            model: Product,
+            sync:function (method, model, options) {
+                return options.success.call(this, [
+                    {
+                        id:1,
+                        categories:[
+                            {
+                                id:1,
+                                name:'category1'
+                            },
+                            {
+                                id:2,
+                                name:'category2'
+                            }
+                        ]
+                    },
+                    {
+                        id:2,
+                        categories:[]
+                    }
+                ])
+            },
+            urlRoot:'/products'
+        });
+
+        var products = new Products([{id:1}, {id:2}, {id:3}]);
+        products.fetch({add: false, remove: false, merge: true});
+        ok(true, "the collection should be instanciate without error");
+        equal(3, products.length, "the collection should have 3 products");
+        equal(2, products.get(1).get("categories").length, "the product with id 1 should have 2 categories");
+        equal(0, products.get(2).get("categories").length, "the product with id 2 should have 0 category");
+        equal(null, products.get(3).get("categories"), "the product with id 3 should not have categories reference");
+    });
+
     test("IdAttribute: Issue#80", 2, function () {
 
         var User = Backbone.AssociatedModel.extend({
@@ -1886,7 +1937,7 @@ $(document).ready(function () {
         equal(foo1.parents.length == 0, true);
         equal(foo2.parents.length == 1, true);
     });
-    
+
     test('Issue #113', 8, function() {
 
         var Foo = Backbone.AssociatedModel.extend({});
