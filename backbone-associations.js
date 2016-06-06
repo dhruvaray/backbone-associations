@@ -257,7 +257,7 @@
             if (this.relations) {
                 // Iterate over `this.relations` and `set` model and collection values
                 // if `relations` are available.
-                _.each(this.relations, function (relation) {
+                _.each(this.relations, _.bind(function (relation) {
                     var relationKey = relation.key,
                         activationContext = relation.scope || root,
                         relatedModel = this._transformRelatedModel(relation, attributes),
@@ -365,7 +365,7 @@
                     //Distinguish between the value of undefined versus a set no-op
                     if (attributes.hasOwnProperty(relationKey))
                         this._setupParents(attributes[relationKey], this.attributes[relationKey]);
-                }, this);
+                }, this));
             }
             // Return results for `BackboneModel.set`.
             return  ModelProto.set.call(this, attributes, options);
@@ -512,10 +512,10 @@
                 this._pendingEvents = [];
 
                 // Traverse down the object graph and call process pending events on sub-trees
-                _.each(this.relations, function (relation) {
+                _.each(this.relations, _.bind(function (relation) {
                     var val = this.attributes[relation.key];
                     val && val._processPendingEvents && val._processPendingEvents();
-                }, this);
+                }, this));
 
                 delete this._processedEvents;
             }
@@ -614,7 +614,7 @@
                 // If `this.relations` is defined, iterate through each `relation`
                 // and added it's json representation to parents' json representation.
                 if (this.relations) {
-                    _.each(this.relations, function (relation) {
+                    _.each(this.relations, _.bind(function (relation) {
                         var key = relation.key,
                             remoteKey = relation.remoteKey,
                             attr = this.attributes[key],
@@ -640,7 +640,7 @@
                             json[remoteKey || key] = _.isArray(aJson) ? _.compact(aJson) : aJson;
                         }
 
-                    }, this);
+                    }, this));
                 }
 
                 delete this.visited;
@@ -659,13 +659,13 @@
         cleanup:function (options) {
             options = options || {};
 
-            _.each(this.relations, function (relation) {
+            _.each(this.relations, _.bind(function (relation) {
                 var val = this.attributes[relation.key];
                 if(val) {
                     val._proxyCallback && val.off("all", val._proxyCallback, this);
                     val.parents = _.difference(val.parents, [this]);
                 }
-            }, this);
+            }, this));
             
             (!options.listen) && this.off();
         },
@@ -769,16 +769,16 @@
     var map2models = function (parents, target, models) {
         var relation, surrogate;
         //Iterate over collection's parents
-        _.find(parents, function (parent) {
+        _.find(parents, _.bind(function (parent) {
             //Iterate over relations
-            relation = _.find(parent.relations, function (rel) {
+            relation = _.find(parent.relations, _.bind(function (rel) {
                 return parent.get(rel.key) === target;
-            }, this);
+            }, this));
             if (relation) {
                 surrogate = parent;//surrogate for transformation
                 return true;//break;
             }
-        }, this);
+        }, this));
 
         //If we found a relation and it has a mapping function
         if (relation && relation.map) {
