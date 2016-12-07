@@ -578,8 +578,9 @@
 
             // Error checking
             if (relation.type === Backbone.Many) {
-                if ((!relatedModel) && (!collectionType))
+                if ((!relatedModel) && (!collectionType)) {
                     throw new Error('specify either a relatedModel or collectionType');
+                }
             }
 
             return collectionType;
