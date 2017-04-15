@@ -147,7 +147,7 @@
 
         <dl class="dl-horizontal">
             <dt>key (required)</dt>
-            <dd>A string which references an attribute name on relatedModel.</dd>
+            <dd>A string which references an attribute name for the relatedModel.<br />This key MUST be defined in the model defaults, although can be null or empty.</dd>
         </dl>
 
         <hr/>
@@ -219,7 +219,7 @@
     <hr/>
     <div class="well well-large">
         Use Backbone.One to specify a 1:1 relationship between two Backbone Models. The key specifies the attribute on
-        the AssociatedModel which will hold the instance of relatedModel.
+        the AssociatedModel which will hold the instance of relatedModel and must have a default defined.
                 <pre class="prettyprint lang-js">
 
 var Employee = Backbone.AssociatedModel.extend({
